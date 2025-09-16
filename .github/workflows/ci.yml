@@ -34,6 +34,7 @@ jobs:
         with:
           # GitHub 기본 토큰 사용 why? 이 토큰이 있어야 PR 브랜치에 push 가능
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
 
       # (2) Python 3.11로 환경 세팅
       - uses: actions/setup-python@v5
@@ -55,20 +56,22 @@ jobs:
           ruff check --fix .
           # Black 스타일 포맷팅 적용 # 사실상 PEP8 기반 고정 스타일을 따른다.
           ruff format .
+      
 
+      
       # (5) 수정된 결과를 PR 브랜치에 커밋, 푸시
+      # 기본적으로 github 실행 환경은 일회성 vm이라, 기본적으로 git 사용자에 대한 정보가 없음.
+      # 따라서, git commit 을 하려면 이름 및 이메일을 세팅해야 함.
+      # 여기서는 github에서 공식적으로 제공하는 봇 계정을 사용할건데,
+      # 이는 github 레포에서 자동 커밋할 때 흔히 쓰이는 표준
       - name: Commit and push changes
-          # 기본적으로 github 실행 환경은 일회성 vm이라, 기본적으로 git 사용자에 대한 정보가 없음.
-          # 따라서, git commit 을 하려면 이름 및 이메일을 세팅해야 함.
-          # 여기서는 github에서 공식적으로 제공하는 봇 계정을 사용할건데,
-          # 이는 github 레포에서 자동 커밋할 때 흔히 쓰이는 표준
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           # 수정사항이 있을 때만 커밋(파일이 변경되었을 때만 자동 커밋이 남는다)
           git commit -m "ci(ruff): Ruff로 코드 스타일 자동 수정" || echo "No changes to commit"
-          git push #(PR 브랜치에 푸시)
+          git push origin HEAD:${{ github.head_ref }} # 에러 해결. checkout 없이 push 시 브랜치 직접 지정해두었다.
 
   # -------------------------------------------------
   # (선택) Frontend ESLint - Node 프로젝트(package.json 또는 .eslintrc)가 있을 때만 실행
@@ -83,6 +86,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}  # 자동 커밋/푸시 권한
+          ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
 
       # (2) Node.js 환경 세팅
       - uses: actions/setup-node@v4
@@ -117,7 +121,8 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "ci(eslint): 린트 이슈 자동 수정" || echo "No changes to commit"
-          git push
+          git push origin HEAD:${{ github.head_ref }}
+
 
       # (6) 최종 검사: 남은 문제가 있으면 실패 처리 -> PR에서 한 번 더 수정 유도
       - name: Run ESLint (final check)
