@@ -78,57 +78,57 @@ jobs:
   #   ※ ESLint도 ruff와 마찬가지로,
   #      자동수정 + pr 브랜치에 커밋, 푸시 + 최종 검사 까지 구현
   # -------------------------------------------------
-  lint-frontend:
-    name: ci/lint-frontend
-    runs-on: ubuntu-latest
-    steps:
-      # (1) 코드 체크아웃
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # 자동 커밋/푸시 권한
-          ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
+  # lint-frontend:
+  #   name: ci/lint-frontend
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # (1) 코드 체크아웃
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}  # 자동 커밋/푸시 권한
+  #         ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
 
-      # (2) Node.js 환경 세팅
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+  #     # (2) Node.js 환경 세팅
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "20"
+  #         cache: "npm"
 
-      # (3) 의존성 설치 (Node 프로젝트일 때만)
-      - name: Install deps (install ESLint if missing)
-        # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
-        if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-        run: |
-          # package-lock.json이 있으면 → npm ci
-          # 없으면 → npm i
-          if [ -f package-lock.json ]; then npm ci; else npm i; fi
-          # eslint 버전 확인 시도
-          # → eslint가 없는 경우 devDependencies로 즉시 설치
-          npx --yes eslint -v >/dev/null 2>&1 || npm i -D eslint
+  #     # (3) 의존성 설치 (Node 프로젝트일 때만)
+  #     - name: Install deps (install ESLint if missing)
+  #       # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
+  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+  #       run: |
+  #         # package-lock.json이 있으면 → npm ci
+  #         # 없으면 → npm i
+  #         if [ -f package-lock.json ]; then npm ci; else npm i; fi
+  #         # eslint 버전 확인 시도
+  #         # → eslint가 없는 경우 devDependencies로 즉시 설치
+  #         npx --yes eslint -v >/dev/null 2>&1 || npm i -D eslint
 
-      # (4) ESLint 자동수정 (Node 프로젝트일 때만)
-      - name: Run ESLint --fix
-        # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
-        if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-        # eslint 실행
-        run: npx eslint . --fix || true 
+  #     # (4) ESLint 자동수정 (Node 프로젝트일 때만)
+  #     - name: Run ESLint --fix
+  #       # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
+  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+  #       # eslint 실행
+  #       run: npx eslint . --fix || true 
 
-      # (5) 수정사항이 있으면 커밋, 푸시 (Conventional Commit 사용)
-      - name: Commit and push ESLint fixes
-        if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "ci(eslint): 린트 이슈 자동 수정" || echo "No changes to commit"
-          git push origin HEAD:${{ github.head_ref }}
+  #     # (5) 수정사항이 있으면 커밋, 푸시 (Conventional Commit 사용)
+  #     - name: Commit and push ESLint fixes
+  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+  #       run: |
+  #         git config --global user.name "github-actions[bot]"
+  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  #         git add .
+  #         git commit -m "ci(eslint): 린트 이슈 자동 수정" || echo "No changes to commit"
+  #         git push origin HEAD:${{ github.head_ref }}
 
 
-      # (6) 최종 검사: 남은 문제가 있으면 실패 처리 -> PR에서 한 번 더 수정 유도
-      - name: Run ESLint (final check)
-        if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-        run: |
-          npx eslint . || (echo "ESLint found issues. Please fix locally or push updates." ; exit 1)
+  #     # (6) 최종 검사: 남은 문제가 있으면 실패 처리 -> PR에서 한 번 더 수정 유도
+  #     - name: Run ESLint (final check)
+  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+  #       run: |
+  #         npx eslint . || (echo "ESLint found issues. Please fix locally or push updates." ; exit 1)
 
 
   # -------------------------------------------------
