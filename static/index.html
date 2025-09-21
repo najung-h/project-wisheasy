@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>지하철 환승 서비스</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
+    header { background: #ff66b2; color: white; padding: 16px; text-align: center; font-size: 20px; }
+    main { max-width: 600px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 12px; font-weight: bold; }
+    input, select { width: 100%; padding: 10px; margin-top: 6px; border: 1px solid #ddd; border-radius: 6px; }
+    button { margin-top: 16px; width: 100%; padding: 12px; background: #ff66b2; border: none; color: #fff; font-weight: bold; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #e0559f; }
+  </style>
+</head>
+<body>
+  <header>
+    지하철 환승 도우미
+  </header>
+
+  <main>
+    <form>
+      <label for="from">출발역</label>
+      <input type="text" id="from" name="from" placeholder="예: 시청" />
+
+      <label for="to">도착역</label>
+      <input type="text" id="to" name="to" placeholder="예: 강남" />
+
+      <label for="priority">우선순위</label>
+      <select id="priority" name="priority">
+        <option value="fastest">최단시간</option>
+        <option value="min-transfer">최소 환승</option>
+        <option value="min-walk">최소 도보</option>
+      </select>
+
+      <button type="submit">경로 검색</button>
+    </form>
+  </main>
+</body>
+</html>
