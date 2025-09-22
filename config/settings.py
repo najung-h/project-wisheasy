@@ -124,3 +124,11 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# 정적 파일을 찾을 경로
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# 배포시 모든 정적 파일을 모을 경로
+STATIC_ROOT = BASE_DIR / 'staticfiles'
