@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 - 쉽길</title>
+    <link rel="stylesheet" href="settings.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="page-header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        <div class="page-title">설정</div>
+        <a href="main.html" class="home-btn" aria-label="메인으로 돌아가기">
+            <i class="fas fa-home"></i>
+        </a>
+    </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="info-box">
+                <p>드래그하여 선호하는 경로의 우선순위를 변경하세요.</p>
+            </div>
+
+            <div class="priority-list" id="priorityList">
+                <div class="priority-item" draggable="true" data-priority="escalator">
+                    <i class="fas fa-grip-vertical handle"></i>
+                    <span>에스컬레이터 우선</span>
+                </div>
+                <div class="priority-item" draggable="true" data-priority="elevator">
+                    <i class="fas fa-grip-vertical handle"></i>
+                    <span>엘리베이터 우선</span>
+                </div>
+                <div class="priority-item" draggable="true" data-priority="transfer">
+                    <i class="fas fa-grip-vertical handle"></i>
+                    <span>최소 환승</span>
+                </div>
+                <div class="priority-item" draggable="true" data-priority="time">
+                    <i class="fas fa-grip-vertical handle"></i>
+                    <span>최단 시간</span>
+                </div>
+            </div>
+
+            <button class="save-btn" onclick="savePriorityOrder()">저장</button>
+        </main>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html>
