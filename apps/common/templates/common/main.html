@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>쉽길 - 쉽고 빠른 지하철 길찾기</title>
+    <link rel="stylesheet" href="main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- App Header -->
+        <header class="app-header">
+            <img src="logo.png" alt="쉽길 로고" class="app-logo">
+            <h1 class="app-title">쉽길</h1>
+            <p class="app-subtitle">쉽고 빠른 지하철 길찾기</p>
+        </header>
+
+        <!-- Main Content Card -->
+        <main class="main-card">
+            <!-- Card Header -->
+            <div class="card-header">
+                <button class="login-btn" onclick="showLoginModal()">
+                    <i class="fas fa-user"></i>
+                    로그인
+                </button>
+                <button class="mypage-btn" onclick="showMyPage()">
+                    <i class="fas fa-cog"></i>
+                    마이페이지
+                </button>
+            </div>
+
+            <!-- Main Buttons -->
+            <div class="main-buttons">
+                <!-- Route Finding Button -->
+                <button class="main-btn route-btn" onclick="goToRoutePage()">
+                    <div class="btn-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <span class="btn-text">길찾기</span>
+                </button>
+
+                <!-- Station Info Button -->
+                <button class="main-btn station-btn" onclick="goToStationPage()">
+                    <div class="btn-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <span class="btn-text">역 정보</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="main.js"></script>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>로그인</h3>
+                <button class="close-btn" onclick="closeLoginModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <button class="google-login-btn" onclick="handleGoogleLogin()">
+                    <i class="fab fa-google"></i>
+                    구글로 계속하기
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
