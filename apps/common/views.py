@@ -8,5 +8,5 @@ def healthz(_request):
 
 
 # 출발역/도착역을 입력받고 경로 안내를 제공한다.
-def main(request):
+def index(request):
     return render(request, "common/index.html")
