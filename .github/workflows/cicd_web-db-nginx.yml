@@ -1,91 +1,78 @@
 # ======================================================================
-# [요구 1] 단일 GitHub Workflow로 Lint → Build → Push → (EC2) Deploy 완주
-#   - build-and-push 잡: 코드 Lint/검증 + Docker 이미지 빌드/푸시
-#   - deploy 잡       : EC2 접속 → docker compose로 (nginx + web + db) 기동
-#   - deploy는 build-and-push에 의존(needs) → 빌드 성공 후에만 배포
+# 단일 워크플로: Lint → Build → Push → (EC2) Deploy
+# - 트리거(on) 명시: push(dev), pull_request(dev)  ← (오류 원인 제거)
 # ======================================================================
 
 name: Full CI/CD - Lint, Build, Push, and Deploy (Nginx + Django + MySQL)
 
 on:
   push:
-    branches: ["dev"]  # main이면 main으로 바꾸세요.
-    
+    branches:
+      - dev          # ← 필요한 브랜치로 교체 가능 (예: main)
+  pull_request:
+    branches:
+      - dev          # ← PR에서도 린트/빌드가 돌도록 명시
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       # ------------------------------------------------------------------
-      # [요구 2-1] 코드 체크아웃
+      # 코드 체크아웃
+      #  - token: 기본 제공 토큰 사용 (github.token). secrets.GITHUB_TOKEN 사용 금지
+      #  - ref: 이벤트별로 조건 지정 (PR: head_ref, PUSH: ref)
       # ------------------------------------------------------------------
-    
-      # (1) PR 브랜치 체크아웃
       - uses: actions/checkout@v4
         with:
-          # GitHub 기본 토큰 사용 → 이후 수정사항을 PR 브랜치에 push 가능
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
+          token: ${{ github.token }}
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
 
-      # (2) Python 3.11 환경 세팅
+      # Python 3.11 (ruff 등 도구 실행용)
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
 
-      # (3) Ruff 설치 (자동 수정 + 포맷팅 둘 다 활용할 예정)
+      # Ruff 설치
       - name: Install Ruff
         run: |
-          # python -m pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install ruff
-	
-      # 별도 워크플로우로 분리를 고려중이라, 일단은 주석 처리해놓았습니다.
-      # 현재는 무한 루프가 우려되는 상황입니다.
-      # (4) Ruff 실행 (fix + format)
-      #- name: Run Ruff (auto-fix + format)
-      #  run: |
-      #    # 린트 규칙 위반 자동 수정
-      #    ruff check --fix .
-      #    # Black 스타일 기반 포맷터 실행 (PEP8 준수)
-      #    ruff format .
-	
-      # 일단은 주석 처리 해놓겠습니다. commit / push 를 해두면 뒤에가 어떻게 망가질지 몰라서.
-      # (5) 변경사항이 있으면 PR 브랜치에 다시 commit & push
-      #- name: Commit & Push changes
-      #  run: |
-      #    git config user.name "github-actions[bot]"
-      #    git config user.email "github-actions[bot]@users.noreply.github.com"
-      #    git add .
-      #    # 변경된 파일이 있을 때만 커밋/푸시
-      #    if ! git diff --cached --quiet; then
-      #      git commit -m "style: apply Ruff auto-fix & format"
-      #      git push origin HEAD:${{ github.head_ref }}
-      #    fi
 
-      # ------------------------------------------------------------------
-      # [요구 2-2] 이미지 빌드 전 세팅: Buildx (멀티플랫폼/캐시 등 고급기능)
-      # [요구 2-3] 도커허브 푸시: 로그인 + build-push-action(push: true)
-      # ------------------------------------------------------------------
+      # Ruff: check-only 모드 (자동수정/푸시 없음 → 루프 방지)
+      #  - 위반사항이 있으면 non-zero로 실패 처리
+      - name: Run Ruff (check-only; no auto-fix)
+        if: ${{ github.actor != 'github-actions[bot]' }}   # 루프 방지 추가 안전장치
+        run: |
+          ruff check --diff .
+          ruff format --check .
+
+      # Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      # Docker Hub 로그인
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      # 빌드 & 푸시
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: true  # 빌드 결과를 Hub로 푸시
+          push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/najungh:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }}
 
   deploy:
-    needs: build-and-push  # [요구 1] 빌드 성공 후에만 배포
+    needs: build-and-push
+    # PR에서는 배포를 스킵하고, push(dev)일 때만 배포하려면 아래 if 추가
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to EC2 with Docker Compose (nginx + web + db)
@@ -100,102 +87,47 @@ jobs:
             APP_DIR="/home/ubuntu/app"
             mkdir -p "$APP_DIR/nginx/conf.d"
             cd "$APP_DIR"
-            
-            # 기존 .env 파일이 있다면 제거
+
+            # .env 재생성
             rm -f .env
-            
-            # .env 파일 생성
             cat > .env << 'EOF'
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-            
+
             DB_HOST=db
             DB_NAME=${{ secrets.MYSQL_DATABASE }}
             DB_USER=${{ secrets.MYSQL_USER }}
             DB_PASS=${{ secrets.MYSQL_PASSWORD }}
             DB_PORT=3306
-            
+
             DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
             DJANGO_DEBUG=false
             DJANGO_ALLOWED_HOSTS=*
             EOF
-            
-            # Docker/Compose 가용성 보장
+
+            # Docker/Compose 보장
             if ! command -v docker >/dev/null 2>&1; then
               echo "Docker not found. Install Docker CE first."; exit 1
             fi
             sudo systemctl enable --now docker
             sudo docker version || (echo "Docker daemon not running" && exit 1)
 
-            # Docker Compose 플러그인 확인/설치
             if ! sudo docker compose version >/dev/null 2>&1; then
               sudo apt-get update -y
               sudo apt-get install -y docker-compose-plugin
             fi
 
-            # Hub 로그인(프라이빗 대비)
+            # Hub 로그인
             if [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
               echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             fi
 
-            # 공유 네트워크(브리지) 생성: 세 컨테이너가 내부 DNS로 통신
+            # 네트워크
             sudo docker network create appnet || true
 
-
-            # ------------------------------------------------------------------
-            # [요구 5] 설정파일 원격 생성: .env / nginx conf / compose 파일
-            #   - 외부 트래픽은 반드시 nginx → web(프록시)
-            #   - web ↔ db는 내부 네트워크만 (호스트 포트 매핑 금지)
-            # ------------------------------------------------------------------
-
-            # # .env: DB 및 Django 런타임 환경변수
-            # cat > .env << 'EOF'
-            # MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            # MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-            # MYSQL_USER=${{ secrets.MYSQL_USER }}
-            # MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-
-            # DB_HOST=db
-            # DB_NAME=${{ secrets.MYSQL_DATABASE }}
-            # DB_USER=${{ secrets.MYSQL_USER }}
-            # DB_PASS=${{ secrets.MYSQL_PASSWORD }}
-            # DB_PORT=3306
-
-            # DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-            # DJANGO_DEBUG=false
-            # DJANGO_ALLOWED_HOSTS=*
-            # EOF
-
-
-
-            # nginx 리버스 프록시 설정
-            # # [요구 5-1] 외부 → nginx(80/443) → web:8000 으로만 접근 (proxy_pass)
-            # cat > nginx/conf.d/default.conf << 'EOF'
-            # server {
-            #   listen 80;
-            #   server_name _;
-
-            #   location / {
-            #     proxy_pass         http://web:8000;
-            #     proxy_http_version 1.1;
-            #     proxy_set_header   Host $host;
-            #     proxy_set_header   X-Real-IP $remote_addr;
-            #     proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-            #     proxy_set_header   X-Forwarded-Proto $scheme;
-            #   }
-
-            #   # 엔드투엔드 헬스체크(nginx→web)
-            #   location = /healthz {
-            #     proxy_pass http://web:8000/healthz;
-            #   }
-            # }
-            # EOF
-            
-            
-
-            # nginx 파일 생성
+            # nginx conf (HTTP→HTTPS 리다이렉트 + 프록시)
             cat > nginx/conf.d/default.conf << 'EOF'
             server {
               listen 80;
@@ -232,14 +164,7 @@ jobs:
             }
             EOF
 
-            # ------------------------------------------------------------------
-            # [요구 3] docker-compose로 3컨테이너 정의(nginx/web/db)
-            #   - nginx만 외부 포트 매핑(80, 필요 시 443)
-            #   - web/db는 호스트 포트 매핑 없음 → 내부 네트워크 전용
-            #   - 같은 네트워크(appnet)에서 서비스명(DNS)으로 통신
-            #   - [요구 4] 아래에서 compose pull/up -d로 실행
-            #   - [+ SSL] 443/인증서 볼륨 주석 제공(인증서 갖추면 즉시 활성화)
-            # ------------------------------------------------------------------
+            # compose 작성
             cat > docker-compose.prod.yml << 'EOF'
             services:
               db:
@@ -250,7 +175,6 @@ jobs:
                 volumes:
                   - mysql_data:/var/lib/mysql
                 networks: [appnet]
-                # 내부 전용: 호스트 포트 매핑 없음 (외부 직접 접근 차단)
                 healthcheck:
                   test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
                   interval: 5s
@@ -266,8 +190,6 @@ jobs:
                 depends_on:
                   db:
                     condition: service_healthy
-                # 내부 전용: 호스트 포트 매핑 없음
-                # Django는 0.0.0.0:8000 리슨 가정 (gunicorn/uvicorn 등)
                 healthcheck:
                   test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
                   interval: 10s
@@ -281,10 +203,9 @@ jobs:
                 depends_on:
                   web:
                     condition: service_healthy
-                # 외부 공개 포트: 반드시 nginx만 오픈
                 ports:
                   - "80:80"
-                  - "443:443"  #ssl 인증
+                  - "443:443"
                 volumes:
                   - ./nginx/conf.d:/etc/nginx/conf.d:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
@@ -303,36 +224,12 @@ jobs:
               mysql_data:
             EOF
 
-            # # 이미지 태그는 sha 권장(롤백/추적). latest 쓰려면 아래만 바꾸면 됨
-            # # sudo sed -i "s|\${DOCKERHUB_IMAGE}|${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }}|g" docker-compose.prod.yml
-
-            # # [요구 4] compose 실행: 최신 이미지 pull → up -d → 상태 출력
-            # sudo docker compose -f docker-compose.prod.yml pull
-            # sudo docker compose -f docker-compose.prod.yml up -d
-            # sudo docker compose -f docker-compose.prod.yml ps
-
-            # # 엔드투엔드 헬스체크: nginx 경유 /healthz가 200 나올 때까지 대기
-            # for i in {1..40}; do
-            #   CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/healthz || true)
-            #   if [ "$CODE" = "200" ]; then
-            #     echo "NGINX → WEB health OK (HTTP 200)"; break
-            #   fi
-            #   echo "Waiting for stack to be ready... ($i)"; sleep 3
-            # done
-
-            # if [ "$CODE" != "200" ]; then
-            #   echo "ERROR: stack health check failed"
-            #   echo "==== nginx logs ===="; sudo docker logs nginx_edge --tail 200 || true
-            #   echo "==== web logs ====";   sudo docker logs najungh_web --tail 200 || true
-            #   echo "==== mysql logs ===="; sudo docker logs mysql_db --tail 200 || true
-            #   exit 1
-            # fi
-
-
+            # 이미지 태그 지정(sha 권장)
             sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.prod.yml pull
             sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.prod.yml up -d
             sudo docker compose -f docker-compose.prod.yml ps
 
+            # E2E 헬스체크 (HTTPS 경유)
             for i in {1..40}; do
               CODE=$(curl -s -o /dev/null -w "%{http_code}" https://wisheasy.site/healthz || true)
               if [ "$CODE" = "200" ]; then
