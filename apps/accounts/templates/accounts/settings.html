@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>설정 - 쉽길</title>
-    <link rel="stylesheet" href="settings.css">
+    <link rel="stylesheet" href="{% static "css/settings.css" %}">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -16,7 +16,7 @@
                 <i class="fas fa-arrow-left"></i>
             </button>
         <div class="page-title">설정</div>
-        <a href="main.html" class="home-btn" aria-label="메인으로 돌아가기">
+        <a href="{% url "common:index" %}" class="home-btn" aria-label="메인으로 돌아가기">
             <i class="fas fa-home"></i>
         </a>
     </header>
@@ -50,6 +50,6 @@
         </main>
     </div>
 
-    <script src="settings.js"></script>
+    <script src="{% static "js/settings.js" %}"></script>
 </body>
 </html>
