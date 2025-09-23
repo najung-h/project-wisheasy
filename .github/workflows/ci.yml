@@ -1,151 +1,151 @@
-# -------------------------------------------------
-# GitHub Actions Workflow - Ruff 자동수정 버전
-# -------------------------------------------------
-# PR이 master/dev에 열리면 실행되는 워크플로우입니다.
-# 1) Ruff: Python 코드 검사 + 자동수정 (--fix, format)
-# 2) ESLint: JS/TS 코드 검사 (Node 프로젝트일 때만 실행)
-# 3) Docker Build: Dockerfile 빌드 확인 (있을 때만 실행)
-# => 코드 스타일을 자동 정리하고, 항상 포맷팅된 코드로 리뷰할 수 있게 합니다.
-# -------------------------------------------------
+# # -------------------------------------------------
+# # GitHub Actions Workflow - Ruff 자동수정 버전
+# # -------------------------------------------------
+# # PR이 master/dev에 열리면 실행되는 워크플로우입니다.
+# # 1) Ruff: Python 코드 검사 + 자동수정 (--fix, format)
+# # 2) ESLint: JS/TS 코드 검사 (Node 프로젝트일 때만 실행)
+# # 3) Docker Build: Dockerfile 빌드 확인 (있을 때만 실행)
+# # => 코드 스타일을 자동 정리하고, 항상 포맷팅된 코드로 리뷰할 수 있게 합니다.
+# # -------------------------------------------------
 
 
 
-name: ci
+# name: ci
 
-on:
-  pull_request:                # PR 이벤트 발생시 트리거를 받습니다
-    branches: [ master, dev ]  # master, dev 브랜치 대상의 PR에만 적용됩니다
+# on:
+#   pull_request:                # PR 이벤트 발생시 트리거를 받습니다
+#     branches: [ master, dev ]  # master, dev 브랜치 대상의 PR에만 적용됩니다
 
-# PR 브랜치로 커밋/푸시하려면 write 권한 필요!
-permissions:
-  contents: write
+# # PR 브랜치로 커밋/푸시하려면 write 권한 필요!
+# permissions:
+#   contents: write
 
-jobs:
-  # -------------------------------------------------
-  # Ruff Auto Fix Job (항상 실행 - 파이썬 의존성이 불필요하기 때문)
-  # -------------------------------------------------
-  ruff-fix:
-    name: ci/ruff-auto-fix
-    runs-on: ubuntu-latest
+# jobs:
+#   # -------------------------------------------------
+#   # Ruff Auto Fix Job (항상 실행 - 파이썬 의존성이 불필요하기 때문)
+#   # -------------------------------------------------
+#   ruff-fix:
+#     name: ci/ruff-auto-fix
+#     runs-on: ubuntu-latest
 
-    steps:
-      # (1) PR 브랜치의 코드 가져오기, 토큰 필요!
-      - uses: actions/checkout@v4
-        with:
-          # GitHub 기본 토큰 사용 why? 이 토큰이 있어야 PR 브랜치에 push 가능
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
+#     steps:
+#       # (1) PR 브랜치의 코드 가져오기, 토큰 필요!
+#       - uses: actions/checkout@v4
+#         with:
+#           # GitHub 기본 토큰 사용 why? 이 토큰이 있어야 PR 브랜치에 push 가능
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#           ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
 
-      # (2) Python 3.11로 환경 세팅
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"  # 설치 속도 향상
+#       # (2) Python 3.11로 환경 세팅
+#       - uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.11"
+#           cache: "pip"  # 설치 속도 향상
 
 
-      # (3) Ruff 설치
-      - name: Install ruff
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
+#       # (3) Ruff 설치
+#       - name: Install ruff
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install ruff
 
-      # (4) Ruff 실행 - 자동수정 모드로!
-      - name: Run Ruff (fix + format)
-        run: |
-          # 린트 규칙 위반 자동 수정
-          ruff check --fix .
-          # Black 스타일 포맷팅 적용 # 사실상 PEP8 기반 고정 스타일을 따른다.
-          ruff format .
+#       # (4) Ruff 실행 - 자동수정 모드로!
+#       - name: Run Ruff (fix + format)
+#         run: |
+#           # 린트 규칙 위반 자동 수정
+#           ruff check --fix .
+#           # Black 스타일 포맷팅 적용 # 사실상 PEP8 기반 고정 스타일을 따른다.
+#           ruff format .
       
 
       
-      # (5) 수정된 결과를 PR 브랜치에 커밋, 푸시
-      # 기본적으로 github 실행 환경은 일회성 vm이라, 기본적으로 git 사용자에 대한 정보가 없음.
-      # 따라서, git commit 을 하려면 이름 및 이메일을 세팅해야 함.
-      # 여기서는 github에서 공식적으로 제공하는 봇 계정을 사용할건데,
-      # 이는 github 레포에서 자동 커밋할 때 흔히 쓰이는 표준
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          # 수정사항이 있을 때만 커밋(파일이 변경되었을 때만 자동 커밋이 남는다)
-          git commit -m "ci(ruff): Ruff로 코드 스타일 자동 수정" || echo "No changes to commit"
-          git push origin HEAD:${{ github.head_ref }} # 에러 해결. checkout 없이 push 시 브랜치 직접 지정해두었다.
+#       # (5) 수정된 결과를 PR 브랜치에 커밋, 푸시
+#       # 기본적으로 github 실행 환경은 일회성 vm이라, 기본적으로 git 사용자에 대한 정보가 없음.
+#       # 따라서, git commit 을 하려면 이름 및 이메일을 세팅해야 함.
+#       # 여기서는 github에서 공식적으로 제공하는 봇 계정을 사용할건데,
+#       # 이는 github 레포에서 자동 커밋할 때 흔히 쓰이는 표준
+#       - name: Commit and push changes
+#         run: |
+#           git config --global user.name "github-actions[bot]"
+#           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+#           git add .
+#           # 수정사항이 있을 때만 커밋(파일이 변경되었을 때만 자동 커밋이 남는다)
+#           git commit -m "ci(ruff): Ruff로 코드 스타일 자동 수정" || echo "No changes to commit"
+#           git push origin HEAD:${{ github.head_ref }} # 에러 해결. checkout 없이 push 시 브랜치 직접 지정해두었다.
 
-  # -------------------------------------------------
-  # (선택) Frontend ESLint - Node 프로젝트(package.json 또는 .eslintrc)가 있을 때만 실행
-  #   ※ ESLint도 ruff와 마찬가지로,
-  #      자동수정 + pr 브랜치에 커밋, 푸시 + 최종 검사 까지 구현
-  # -------------------------------------------------
-  # lint-frontend:
-  #   name: ci/lint-frontend
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     # (1) 코드 체크아웃
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}  # 자동 커밋/푸시 권한
-  #         ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
+#   # -------------------------------------------------
+#   # (선택) Frontend ESLint - Node 프로젝트(package.json 또는 .eslintrc)가 있을 때만 실행
+#   #   ※ ESLint도 ruff와 마찬가지로,
+#   #      자동수정 + pr 브랜치에 커밋, 푸시 + 최종 검사 까지 구현
+#   # -------------------------------------------------
+#   # lint-frontend:
+#   #   name: ci/lint-frontend
+#   #   runs-on: ubuntu-latest
+#   #   steps:
+#   #     # (1) 코드 체크아웃
+#   #     - uses: actions/checkout@v4
+#   #       with:
+#   #         token: ${{ secrets.GITHUB_TOKEN }}  # 자동 커밋/푸시 권한
+#   #         ref: ${{ github.head_ref }}      # 선택: 브랜치로 체크아웃
 
-  #     # (2) Node.js 환경 세팅
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version: "20"
-  #         cache: "npm"
+#   #     # (2) Node.js 환경 세팅
+#   #     - uses: actions/setup-node@v4
+#   #       with:
+#   #         node-version: "20"
+#   #         cache: "npm"
 
-  #     # (3) 의존성 설치 (Node 프로젝트일 때만)
-  #     - name: Install deps (install ESLint if missing)
-  #       # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
-  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-  #       run: |
-  #         # package-lock.json이 있으면 → npm ci
-  #         # 없으면 → npm i
-  #         if [ -f package-lock.json ]; then npm ci; else npm i; fi
-  #         # eslint 버전 확인 시도
-  #         # → eslint가 없는 경우 devDependencies로 즉시 설치
-  #         npx --yes eslint -v >/dev/null 2>&1 || npm i -D eslint
+#   #     # (3) 의존성 설치 (Node 프로젝트일 때만)
+#   #     - name: Install deps (install ESLint if missing)
+#   #       # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
+#   #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+#   #       run: |
+#   #         # package-lock.json이 있으면 → npm ci
+#   #         # 없으면 → npm i
+#   #         if [ -f package-lock.json ]; then npm ci; else npm i; fi
+#   #         # eslint 버전 확인 시도
+#   #         # → eslint가 없는 경우 devDependencies로 즉시 설치
+#   #         npx --yes eslint -v >/dev/null 2>&1 || npm i -D eslint
 
-  #     # (4) ESLint 자동수정 (Node 프로젝트일 때만)
-  #     - name: Run ESLint --fix
-  #       # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
-  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-  #       # eslint 실행
-  #       run: npx eslint . --fix || true 
+#   #     # (4) ESLint 자동수정 (Node 프로젝트일 때만)
+#   #     - name: Run ESLint --fix
+#   #       # 조건: package.json이나 ESLint 설정 파일이 있을 때만 실행
+#   #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+#   #       # eslint 실행
+#   #       run: npx eslint . --fix || true 
 
-  #     # (5) 수정사항이 있으면 커밋, 푸시 (Conventional Commit 사용)
-  #     - name: Commit and push ESLint fixes
-  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-  #       run: |
-  #         git config --global user.name "github-actions[bot]"
-  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-  #         git add .
-  #         git commit -m "ci(eslint): 린트 이슈 자동 수정" || echo "No changes to commit"
-  #         git push origin HEAD:${{ github.head_ref }}
-
-
-  #     # (6) 최종 검사: 남은 문제가 있으면 실패 처리 -> PR에서 한 번 더 수정 유도
-  #     - name: Run ESLint (final check)
-  #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
-  #       run: |
-  #         npx eslint . || (echo "ESLint found issues. Please fix locally or push updates." ; exit 1)
+#   #     # (5) 수정사항이 있으면 커밋, 푸시 (Conventional Commit 사용)
+#   #     - name: Commit and push ESLint fixes
+#   #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+#   #       run: |
+#   #         git config --global user.name "github-actions[bot]"
+#   #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+#   #         git add .
+#   #         git commit -m "ci(eslint): 린트 이슈 자동 수정" || echo "No changes to commit"
+#   #         git push origin HEAD:${{ github.head_ref }}
 
 
-  # -------------------------------------------------
-  # (선택) Docker 빌드 확인 - Dockerfile 있을 때만 실행
-  #   ※ 여기서도 job 레벨 if 대신 step 레벨 if 사용 가능
-  # -------------------------------------------------
-  docker-build:
-    name: ci/docker-build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+#   #     # (6) 최종 검사: 남은 문제가 있으면 실패 처리 -> PR에서 한 번 더 수정 유도
+#   #     - name: Run ESLint (final check)
+#   #       if: ${{ hashFiles('**/package.json') != '' || hashFiles('**/.eslintrc*') != '' }}
+#   #       run: |
+#   #         npx eslint . || (echo "ESLint found issues. Please fix locally or push updates." ; exit 1)
 
-      # (옵션) Dockerfile이 없으면 이 단계는 스킵됨
-      - name: Set up Docker Buildx
-        if: ${{ hashFiles('**/Dockerfile') != '' }}
-        uses: docker/setup-buildx-action@v3
 
-      - name: Build image (no push)
-        if: ${{ hashFiles('**/Dockerfile') != '' }}
-        run: docker build -t subway-stairs-app:ci .
+#   # -------------------------------------------------
+#   # (선택) Docker 빌드 확인 - Dockerfile 있을 때만 실행
+#   #   ※ 여기서도 job 레벨 if 대신 step 레벨 if 사용 가능
+#   # -------------------------------------------------
+#   docker-build:
+#     name: ci/docker-build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       # (옵션) Dockerfile이 없으면 이 단계는 스킵됨
+#       - name: Set up Docker Buildx
+#         if: ${{ hashFiles('**/Dockerfile') != '' }}
+#         uses: docker/setup-buildx-action@v3
+
+#       - name: Build image (no push)
+#         if: ${{ hashFiles('**/Dockerfile') != '' }}
+#         run: docker build -t subway-stairs-app:ci .
