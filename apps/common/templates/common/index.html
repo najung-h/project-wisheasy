@@ -1,10 +1,12 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>쉽길 - 쉽고 빠른 지하철 길찾기</title>
-    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="{% static "css/index.css" %}">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -52,7 +54,7 @@
         </main>
     </div>
 
-    <script src="main.js"></script>
+    <script src="{% static "js/index.js" %}"></script>
 
     <!-- Login Modal -->
     <div class="modal" id="loginModal">

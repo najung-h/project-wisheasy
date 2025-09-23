@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>역 정보 - 쉽길</title>
-    <link rel="stylesheet" href="station.css">
+    <link rel="stylesheet" href="{% static "css/station_info.css" %}">
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -13,7 +13,7 @@
         <!-- Header -->
         <header class="page-header">
         <div class="page-title">역 정보</div>
-        <a href="main.html" class="home-btn" aria-label="메인으로 돌아가기">
+        <a href="{% url "common:index" %}" class="home-btn" aria-label="메인으로 돌아가기">
             <i class="fas fa-home"></i>
         </a>
     </header>
@@ -139,7 +139,7 @@
         </main>
     </div>
 
-    <script src="search-util.js"></script>
-    <script src="station.js"></script>
+    <script src="{% static "js/search-util.js" %}"></script>
+    <script src="{% static "js/station_info.js" %}"></script>
 </body>
 </html>
