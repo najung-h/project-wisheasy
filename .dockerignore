@@ -16,10 +16,6 @@ __pycache__/
 .gitignore
 .gitattributes
 
-# Docker 관련
-.dockerignore
-Dockerfile*
-
 # IDE / OS
 .vscode
 .idea
