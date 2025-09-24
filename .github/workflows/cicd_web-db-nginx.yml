@@ -120,6 +120,9 @@ jobs:
             DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
             DJANGO_DEBUG=false
             DJANGO_ALLOWED_HOSTS=*
+
+            DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh
+            IMAGE_TAG=sha-${{ github.sha }}
             EOF
             # ----------/deploy:env---------
 
@@ -238,7 +241,7 @@ jobs:
                   retries: 30
 
               web:
-                image: ${DOCKERHUB_IMAGE}
+                image: "${DOCKERHUB_IMAGE}:${IMAGE_TAG}"
                 container_name: najungh_web
                 restart: always
                 env_file: .env
@@ -278,5 +281,5 @@ jobs:
             # ----------/deploy:compose-up---------
 
 
-              
+
   #-------------/Deploy-------------
