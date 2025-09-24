@@ -190,19 +190,22 @@ jobs:
                 depends_on:
                   db:
                     condition: service_healthy
-                healthcheck:
-                  test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
-                  interval: 10s
-                  timeout: 3s
-                  retries: 12
+                # 임시 주석 처리, 백엔드에서 /healthz 엔드포인트 구현 전까지 비활성화
+                # healthcheck:
+                #   test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
+                #   interval: 10s
+                #   timeout: 3s
+                #   retries: 12
 
               nginx:
                 image: nginx:1.27-alpine
                 container_name: nginx_edge
                 restart: always
                 depends_on:
-                  web:
-                    condition: service_healthy
+                  - web
+                  # 임시 주석 처리, healthcheck 켜놓은 이후로 다시 해제 예정
+                  # web:
+                  #   condition: service_healthy
                 ports:
                   - "80:80"
                   - "443:443"
@@ -210,11 +213,12 @@ jobs:
                   - ./nginx/conf.d:/etc/nginx/conf.d:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
                 networks: [appnet]
-                healthcheck:
-                  test: ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]
-                  interval: 10s
-                  timeout: 3s
-                  retries: 12
+                # 임시 주석 처리
+                # healthcheck:
+                #   test: ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]
+                #   interval: 10s
+                #   timeout: 3s
+                #   retries: 12
 
             networks:
               appnet:
