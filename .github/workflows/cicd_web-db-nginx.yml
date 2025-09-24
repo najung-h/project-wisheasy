@@ -1,8 +1,3 @@
-# ======================================================================
-# 단일 워크플로: Lint → Build → Push → (EC2) Deploy
-# - 트리거(on) 명시: push(dev), pull_request(dev)  ← (오류 원인 제거)
-# ======================================================================
-
 name: Full CI/CD - Lint, Build, Push, and Deploy (Nginx + Django + MySQL)
 
 # --------------- triggers ---------------------------------------------
@@ -28,8 +23,8 @@ jobs:
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
       # ---------------/checkout ----------------------------------------
 
-        
-      ## ---------ruff-------------------------------------------------------------
+      #-------------Lint:Ruff-------------
+      # (임시 주석처리 - 추후 ci.yml / cd.yml 분리 시 복구)
       # # Python 3.11 (ruff 등 도구 실행용)
       # - uses: actions/setup-python@v5
       #   with:
@@ -49,20 +44,28 @@ jobs:
       #   run: |
       #     ruff check --diff .
       #     ruff format --check .
-      ## ---------ruff-------------------------------------------------------------
+      #-------------/Lint:Ruff-------------
 
-      # Buildx
+
+      #-------------Build-------------
+
+      #-------------Build:buildx-------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+      #-------------/Build:buildx-------------
 
-      # Docker Hub 로그인
+
+
+      #-------------Build:registry-login-------------
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      # 빌드 & 푸시
+      #-------------/Build:registry-login-------------
+          
+        
+      #-------------Build:build_n_push-------------
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -72,7 +75,10 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/najungh:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }}
+      #-------------/Build:build_n_push-------------
+  #-------------/Build-------------
 
+  #-------------Deploy-------------
   deploy:
     needs: build-and-push
     # PR에서는 배포를 스킵하고, push(dev)일 때만 배포하려면 아래 if 추가
@@ -88,12 +94,17 @@ jobs:
           script: |
             set -e
 
+            # -----------deploy:prep---------
+            # -p 명령어(폴더가 없으면 만들고, 있어도 실패 안함)를 통해, 다음 단계에서 필요한 폴더 구조가 확실하게 존재하도록 보장
             APP_DIR="/home/ubuntu/app"
             mkdir -p "$APP_DIR/nginx/conf.d"
             cd "$APP_DIR"
+            # ----------/deploy:prep---------
 
-            # .env 재생성
+            # -----------deploy:env---------
+            # .env 파일 재생성, -f 명령어를 통해 파일 존재여부와 관계없이 삭제를 (안전하게 == 실패 안하게)보장하려고 함.
             rm -f .env
+            # 아래 명령어를 통해 스크립트 내에서 환경 변수와 같은 여러 줄의 데이터를 파일(.env)로 만들 수 있음 
             cat > .env << 'EOF'
             MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
@@ -110,17 +121,55 @@ jobs:
             DJANGO_DEBUG=false
             DJANGO_ALLOWED_HOSTS=*
             EOF
+            # ----------/deploy:env---------
 
+            # -----------deploy:docker-ensure---------
             # Docker/Compose 보장
-            if ! command -v docker >/dev/null 2>&1; then
-              echo "Docker not found. Install Docker CE first."; exit 1
-            fi
-            sudo systemctl enable --now docker
-            sudo docker version || (echo "Docker daemon not running" && exit 1)
+            # 1) Docker CE 설치 여부 확인, 없으면 설치
+            # 2) Docker 서비스 활성화
+            # 3) docker compose 설치 여부 확인, 없으면 설치
 
+            # Docker 설치 여부 확인
+            if ! command -v docker >/dev/null 2>&1; then
+              echo "[deploy:docker-ensure] Docker CE 설치되어 있지 않습니다. 설치하겠습니다..."
+              # Docker CE 설치 없을 때 설치 - 기존에 수동으로 하는 법을 정리해놨는데, 그것을 CI-CD로도 자동화하겠습니다. 아래 코드가 궁금하다면 정현쓰 티스토리 참고하세요
+              sudo apt-get update
+              sudo apt-get install -y ca-certificates curl gnupg lsb-release
+
+              sudo mkdir -p /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+                sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+              echo \
+                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+                https://download.docker.com/linux/ubuntu \
+                $(lsb_release -cs) stable" | \
+                sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+              sudo apt-get update
+              # - docker-ce: 도커 엔진
+              # - docker-ce-cli: 도커 CLI
+              # - containerd.io: 컨테이너 런타임
+              # - docker-buildx-plugin: Buildx 플러그인
+              # - docker-compose-plugin: Compose v2 플러그인
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+            else
+              # 이미 설치되어 있음을 알리는 메시지
+              echo "[deploy:docker-ensure] Docker CE 설치되어 있습니다."
+            fi
+
+            # 도커 서비스가 부팅 시 자동으로 시작되도록 설정하고 즉시 시작하게
+            sudo systemctl enable --now docker
+            sudo docker version || (echo "[deploy:docker-ensure] Docker 데몬이 실행 중이 아닙니다" && exit 1)
+
+            # docker compose를 사용해서 배포할 예정이기 때문에, docker-compose 설치 확인
             if ! sudo docker compose version >/dev/null 2>&1; then
+              echo "[deploy:docker-ensure] docker-compose 플러그인 설치하겠습니다..."
               sudo apt-get update -y
               sudo apt-get install -y docker-compose-plugin
+            else
+              echo "[deploy:docker-ensure] docker compose 사용 가능합니다. 설치 진행하지 않겠습니다."
             fi
 
             # Hub 로그인
@@ -128,10 +177,15 @@ jobs:
               echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
             fi
 
-            # 네트워크
+            # 네트워크 생성 - 야멜 파일 안에 정의된 컨테이너 들이 appnet에 연결되어, 서로 다른 컨테이너 들이 통신할 수 있게 만들어줍니다. 반대로 appnet 네트워크에 속하지 않은 다른 컨테이너들과는 격리되어 보안은 강화됩니다.
             sudo docker network create appnet || true
+            # ----------/deploy:docker-ensure---------
 
-            # nginx conf (HTTP→HTTPS 리다이렉트 + 프록시)
+            # -----------deploy:nginx-conf---------
+            # nginx conf (HTTP→HTTPS 리다이렉트 + 프록시) 
+            # 목적: 80 포트는 443으로 리다이렉트 강제, 443은 web:8000으로 프록시
+            # 즉, 80(hhtp), 443(https)로 사용자의 요청이 오면, nginx컨테이너로 전달하고, 이후 들어온 요청을 실제 웹앱이 있는 컨테이너로 전달한다.
+            # Nginx 가 읽을 서버 설정 파일을 nginx/conf.d/default.conf 경로에 생성
             cat > nginx/conf.d/default.conf << 'EOF'
             server {
               listen 80;
@@ -161,15 +215,13 @@ jobs:
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
               }
-
-              location = /healthz {
-                proxy_pass http://web:8000/healthz;
-              }
             }
             EOF
+            # ----------/deploy:nginx-conf---------
 
-            # compose 작성
-            cat > docker-compose.prod.yml << 'EOF'
+            # -----------deploy:compose-file---------
+            # 개발 과정임을 고려하여 docker-compose.yml 작성, 추후 운영환경을 위해 docker-compose.prod.yml 별도 작성 예정.
+            cat > docker-compose.yml << 'EOF'
             services:
               db:
                 image: mysql:8
@@ -194,12 +246,6 @@ jobs:
                 depends_on:
                   db:
                     condition: service_healthy
-                # 임시 주석 처리, 백엔드에서 /healthz 엔드포인트 구현 전까지 비활성화
-                # healthcheck:
-                #   test: ["CMD-SHELL", "curl -fsS http://localhost:8000/healthz || exit 1"]
-                #   interval: 10s
-                #   timeout: 3s
-                #   retries: 12
 
               nginx:
                 image: nginx:1.27-alpine
@@ -207,9 +253,6 @@ jobs:
                 restart: always
                 depends_on:
                   - web
-                  # 임시 주석 처리, healthcheck 켜놓은 이후로 다시 해제 예정
-                  # web:
-                  #   condition: service_healthy
                 ports:
                   - "80:80"
                   - "443:443"
@@ -217,12 +260,6 @@ jobs:
                   - ./nginx/conf.d:/etc/nginx/conf.d:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
                 networks: [appnet]
-                # 임시 주석 처리
-                # healthcheck:
-                #   test: ["CMD-SHELL", "curl -f http://localhost/healthz || exit 1"]
-                #   interval: 10s
-                #   timeout: 3s
-                #   retries: 12
 
             networks:
               appnet:
@@ -231,25 +268,15 @@ jobs:
             volumes:
               mysql_data:
             EOF
+            # ----------/deploy:compose-file---------
 
-            # 이미지 태그 지정(sha 권장)
-            sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.prod.yml pull
-            sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.prod.yml up -d
-            sudo docker compose -f docker-compose.prod.yml ps
+            # -----------deploy:compose-up---------
+            # 최신 이미지 pull & 컨테이너 기동
+            sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.yml pull
+            sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.yml up -d
+            sudo docker compose ps
+            # ----------/deploy:compose-up---------
 
-            # E2E 헬스체크 (HTTPS 경유)
-            for i in {1..40}; do
-              CODE=$(curl -s -o /dev/null -w "%{http_code}" https://wisheasy.site/healthz || true)
-              if [ "$CODE" = "200" ]; then
-                echo "NGINX -> WEB health OK (HTTP 200)"; break
-              fi
-              echo "Waiting for stack to be ready... ($i)"; sleep 3
-            done
 
-            if [ "$CODE" != "200" ]; then
-              echo "ERROR: stack health check failed"
-              echo "==== nginx logs ===="; sudo docker logs nginx_edge --tail 200 || true
-              echo "==== web logs ====";    sudo docker logs najungh_web --tail 200 || true
-              echo "==== mysql logs ===="; sudo docker logs mysql_db --tail 200 || true
-              exit 1
-            fi
+              
+  #-------------/Deploy-------------
