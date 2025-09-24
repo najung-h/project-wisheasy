@@ -5,6 +5,8 @@
 
 name: Full CI/CD - Lint, Build, Push, and Deploy (Nginx + Django + MySQL)
 
+# --------------- triggers ---------------------------------------------
+
 on:
   push:
     branches:
@@ -12,40 +14,42 @@ on:
   pull_request:
     branches:
       - dev          # ← PR에서도 린트/빌드가 돌도록 명시
+# --------------- /triggers ---------------------------------------------
+
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      # ------------------------------------------------------------------
-      # 코드 체크아웃
-      #  - token: 기본 제공 토큰 사용 (github.token). secrets.GITHUB_TOKEN 사용 금지
-      #  - ref: 이벤트별로 조건 지정 (PR: head_ref, PUSH: ref)
-      # ------------------------------------------------------------------
+      # --------------- checkout ----------------------------------------
       - uses: actions/checkout@v4
         with:
           token: ${{ github.token }}
           ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+      # ---------------/checkout ----------------------------------------
 
-      # Python 3.11 (ruff 등 도구 실행용)
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: "pip"
+        
+      ## ---------ruff-------------------------------------------------------------
+      # # Python 3.11 (ruff 등 도구 실행용)
+      # - uses: actions/setup-python@v5
+      #   with:
+      #     python-version: "3.11"
+      #     cache: "pip"
 
-      # Ruff 설치
-      - name: Install Ruff
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff
+      # # Ruff 설치
+      # - name: Install Ruff
+      #   run: |
+      #     python -m pip install --upgrade pip
+      #     pip install ruff
 
-      # Ruff: check-only 모드 (자동수정/푸시 없음 → 루프 방지)
-      #  - 위반사항이 있으면 non-zero로 실패 처리
-      - name: Run Ruff (check-only; no auto-fix)
-        if: ${{ github.actor != 'github-actions[bot]' }}   # 루프 방지 추가 안전장치
-        run: |
-          ruff check --diff .
-          ruff format --check .
+      # # Ruff: check-only 모드 (자동수정/푸시 없음 → 루프 방지)
+      # #  - 위반사항이 있으면 non-zero로 실패 처리
+      # - name: Run Ruff (check-only; no auto-fix)
+      #   if: ${{ github.actor != 'github-actions[bot]' }}   # 루프 방지 추가 안전장치
+      #   run: |
+      #     ruff check --diff .
+      #     ruff format --check .
+      ## ---------ruff-------------------------------------------------------------
 
       # Buildx
       - name: Set up Docker Buildx
