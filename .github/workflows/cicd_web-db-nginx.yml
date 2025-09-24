@@ -5,10 +5,10 @@ name: Full CI/CD - Lint, Build, Push, and Deploy (Nginx + Django + MySQL)
 on:
   push:
     branches:
-      - dev          # ← 필요한 브랜치로 교체 가능 (예: main)
+      - feat/ci-cd          # ← 필요한 브랜치로 교체 가능 (예: main)
   pull_request:
     branches:
-      - dev          # ← PR에서도 린트/빌드가 돌도록 명시
+      - feat/ci-cd          # ← PR에서도 린트/빌드가 돌도록 명시
 # --------------- /triggers ---------------------------------------------
 
 
@@ -73,8 +73,9 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/najungh:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/wisheasy:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/wisheasy:sha-${{ github.sha }}
+          
       #-------------/Build:build_n_push-------------
   #-------------/Build-------------
 
@@ -121,7 +122,7 @@ jobs:
             DJANGO_DEBUG=false
             DJANGO_ALLOWED_HOSTS=*
 
-            DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh
+            DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/wisheasy
             IMAGE_TAG=sha-${{ github.sha }}
             EOF
             # ----------/deploy:env---------
@@ -206,7 +207,7 @@ jobs:
               ssl_session_timeout 1d;
               ssl_session_cache shared:MozSSL:10m;
               ssl_session_tickets off;
-              ssl_dhparam /etc/ssl/certs/dhparam.pem;
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
               add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
@@ -242,7 +243,7 @@ jobs:
 
               web:
                 image: "${DOCKERHUB_IMAGE}:${IMAGE_TAG}"
-                container_name: najungh_web
+                container_name: wisheasy_web
                 restart: always
                 env_file: .env
                 networks: [appnet]
@@ -275,11 +276,13 @@ jobs:
 
             # -----------deploy:compose-up---------
             # 최신 이미지 pull & 컨테이너 기동
-            sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.yml pull
-            sudo DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/najungh:sha-${{ github.sha }} docker compose -f docker-compose.yml up -d
+            sudo docker compose -f docker-compose.yml pull
+            sudo docker compose -f docker-compose.yml up -d
             sudo docker compose ps
             # ----------/deploy:compose-up---------
 
 
 
   #-------------/Deploy-------------
+    
+      
