@@ -207,7 +207,7 @@ jobs:
               ssl_session_timeout 1d;
               ssl_session_cache shared:MozSSL:10m;
               ssl_session_tickets off;
-              ssl_dhparam /etc/ssl/certs/dhparam.pem;
+              ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
               add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
