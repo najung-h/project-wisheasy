@@ -4,3 +4,5 @@ mysql-connector-python
 requests
 Django==5.2.6
 gunicorn
+django-environ
+mysqlclient
