@@ -131,7 +131,10 @@ jobs:
             NGINX_SVC=nginx_edge
 
             EOF
-            set -a; . ./.env; set +a
+            COMPOSE_FILE=docker-compose.yml
+            WEB_SVC=wisheasy_web
+            DB_SVC=mysql_db
+            NGINX_SVC=nginx_edge
             # ----------/deploy:env---------
 
             # -----------deploy:docker-ensure---------
