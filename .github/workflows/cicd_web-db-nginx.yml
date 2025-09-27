@@ -308,67 +308,67 @@ jobs:
             sudo docker compose ps
             # ----------/deploy:compose-up---------
 
-            # -----------deploy:db-wait-and-init---------
-            # [로그] 현재 단계가 DB 대기 및 초기화임을 알림
-            echo "[deploy:db-wait-and-init] MySQL이 준비될 때까지 대기 중입니다."
+            # # -----------deploy:db-wait-and-init---------
+            # # [로그] 현재 단계가 DB 대기 및 초기화임을 알림
+            # echo "[deploy:db-wait-and-init] MySQL이 준비될 때까지 대기 중입니다."
 
-            # 최대 60회(= 약 120초)까지 MySQL이 준비될 때까지 반복 대기
-            for i in {1..60}; do
-              # DB 컨테이너 내부에서 mysqladmin ping 실행하여 서버가 응답 가능한지 확인
-              # - docker exec $DB_SVC: $DB_SVC(예: mysql_db) 컨테이너 안으로 들어가 명령 실행
-              # - sh -lc '...': 로그인 쉘(-l) + 문자열 전체를 하나의 커맨드로 실행(-c)
-              # - mysqladmin ping: MySQL 데몬이 살아있고 접속 가능한지 확인하는 유틸
-              # - --silent: 준비가 안 되면 아무 것도 출력하지 않음(반환코드로 판단)
-              if sudo docker exec "$DB_SVC" sh -lc 'mysqladmin ping -uroot -p"$MYSQL_ROOT_PASSWORD" --silent'; then
-                echo "[deploy(db:wait-and-init)] MySQL 준비 완료"; break
-              fi
-              echo "[deploy(db:wait-and-init)] MySQL 대기 중... ($i)"
-              sleep 2
-            done  
+            # # 최대 60회(= 약 120초)까지 MySQL이 준비될 때까지 반복 대기
+            # for i in {1..60}; do
+            #   # DB 컨테이너 내부에서 mysqladmin ping 실행하여 서버가 응답 가능한지 확인
+            #   # - docker exec $DB_SVC: $DB_SVC(예: mysql_db) 컨테이너 안으로 들어가 명령 실행
+            #   # - sh -lc '...': 로그인 쉘(-l) + 문자열 전체를 하나의 커맨드로 실행(-c)
+            #   # - mysqladmin ping: MySQL 데몬이 살아있고 접속 가능한지 확인하는 유틸
+            #   # - --silent: 준비가 안 되면 아무 것도 출력하지 않음(반환코드로 판단)
+            #   if sudo docker exec "$DB_SVC" sh -lc 'mysqladmin ping -uroot -p"$MYSQL_ROOT_PASSWORD" --silent'; then
+            #     echo "[deploy(db:wait-and-init)] MySQL 준비 완료"; break
+            #   fi
+            #   echo "[deploy(db:wait-and-init)] MySQL 대기 중... ($i)"
+            #   sleep 2
+            # done  
 
-            # [로그] 데이터베이스/사용자 보장 단계 안내
-            echo "[deploy(db:wait-and-init)] 데이터베이스와 사용자 존재 여부 확인합니다."
+            # # [로그] 데이터베이스/사용자 보장 단계 안내
+            # echo "[deploy(db:wait-and-init)] 데이터베이스와 사용자 존재 여부 확인합니다."
 
-            # DB 컨테이너 내부에서 mysql 클라이언트로 SQL을 실행하여
-            # 1) 데이터베이스가 없으면 생성
-            # 2) 유저가 없으면 생성
-            # 3) 권한 부여 및 적용
-            sudo docker exec $DB_SVC sh -lc '
-              mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "
-                /* 데이터베이스가 없으면 생성 (멱등 보장) */
-                CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE:-${MYSQL_DB}}
-                  DEFAULT CHARACTER SET utf8mb4
-                  COLLATE utf8mb4_unicode_ci;
+            # # DB 컨테이너 내부에서 mysql 클라이언트로 SQL을 실행하여
+            # # 1) 데이터베이스가 없으면 생성
+            # # 2) 유저가 없으면 생성
+            # # 3) 권한 부여 및 적용
+            # sudo docker exec $DB_SVC sh -lc '
+            #   mysql -uroot -p"$MYSQL_ROOT_PASSWORD" -e "
+            #     /* 데이터베이스가 없으면 생성 (멱등 보장) */
+            #     CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE:-${MYSQL_DB}}
+            #       DEFAULT CHARACTER SET utf8mb4
+            #       COLLATE utf8mb4_unicode_ci;
 
-                /* 애플리케이션 접속용 계정을 없으면 생성 (멱등 보장)
-                  '\'' ... '\'' 는 SQL 문자열 내에서 작은따옴표를 이스케이프하기 위한 표기 */
-                CREATE USER IF NOT EXISTS '\''${MYSQL_USER}'\''@'\'%\'' 
-                  IDENTIFIED BY '\''${MYSQL_PASSWORD}'\'';
+            #     /* 애플리케이션 접속용 계정을 없으면 생성 (멱등 보장)
+            #       '\'' ... '\'' 는 SQL 문자열 내에서 작은따옴표를 이스케이프하기 위한 표기 */
+            #     CREATE USER IF NOT EXISTS '\''${MYSQL_USER}'\''@'\'%\'' 
+            #       IDENTIFIED BY '\''${MYSQL_PASSWORD}'\'';
 
-                /* 해당 DB에 대한 모든 권한 부여 (개발/테스트 편의 목적)*/
-                GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE:-${MYSQL_DB}}.* TO '\''${MYSQL_USER}'\''@'\'%\''; 
+            #     /* 해당 DB에 대한 모든 권한 부여 (개발/테스트 편의 목적)*/
+            #     GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE:-${MYSQL_DB}}.* TO '\''${MYSQL_USER}'\''@'\'%\''; 
 
-                /* 권한 변경사항 즉시 반영 */
-                FLUSH PRIVILEGES;
-              "
-            '
-            # -----------/deploy:db-wait-and-init---------
+            #     /* 권한 변경사항 즉시 반영 */
+            #     FLUSH PRIVILEGES;
+            #   "
+            # '
+            # # -----------/deploy:db-wait-and-init---------
 
-            # -----------deploy:migrate-and-static---------
-            # 배포 단계 중 migrate와 collectstatic 작업이 수행되는 부분
-            echo "[deploy:migrate-and-static] Django migrate과 collectstatic 수행하겠습니다."
-            # 도커 컨테이너 안에서, 실행 대상인 컨테이너 이름에 대해서, 환경 변수 로드해서 뒤의 문자열을 명령으로 실행하라.
-            # -  Django의 마이그레이션 적용하여 DB  스키마를 현재 모델 정의와 동기화하자.
-            # -  noinput 옵션은 실행 중 사용자 입력을 요구하지 않고 자동으로 진행한다.
-            # -  &&  는 migrate가 성공해야 collectstatic 실행하겠다는 의미
-            # -  모든 앱의 정적 파일을 static_root의 디렉토리로 복사하며
-            # -  운영환경에서 nginx 가 정적 파일을 제공할 수 있도록 준비한다.
-            # -  ---noinput 옵션으로 파일 덮어쓰기 여부 등 질문에 자동으로 yes를 응답하게 된다.
-            sudo docker exec $WEB_SVC bash -lc "
-              python manage.py migrate --noinput &&
-              python manage.py collectstatic --noinput
-            "
-            # -----------/deploy:migrate-and-static---------
+            # # -----------deploy:migrate-and-static---------
+            # # 배포 단계 중 migrate와 collectstatic 작업이 수행되는 부분
+            # echo "[deploy:migrate-and-static] Django migrate과 collectstatic 수행하겠습니다."
+            # # 도커 컨테이너 안에서, 실행 대상인 컨테이너 이름에 대해서, 환경 변수 로드해서 뒤의 문자열을 명령으로 실행하라.
+            # # -  Django의 마이그레이션 적용하여 DB  스키마를 현재 모델 정의와 동기화하자.
+            # # -  noinput 옵션은 실행 중 사용자 입력을 요구하지 않고 자동으로 진행한다.
+            # # -  &&  는 migrate가 성공해야 collectstatic 실행하겠다는 의미
+            # # -  모든 앱의 정적 파일을 static_root의 디렉토리로 복사하며
+            # # -  운영환경에서 nginx 가 정적 파일을 제공할 수 있도록 준비한다.
+            # # -  ---noinput 옵션으로 파일 덮어쓰기 여부 등 질문에 자동으로 yes를 응답하게 된다.
+            # sudo docker exec $WEB_SVC bash -lc "
+            #   python manage.py migrate --noinput &&
+            #   python manage.py collectstatic --noinput
+            # "
+            # # -----------/deploy:migrate-and-static---------
 
 
   #-------------/Deploy-------------
