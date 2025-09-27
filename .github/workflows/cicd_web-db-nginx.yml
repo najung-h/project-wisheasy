@@ -246,6 +246,14 @@ jobs:
                 container_name: wisheasy_web
                 restart: always
                 env_file: .env
+                environment:
+                  SECRET_KEY: ${DJANGO_SECRET_KEY}
+                  DJANGO_DEBUG: ${DJANGO_DEBUG}
+                  MYSQL_HOST: ${DB_HOST:-db}
+                  MYSQL_PORT: ${DB_PORT:-3306}
+                  MYSQL_DATABASE: ${MYSQL_DATABASE}
+                  MYSQL_USER: ${MYSQL_USER}
+                  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
                 networks: [appnet]
                 depends_on:
                   db:
