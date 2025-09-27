@@ -31,7 +31,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 # 이제 설정 읽기
 SECRET_KEY = env("SECRET_KEY")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
 
 
 # Application definition
