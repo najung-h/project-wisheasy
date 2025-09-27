@@ -84,8 +84,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": env.str("MYSQL_DB"),
+        "USER": env.str("MYSQL_USER"),
+        "PASSWORD": env.str("MYSQL_PASSWORD"),
+        "HOST": env.str("MYSQL_HOST", default="localhost"),
+        "PORT": env.int("MYSQL_PORT", default=3306),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+        },
+        "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=0),
     }
 }
 
