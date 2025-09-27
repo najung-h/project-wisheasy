@@ -5,10 +5,10 @@ name: Full CI/CD - Lint, Build, Push, and Deploy (Nginx + Django + MySQL)
 on:
   push:
     branches:
-      - feat/ci-cd          # ← 필요한 브랜치로 교체 가능 (예: main)
+      - feat/db-init          # ← 필요한 브랜치로 교체 가능 (예: main)
   pull_request:
     branches:
-      - feat/ci-cd          # ← PR에서도 린트/빌드가 돌도록 명시
+      - dev          # ← PR에서도 린트/빌드가 돌도록 명시
 # --------------- /triggers ---------------------------------------------
 
 
