@@ -255,6 +255,8 @@ jobs:
                   MYSQL_USER: ${MYSQL_USER}
                   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
                   MYSQL_DB: ${MYSQL_DATABASE}
+                volumes:
+                  - ./staticfiles:/app/staticfiles
                 networks: [appnet]
                 depends_on:
                   db:
@@ -272,6 +274,7 @@ jobs:
                 volumes:
                   - ./nginx/conf.d:/etc/nginx/conf.d:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
+                  - ./staticfiles:/usr/share/nginx/html/static:ro 
                 networks: [appnet]
 
             networks:
