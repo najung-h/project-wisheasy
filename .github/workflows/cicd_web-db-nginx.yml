@@ -254,6 +254,7 @@ jobs:
                   MYSQL_DATABASE: ${MYSQL_DATABASE}
                   MYSQL_USER: ${MYSQL_USER}
                   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+                  MYSQL_DB: ${MYSQL_DATABASE}
                 networks: [appnet]
                 depends_on:
                   db:
