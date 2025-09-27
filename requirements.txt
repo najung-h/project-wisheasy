@@ -1,8 +1,7 @@
 fastapi
 uvicorn
-mysql-connector-python
 requests
 Django==5.2.6
 gunicorn
 django-environ
-mysqlclient
+mysqlclient==2.2.7
