@@ -46,7 +46,17 @@ RUN pip install --upgrade pip && \
 # 애플리케이션 소스 전체 복사
 COPY . .
 
-# compose에서 80:8000으로 매핑하는 과정이 있으니 80으로 냅둠
-EXPOSE 80
+# docker-compose 파일에도 포트 8000으로 변경
+EXPOSE 8000
 
-CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+# uvicorn -> gunicorn
+# server:app -> config.wsgi:application -> Django는 WSGI 규약을 따르면서, APPLICATION이라는 객체로 진입점을 정함.
+# FastAPI는 uvicorn, Django는 기본 WSGI 기반 gunicorn 을 많이 쓴다.
+# "--bind", "0.0.0.0:8000" 컨테이너 내부에서 모든 인터페이스로 8000포트를 리슨
+# 그래야 호스트 / 로드밸런서가 포트 매핑으로 접근할 수 있게 됨.
+# --access-logfile : 도커에서 엑세스 로그를 수집하기 좋게끔
+# --error-logfile : 도커에서 에러 로그를 수집하기 좋게끔
+CMD ["gunicorn", "config.wsgi:application", \
+     "--bind", "0.0.0.0:8000", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-"]
