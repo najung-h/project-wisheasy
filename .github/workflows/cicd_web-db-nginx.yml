@@ -221,6 +221,11 @@ jobs:
 
               add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
+              location /static/ {
+                alias /usr/share/nginx/html/static/;
+                try_files $uri $uri/ =404;
+              }
+                
               location / {
                 proxy_pass http://web:8000;
                 proxy_http_version 1.1;
