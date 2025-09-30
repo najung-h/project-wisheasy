@@ -222,7 +222,7 @@ jobs:
               add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
               location /static/ {
-                alias /usr/share/nginx/html/static/;
+                alias /app/staticfiles/;
                 try_files $uri $uri/ =404;
               }
 
@@ -296,7 +296,7 @@ jobs:
                 volumes:
                   - ./nginx/conf.d:/etc/nginx/conf.d:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
-                  - ./staticfiles:/usr/share/nginx/html/static:ro 
+                  - ./staticfiles:/app/staticfiles:ro
                 networks: [appnet]
 
             networks:
