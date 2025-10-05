@@ -119,7 +119,7 @@ jobs:
             DB_PORT=3306
 
             DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-            DJANGO_DEBUG=false
+            DJANGO_DEBUG=True
             DJANGO_ALLOWED_HOSTS=*
 
             DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/wisheasy
