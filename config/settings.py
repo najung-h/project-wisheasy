@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # environ 초기화
 env = environ.Env(
-    DEBUG=(bool, False)  # 기본값 False
+    DEBUG=env.bool("DJANGO_DEBUG", default=False)  # 기본값 False
 )
 
 # .env 파일 로드
