@@ -21,9 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # environ 초기화
-env = environ.Env(
-    DEBUG=env.bool("DJANGO_DEBUG", default=False)  # 기본값 False
-)
+env = environ.Env()
+
+DEBUG=env.bool("DJANGO_DEBUG", default=False)  # 기본값 False
+
 
 # .env 파일 로드
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
