@@ -9,9 +9,11 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+
+import environ
 import os
 from pathlib import Path
-import environ
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -48,6 +50,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites", # allauth 필수 
+    "allauth", 
+    "allauth.account", 
+    "allauth.socialaccount", 
+    "allauth.socialaccount.providers.google", 
 ]
 
 MIDDLEWARE = [
@@ -56,6 +63,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware", 
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -147,3 +155,32 @@ STATICFILES_DIRS = [
 
 # 배포시 모든 정적 파일을 모을 경로
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# 커스텀 유저 모델 선언
+AUTH_USER_MODEL = "accounts.User"
+
+# 사이트 ID (allauth 필수)
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend", # django 기본 인증
+    "allauth.account.auth_backends.AuthenticationBackend", # allauth 추가
+]
+
+# 로그인/로그아웃 후 이동
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+
+# allauth 기본 옵션 (원하면 조정)
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "none"  # 운영에서는 "mandatory" 권장
+SOCIALACCOUNT_QUERY_EMAIL = True
+
+# 구글 로그인 프로바이더 설정
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},  # refresh_token 원하면 "offline"
+    }
+}
