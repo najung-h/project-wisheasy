@@ -93,7 +93,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
+            set -Eeuo pipefail
 
             # -----------deploy:prep---------
             # -p 명령어(폴더가 없으면 만들고, 있어도 실패 안함)를 통해, 다음 단계에서 필요한 폴더 구조가 확실하게 존재하도록 보장
@@ -276,8 +276,8 @@ jobs:
                 healthcheck:
                   test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
                   interval: 5s
-                  timeout: 3s
-                  retries: 30
+                  timeout: 5s
+                  retries: 90
 
               web:
                 image: "${DOCKERHUB_IMAGE}:${IMAGE_TAG}"
