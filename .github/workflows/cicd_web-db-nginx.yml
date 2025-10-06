@@ -125,11 +125,6 @@ jobs:
             DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/wisheasy
             IMAGE_TAG=sha-${{ github.sha }}
 
-            COMPOSE_FILE=docker-compose.yml
-            WEB_SVC=wisheasy_web
-            DB_SVC=mysql_db
-            NGINX_SVC=nginx_edge
-
             EOF
             COMPOSE_FILE=docker-compose.yml
             WEB_SVC=wisheasy_web
