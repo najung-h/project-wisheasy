@@ -141,7 +141,6 @@ jobs:
             cat > ./mysql/conf.d/my.cnf << 'EOF'
             [mysqld]
             innodb_buffer_pool_size=64M
-            innodb_log_file_size=32M
             max_connections=50
             tmp_table_size=16M
             table_open_cache=200
@@ -149,7 +148,6 @@ jobs:
             read_buffer_size=1M
             read_rnd_buffer_size=1M
             join_buffer_size=1M
-            query_cache_size=0
             EOF
             # -----------/deploy:mysql-conf---------
 
