@@ -137,6 +137,28 @@ jobs:
             NGINX_SVC=nginx_edge
             # ----------/deploy:env---------
 
+            # -----------deploy:mysql-conf---------
+            # MySQL 설정파일 초기화 및 재생성
+            # (기존 파일이 있더라도 강제로 삭제 후 새로 작성)
+            sudo mkdir -p ./mysql/conf.d
+            sudo rm -f ./mysql/conf.d/my.cnf
+
+            cat > ./mysql/conf.d/my.cnf << 'EOF'
+            [mysqld]
+            innodb_buffer_pool_size=64M
+            innodb_log_file_size=32M
+            max_connections=50
+            tmp_table_size=16M
+            table_open_cache=200
+            sort_buffer_size=1M
+            read_buffer_size=1M
+            read_rnd_buffer_size=1M
+            join_buffer_size=1M
+            query_cache_size=0
+            EOF
+            # -----------/deploy:mysql-conf---------
+
+
             # -----------deploy:docker-ensure---------
             # Docker/Compose 보장
             # 1) Docker CE 설치 여부 확인, 없으면 설치
@@ -286,8 +308,6 @@ jobs:
                     condition: service_healthy
                 command: >
                   sh -lc "
-                  python manage.py migrate --noinput &&
-                  python manage.py collectstatic --noinput &&
                   gunicorn config.wsgi:application --bind 0.0.0.0:8000
                   "
 
