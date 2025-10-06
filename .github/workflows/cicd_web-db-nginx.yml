@@ -332,8 +332,8 @@ jobs:
 
             # -----------deploy:compose-up---------
             # 최신 이미지 pull & 컨테이너 기동
-            sudo docker compose -f docker-compose.yml pull
-            sudo docker compose -f docker-compose.yml up -d
+            sudo docker compose -f "$COMPOSE_FILE" pull
+            sudo docker compose -f "$COMPOSE_FILE" up -d
             sudo docker compose ps
             # ----------/deploy:compose-up---------
 
