@@ -254,6 +254,7 @@ jobs:
                   MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
                 volumes:
                   - mysql_data:/var/lib/mysql
+                  - ./mysql/conf.d:/etc/mysql/conf.d:ro 
                 networks: [appnet]
                 healthcheck:
                   test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
