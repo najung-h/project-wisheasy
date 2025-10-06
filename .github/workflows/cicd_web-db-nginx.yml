@@ -93,7 +93,7 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            set -e
+            set -Eeuo pipefail
 
             # -----------deploy:prep---------
             # -p 명령어(폴더가 없으면 만들고, 있어도 실패 안함)를 통해, 다음 단계에서 필요한 폴더 구조가 확실하게 존재하도록 보장
@@ -276,8 +276,8 @@ jobs:
                 healthcheck:
                   test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}"]
                   interval: 5s
-                  timeout: 3s
-                  retries: 30
+                  timeout: 5s
+                  retries: 90
 
               web:
                 image: "${DOCKERHUB_IMAGE}:${IMAGE_TAG}"
@@ -333,8 +333,9 @@ jobs:
             # -----------deploy:compose-up---------
             # 최신 이미지 pull & 컨테이너 기동
             sudo docker compose -f "$COMPOSE_FILE" pull
-            sudo docker compose -f "$COMPOSE_FILE" up -d
-            sudo docker compose ps
+            # DB만 먼저
+            sudo docker compose -f "$COMPOSE_FILE" up -d db
+            sudo docker compose -f "$COMPOSE_FILE" ps
             # ----------/deploy:compose-up---------
 
             # -----------deploy:db-wait-and-init---------
@@ -385,7 +386,15 @@ jobs:
 
             # -----------deploy:migrate-and-static---------
             # 배포 단계 중 migrate와 collectstatic 작업이 수행되는 부분
+            # 목적: Django 프로젝트의 데이터베이스 스키마를 최신 상태로 동기화하고,
+            #       정적 파일을 모아 Nginx가 서비스할 수 있도록 준비하는 단계입니다.
+            #       (== 웹앱이 실제로 뜨기 전에 내부 구조와 자산을 세팅하는 작업)
             echo "[deploy:migrate-and-static] Django migrate과 collectstatic 수행하겠습니다."
+            # ? 왜 웹앱(Gunicorn)이 뜨기 전에 migrate를 하나요?
+            #  └ manage.py migrate 명령은 웹 서버(gunicorn) 실행과 무관하게, 
+            #    Django ORM을 통해 직접 DB에 접속하여 스키마를 적용
+            #  └ 즉, DB만 살아있으면 (웹앱이 뜨기 전이라도) 독립적으로 실행 가능
+            #  └ 이렇게 하면 웹 서버가 DB 미준비 상태에서 오류로 죽는 상황을 예방할 수 있음
             # 도커 컨테이너 안에서, 실행 대상인 컨테이너 이름에 대해서, 환경 변수 로드해서 뒤의 문자열을 명령으로 실행하라.
             # -  Django의 마이그레이션 적용하여 DB  스키마를 현재 모델 정의와 동기화하자.
             # -  noinput 옵션은 실행 중 사용자 입력을 요구하지 않고 자동으로 진행한다.
@@ -393,11 +402,38 @@ jobs:
             # -  모든 앱의 정적 파일을 static_root의 디렉토리로 복사하며
             # -  운영환경에서 nginx 가 정적 파일을 제공할 수 있도록 준비한다.
             # -  ---noinput 옵션으로 파일 덮어쓰기 여부 등 질문에 자동으로 yes를 응답하게 된다.
-            sudo docker exec $WEB_SVC bash -lc "
-              python manage.py migrate --noinput &&
-              python manage.py collectstatic --noinput
+            # sudo docker exec $WEB_SVC bash -lc "
+            # 기존 명령어는 웹 컨테이너가 이미 떠 있어야 동작하는데
+            # 우리는 웹이 뜨기 전에 migrate/collectstatic을 하려는 거기 때문에
+            # 실행 중 컨테이너에 붙는 exec 가 아니라, 일회성 컨테이너를 띄우는 run --rm 을 써야한다.
+            # 요약
+            # 1. 웹 컨테이너가 아직 안 떠 있어도 실행 가능 (이미지 기반으로 일회성 컨테이너 생성)
+            # 2. 실행이 끝나면 컨테이너 자동 제거 -> 환경 깨끗함
+            # 3. 웹 서버 메모리/상태에 영향 없이 마이그레이션 작업만 수행
+            
+            # (1) DB 마이그레이션: 이미 만들어진 테이블이 있어도 기록만 맞추도록 안전장치 포함
+            sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
+              echo '[deploy:migrate-and-static] (1/2) DB 마이그레이션 시작...';
+              python manage.py migrate --noinput || python manage.py migrate --fake-initial --noinput;
+              echo '[deploy:migrate-and-static] (1/2) DB 마이그레이션 완료';
             "
+
+            # (2) 정적 파일 수집
+            sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
+              echo '[deploy:migrate-and-static] (2/2) 정적 파일 수집 시작...';
+              python manage.py collectstatic --noinput;
+              echo '[deploy:migrate-and-static] (2/2) 정적 파일 수집 완료';
+            "
+
+            echo "[deploy:migrate-and-static] 완료되었습니다."
             # -----------/deploy:migrate-and-static---------
+
+            # -----------deploy:start web & nginx---------
+            sudo docker compose -f "$COMPOSE_FILE" up -d web nginx
+            sudo docker compose -f "$COMPOSE_FILE" ps
+            echo "[deploy:done] 배포 완료"
+            # ----------/deploy:start---------
+
 
 
   #-------------/Deploy-------------
