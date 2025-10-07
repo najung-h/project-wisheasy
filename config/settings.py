@@ -197,3 +197,4 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {"access_type": "online"},  # refresh_token 원하면 "offline"
     }
 }
+ACCOUNT_LOGOUT_ON_GET = True

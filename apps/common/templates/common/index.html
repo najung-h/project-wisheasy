@@ -1,4 +1,5 @@
 {% load static %}
+{% load socialaccount %}
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -12,6 +13,15 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Flash messages (선택) -->
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
         <!-- App Header -->
         <header class="app-header">
             <img src="{% static "media/logo.png" %}" alt="쉽길 로고" class="app-logo">
@@ -23,10 +33,19 @@
         <main class="main-card">
             <!-- Card Header -->
             <div class="card-header">
+                {% if request.user.is_authenticated %}
+                <!-- 로그인된 상태 -->
+                <a class="login-btn" href="{% url 'account_logout' %}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    로그아웃
+                </a>
+                {% else %}
+                <!-- 로그인 안 된 상태 -->
                 <button class="login-btn" onclick="showLoginModal()">
                     <i class="fas fa-user"></i>
                     로그인
                 </button>
+                {% endif %}
                 <button class="mypage-btn" onclick="showMyPage()">
                     <i class="fas fa-cog"></i>
                     마이페이지
@@ -53,6 +72,8 @@
             </div>
         </main>
     </div>
+
+    <span id="googleLoginUrl" data-url="{% provider_login_url 'google' next='/' %}" hidden></span>
 
     <script src="{% static "js/index.js" %}"></script>
 
