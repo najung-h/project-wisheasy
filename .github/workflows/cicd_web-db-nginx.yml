@@ -124,6 +124,9 @@ jobs:
 
             DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/wisheasy
             IMAGE_TAG=sha-${{ github.sha }}
+            
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
 
             EOF
             COMPOSE_FILE=docker-compose.yml
@@ -411,16 +414,23 @@ jobs:
             
             # (1) DB 마이그레이션: 이미 만들어진 테이블이 있어도 기록만 맞추도록 안전장치 포함
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
-              echo '[deploy:migrate-and-static] (1/2) DB 마이그레이션 시작...';
+              echo '[deploy:migrate-and-static] (1/3) DB 마이그레이션 시작...';
               python manage.py migrate --noinput || python manage.py migrate --fake-initial --noinput;
-              echo '[deploy:migrate-and-static] (1/2) DB 마이그레이션 완료';
+              echo '[deploy:migrate-and-static] (1/3) DB 마이그레이션 완료';
             "
 
-            # (2) 정적 파일 수집
+            # (2) Google SocialApp 적용
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
-              echo '[deploy:migrate-and-static] (2/2) 정적 파일 수집 시작...';
+              echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 시작...';
+              python manage.py apply_socialapp || echo '[deploy:apply-socialapp] 이미 SocialApp이 존재합니다.';
+              echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 완료';
+            "
+
+            # (3) 정적 파일 수집
+            sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
+              echo '[deploy:migrate-and-static] (3/3) 정적 파일 수집 시작...';
               python manage.py collectstatic --noinput;
-              echo '[deploy:migrate-and-static] (2/2) 정적 파일 수집 완료';
+              echo '[deploy:migrate-and-static] (3/3) 정적 파일 수집 완료';
             "
 
             echo "[deploy:migrate-and-static] 완료되었습니다."
