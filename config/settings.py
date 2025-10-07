@@ -36,6 +36,19 @@ SECRET_KEY = env("SECRET_KEY")
 
 ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
 
+# 신뢰된 오리진 목록 
+CSRF_TRUSTED_ORIGINS = [
+    "https://wisheasy.site",
+    "https://www.wisheasy.site",   # www 쓰면 함께
+]
+
+# 세션/CSRF 쿠키를 HTTPS 연결에서만 전송 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+# 실제 클라이언트가 HTTPS로 전송했음을 장고에게 알려주는 힌트 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # 프록시가 이 헤더를 넣어줄 때
+
 
 # Application definition
 
