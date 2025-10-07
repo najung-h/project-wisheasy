@@ -40,20 +40,15 @@ function closeLoginModal() {
 }
 
 function handleGoogleLogin() {
-    // This is a dummy URL for demonstration purposes.
-    // In a real application, you would use a proper OAuth2 client ID and redirect URI.
-    const oauthURL = 'https://accounts.google.com/o/oauth2/v2/auth?' +
-        'client_id=YOUR_CLIENT_ID.apps.googleusercontent.com&' +
-        'redirect_uri=YOUR_REDIRECT_URI&' +
-        'response_type=code&' +
-        'scope=openid%20email%20profile';
-
-    alert('구글 OAuth 동의 페이지로 이동합니다. (프로토타입)');
-    // In a real app, you would use:
-    // window.location.href = oauthURL;
-    console.log('Redirecting to:', oauthURL);
-    closeLoginModal();
+    const node = document.getElementById('googleLoginUrl');
+    const url = node ? node.dataset.url : null;
+    if (!url) {
+        console.error('Google login URL not found');
+        return;
+    }
+    window.location.href = url;   // ← 실제 allauth 구글 로그인으로 이동
 }
+
 
 function showMyPage() {
     window.location.href = 'settings.html';
