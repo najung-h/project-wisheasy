@@ -122,6 +122,8 @@ jobs:
             DJANGO_DEBUG=True
             DJANGO_ALLOWED_HOSTS=*
 
+            DJANGO_EC2_HOSTS=${{ secrets.DJANGO_EC2_HOSTS }}
+            
             DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/wisheasy
             IMAGE_TAG=sha-${{ github.sha }}
             

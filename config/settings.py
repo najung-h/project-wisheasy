@@ -36,6 +36,10 @@ SECRET_KEY = env("SECRET_KEY")
 
 ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
 
+# EC2 추가
+EC2 = env.list("DJANGO_EC2_HOSTS", default=[])
+ALLOWED_HOSTS += EC2
+
 # 신뢰된 오리진 목록 
 CSRF_TRUSTED_ORIGINS = [
     "https://wisheasy.site",
