@@ -1,4 +1,4 @@
-호선,station,node_id,node_name,floor,type
+line,station,node_id,node_name,floor,type
 "2호선, 신분당선",강남,강남_001,2호선 대합실,지하1층,대합실
 "2호선, 신분당선",강남,강남_002,신분당선 대합실,지하1층,대합실
 "2호선, 신분당선",강남,강남_003,신분당선 대합실,지하3층,대합실
