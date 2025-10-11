@@ -30,10 +30,10 @@ def load_graph(
             df_edges[c] = df_edges[c].astype(str).str.strip()
 
     # 없는 컬럼 대비 기본값
-    if "운영이상여부" not in df_edges.columns:
-        df_edges["운영이상여부"] = 0
-    if "다음역하차_에스컬레이터_유무" not in df_edges.columns:
-        df_edges["다음역하차_에스컬레이터_유무"] = 0
+    if "out_of_order" not in df_edges.columns:
+        df_edges["out_of_order"] = 0
+    if "is_escalator" not in df_edges.columns:
+        df_edges["is_escalator"] = 0
 
     return df_nodes, df_edges
 
@@ -125,8 +125,8 @@ def extend_platform_to_gate(
     if gate_targets.empty:
         return None
 
-    # 다음역하차_에스컬레이터_유무 == 1 가 우선, 없으면 0 중 아무거나
-    gate_targets = gate_targets.sort_values(by="다음역하차_에스컬레이터_유무", ascending=False)
+    # is_escalator == 1 가 우선, 없으면 0 중 아무거나
+    gate_targets = gate_targets.sort_values(by="is_escalator", ascending=False)
     chosen = gate_targets.iloc[0:1]  # 하나만 선택
     return chosen[gate_targets.columns.intersection(df_edges_sub.columns)]
 
@@ -175,7 +175,7 @@ def build_guidance_for_segment(
     steps = []
     for _, r in edges_path.iterrows():
         steps.append(
-            render_relation(r["relation"], r.get("운영이상여부", 0))
+            render_relation(r["relation"], r.get("out_of_order", 0))
         )
 
     # 목적지가 승강장인 경우: 탑승구까지 1단계 연장(우선순위: 다음역하차_에스컬레이터_유무 == 1)
@@ -186,7 +186,7 @@ def build_guidance_for_segment(
         if chosen_edge_to_gate is not None and not chosen_edge_to_gate.empty:
             er = chosen_edge_to_gate.iloc[0]
             steps.append(
-                render_relation(er["relation"], er.get("운영이상여부", 0))
+                render_relation(er["relation"], er.get("out_of_order", 0))
             )
 
     return steps
