@@ -1,17 +1,15 @@
+{% extends "base.html" %}
 {% load static %}
 {% load socialaccount %}
 
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>쉽길 - 쉽고 빠른 지하철 길찾기</title>
+{% block title %}쉽길 - 쉽고 빠른 지하철 길찾기{% endblock title %}
+
+{% block css %}
     <link rel="stylesheet" href="{% static "css/index.css" %}">
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
+{% endblock css %}
+
+
+{% block content %}
     <div class="app-container">
         <!-- Flash messages (선택) -->
         {% if messages %}
@@ -74,9 +72,7 @@
     </div>
 
     <span id="googleLoginUrl" data-url="{% provider_login_url 'google' next='/' %}" hidden></span>
-
-    <script src="{% static "js/index.js" %}"></script>
-
+    
     <!-- Login Modal -->
     <div class="modal" id="loginModal">
         <div class="modal-content">
@@ -94,5 +90,9 @@
             </div>
         </div>
     </div>
-</body>
-</html>
+{% endblock content %}
+
+
+{% block js %}
+    <script src="{% static "js/index.js" %}"></script>
+{% endblock js %}
