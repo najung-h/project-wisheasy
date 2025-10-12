@@ -9,23 +9,33 @@ function initializeMainPage() {
 }
 
 // Navigation functions
+const appContainer = document.getElementById('wisheasy-app');
+
 function goToRoutePage() {
+    // event.target에서부터 가장 가까운 조상 중에 .route-btn 이라는 클래스를 가진 요소를 찾는다.
+    // 찾아낸 버튼에 loading이라는 CSS 클래스를 추가한다. (로딩 중인 ... 표시)
     const btn = event.target.closest('.route-btn');
     btn.classList.add('loading');
 
-    // Simulate loading delay
+    // 0.5초(500ms)간 기다렸다가 코드를 실행한다.
+    // 사용자가 "아, 내 클릭이 잘 인식되었구나"라고 인지할 시간을 벌어주는 UX 장치
     setTimeout(() => {
-        window.location.href = 'route.html';
+        const routePageUrl = appContainer.dataset.routePageUrl;
+        window.location.href = routePageUrl;
     }, 500);
 }
 
 function goToStationPage() {
+    // event.target에서부터 가장 가까운 조상 중에 .route-btn 이라는 클래스를 가진 요소를 찾는다.
+    // 찾아낸 버튼에 loading이라는 CSS 클래스를 추가한다. (로딩 중인 ... 표시)
     const btn = event.target.closest('.station-btn');
     btn.classList.add('loading');
 
-    // Simulate loading delay
+    // 0.5초(500ms)간 기다렸다가 코드를 실행한다.
+    // 사용자가 "아, 내 클릭이 잘 인식되었구나"라고 인지할 시간을 벌어주는 UX 장치
     setTimeout(() => {
-        window.location.href = 'station.html';
+        const stationPageUrl = appContainer.dataset.stationPageUrl;
+        window.location.href = stationPageUrl;
     }, 500);
 }
 
@@ -49,10 +59,10 @@ function handleGoogleLogin() {
     window.location.href = url;   // ← 실제 allauth 구글 로그인으로 이동
 }
 
-
-function showMyPage() {
-    window.location.href = 'settings.html';
-}
+// a 태그로 대체함
+// function showMyPage() {
+//     window.location.href = 'settings.html';
+// }
 
 // Keyboard navigation
 document.addEventListener('keydown', function(e) {

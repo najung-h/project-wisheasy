@@ -44,10 +44,10 @@
                     로그인
                 </button>
                 {% endif %}
-                <button class="mypage-btn" onclick="showMyPage()">
+                <a class="mypage-btn" href="{% url "accounts:settings" %}">
                     <i class="fas fa-cog"></i>
                     마이페이지
-                </button>
+                </a>
             </div>
 
             <!-- Main Buttons -->

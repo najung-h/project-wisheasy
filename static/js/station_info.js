@@ -354,17 +354,25 @@ function showTab(tabName) {
 }
 
 // Navigation
+const appContainer = document.getElementById('wisheasy-app');
+
 function goBack() {
     const stationInfo = document.getElementById('stationInfo');
+    // 역 정보 상세가 화면에 표시된 상태라면, 역 정보 상세를 숨기고 다시 검색 화면으로 이동
     if (stationInfo.style.display === 'block') {
         stationInfo.style.display = 'none';
         document.querySelector('.search-section').style.display = 'block';
         document.getElementById('stationSearch').value = '';
         hideAllResults();
-    } else if (window.history.length > 1) {
+    } 
+    // 검색 화면 상태이고 뒤로 갈 방문 기록이 있다면, 이전 페이지로 이동
+    else if (window.history.length > 1 && document.referrer) {
         window.history.back();
-    } else {
-        window.location.href = 'main.html';
+    } 
+    // 검색 화면 상태인데 뒤로 갈 방문 기록이 없다면, 메인 페이지로 이동
+    else {
+        const mainPageUrl = appContainer.dataset.mainPageUrl;
+        window.location.href = mainPageUrl;
     }
 }
 
