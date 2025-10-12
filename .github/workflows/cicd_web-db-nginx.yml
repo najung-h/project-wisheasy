@@ -450,3 +450,103 @@ jobs:
 
 
   #-------------/Deploy-------------
+
+
+  #-------------Cleanup-------------
+  cleanup:
+    # 배포 완료 후 실행
+    needs: deploy          
+    # push 이벤트에서만 실행
+    if: ${{ github.event_name == 'push' }}  
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup old Docker images on EC2 (retain last 3)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            set -Eeuo pipefail
+            echo "[cleanup] 오래된 Docker 이미지를 정리합니다."
+            REPO="${{ secrets.DOCKERHUB_USERNAME }}/wisheasy"
+            KEEP_N=3
+
+
+            # 1) 현재 실행 중인 이미지 확인
+            # - docker ps -a: 실행 중이거나 종료된 모든 컨테이너 리스트 출력
+            # - --format '{{.Image}}': 컨테이너가 어떤 이미지를 사용하는지 표시
+            # - sort -u: 중복 제거
+            # - mapfile -t: bash 배열(IN_USE[])로 저장 (각 요소가 한 이미지 이름)
+            echo "[cleanup] 1. 실행 중인 컨테이너 이미지를 수집합니다."
+            mapfile -t IN_USE <<< "$(sudo docker ps -a --format '{{.Image}}' | sort -u)"
+
+            # 2) 레포에서 최근 생성된 sha 이미지 N개를 추려서 보존 리스트에 추가
+            # - docker images --format: 이미지 이름(tag) + 생성일을 한 줄로 출력
+            # - awk -v r="$REPO": wisheasy 레포 내 sha-태그만 필터링
+            # - sort -rk2: 생성일 기준 내림차순 정렬 (가장 최근 것이 위로)
+            # - head -n "$KEEP_N": 최근 N개만 남기기
+            # - awk '{print $1}': 이미지 이름만 추출 → KEEP_SHA[] 배열에 저장
+            echo "[cleanup] 2. 최근 ${KEEP_N}개의 sha 이미지를 보호 대상에 추가합니다."
+            mapfile -t KEEP_SHA <<< "$(
+              sudo docker images --format '{{.Repository}}:{{.Tag}} {{.CreatedAt}}' \
+              | awk -v r="$REPO" '$1 ~ r":sha-" {print $1, $2" "$3" "$4" "$5" "$6}' \
+              | sort -rk2 \
+              | head -n "$KEEP_N" \
+              | awk '{print $1}'
+            )"
+
+            # 3) wisheasy 레포의 모든 sha-이미지 목록을 가져옴
+            # ALL_SHA[] = wisheasy 레포에 존재하는 모든 sha 이미지 태그 목록
+            mapfile -t ALL_SHA <<< "$(
+              sudo docker images --format '{{.Repository}}:{{.Tag}}' \
+              | awk -v r="$REPO" '$1 ~ r":sha-" {print $1}'
+            )"
+
+            # 4) atest 이미지가 있으면 보호 리스트에 추가
+            PROTECT_LIST=("${KEEP_SHA[@]}")
+            if sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep -q "^${REPO}:latest$"; then
+              PROTECT_LIST+=("${REPO}:latest")
+            fi
+
+            # 5) 삭제할 후보 찾기
+            # -1- 보호 리스트에 있으면 스킵
+            # -2- 현재 실행 중인 컨테이너가 사용하는 이미지면 스킵
+            DELETE_LIST=()
+            for img in "${ALL_SHA[@]}"; do
+              if printf '%s\n' "${PROTECT_LIST[@]}" | grep -qx "$img"; then
+                continue
+              fi
+              if printf '%s\n' "${IN_USE[@]}" | grep -qx "$img"; then
+                continue
+              fi
+              DELETE_LIST+=("$img")
+            done
+
+            # 6) 삭제 실행
+            # - docker rmi -f: 이미지를 강제 삭제 
+            # - || true: 삭제 중 에러가 나도 스크립트가 중단되지 않게 함
+            if [ "${#DELETE_LIST[@]}" -gt 0 ]; then
+              echo "[cleanup] 6. 오래된 이미지를 ${#DELETE_LIST[@]}개 삭제합니다:"
+              printf '  - %s\n' "${DELETE_LIST[@]}"
+              for img in "${DELETE_LIST[@]}"; do
+                sudo docker rmi -f "$img" || true
+              done
+            else
+              echo "[cleanup] 6. 삭제할 이미지가 없습니다."
+            fi
+
+            # 7) 추가적인 정리 dangling 이미지 및 빌드 캐시 정리
+            # -f: “Are you sure?” 물어보지 말고 바로 실행
+            # || true: 실패해도 스크립트 중단 X
+            echo "[cleanup] + 태그 없는 이미지를 정리합니다."
+            sudo docker image prune -f || true
+            # docker builder prune: Docker 빌드 캐시 정리
+            # 빌드 속도 향상을 위해 남겨둔 중간 결과를 삭제
+            # 이미지나 컨테이너엔 영향 없음  
+            echo "[cleanup] + 빌드 캐시를 정리합니다."
+            sudo docker builder prune -f || true
+
+            echo "[cleanup] 완료되었습니다. 최근 ${KEEP_N}개 이미지만 유지 중입니다."
+
+  #-------------/Cleanup-------------
