@@ -460,11 +460,17 @@ function generateAlternativeRoute() {
 }
 
 // Navigation
+const appContainer = document.getElementById('wisheasy-app');
+
 function goBack() {
-    if (window.history.length > 1) {
+    // 방문 기록이 있으면서, 동시에 외부 페이지를 통해 정상적으로 들어온 경우에만 뒤로가기
+    if (window.history.length > 1 && document.referrer) {
         window.history.back();
-    } else {
-        window.location.href = 'main.html';
+    } 
+    // 그렇지 않다면, 메인 페이지로 이동
+    else {  
+        const mainPageUrl = appContainer.dataset.mainPageUrl;
+        window.location.href = mainPageUrl;
     }
 }
 

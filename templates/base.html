@@ -13,7 +13,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-  {% block content %}{% endblock content %}
+  <div id="wisheasy-app"
+    data-main-page-url="{% url 'common:index' %}"
+    data-route-page-url="{% url 'journeys:route' %}"
+    data-station-page-url="{% url 'stations:station_info' %}"
+  >
+    {% block content %}{% endblock content %}
+  </div>
 
   {% block js %}{% endblock js %}
 </body>
