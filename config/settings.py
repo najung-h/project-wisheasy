@@ -196,6 +196,7 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"  # 운영에서는 "mandatory" 권장
 SOCIALACCOUNT_QUERY_EMAIL = True
 
+
 # 구글 로그인 프로바이더 설정
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
@@ -204,3 +205,6 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 ACCOUNT_LOGOUT_ON_GET = True
+
+# 중간 Continue 페이지 없애기
+SOCIALACCOUNT_LOGIN_ON_GET = True
