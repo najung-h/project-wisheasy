@@ -434,7 +434,7 @@ jobs:
             s.domain = "wisheasy.site"
             s.name = "wisheasy.site"
             s.save()
-            print("[Site]", s.id, s.domain, "created:", created)
+            print('[Site]', s.id, s.domain, 'created:', created)
             PY
 
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 시작...';
