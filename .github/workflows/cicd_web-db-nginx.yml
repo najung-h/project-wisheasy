@@ -112,7 +112,7 @@ jobs:
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
 
-            DB_HOST=db
+            DB_HOST=mysql_db
             DB_NAME=${{ secrets.MYSQL_DATABASE }}
             DB_USER=${{ secrets.MYSQL_USER }}
             DB_PASS=${{ secrets.MYSQL_PASSWORD }}
@@ -417,17 +417,18 @@ jobs:
             # (1) DB 마이그레이션: 이미 만들어진 테이블이 있어도 기록만 맞추도록 안전장치 포함
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
               echo '[deploy:migrate-and-static] (1/3) DB 마이그레이션 시작...';
-              python manage.py migrate --noinput || python manage.py migrate --fake-initial --noinput;
+              python manage.py migrate --noinput --settings=config.settings.prod || \
+              python manage.py migrate --fake-initial --noinput --settings=config.settings.prod;
               echo '[deploy:migrate-and-static] (1/3) DB 마이그레이션 완료';
             "
 
             # (2) Google SocialApp 적용
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
-              set -e
+              set -Eeuo pipefail
               echo '[deploy:apply-socialapp] (2/3) Django Site 도메인 업데이트...';
-              python manage.py shell -c \"from django.conf import settings; from django.contrib.sites.models import Site; site,_=Site.objects.get_or_create(id=getattr(settings,'SITE_ID',1)); site.domain='wisheasy.site'; site.name='wisheasy.site'; site.save(); print('[deploy:apply-socialapp] Site domain set to:', site.domain)\";
+              python manage.py shell --settings=config.settings.prod -c "from django.conf import settings; from django.contrib.sites.models import Site; site,_=Site.objects.get_or_create(id=getattr(settings, \"SITE_ID\",1)); site.domain=\"wisheasy.site\"; site.name=\"wisheasy.site\"; site.save(); print(\"[deploy:apply-socialapp] Site domain set to:\", site.domain)";
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 시작...';
-              python manage.py apply_socialapp || echo '[deploy:apply-socialapp] 이미 SocialApp이 존재합니다.';
+              python manage.py collectstatic --noinput --settings=config.settings.prod;
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 완료';
             "
 
