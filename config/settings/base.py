@@ -203,10 +203,15 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},  # refresh_token 원하면 "offline"
+        "AUTH_PARAMS": {
+            "access_type": "online", 
+            "prompt": "select_account",  
+        },  # refresh_token 원하면 "offline"
     }
 }
 ACCOUNT_LOGOUT_ON_GET = True
 
 # 중간 Continue 페이지 없애기
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+ACCOUNT_ADAPTER = 'config.adapters.MyAccountAdapter'

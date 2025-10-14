@@ -82,9 +82,34 @@
             </div>
         </div>
     </div>
+    {% if request.user.is_authenticated %}
+    <div id="welcome-modal"
+         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999;">
+      <div style="background:#fff;padding:24px 28px;border-radius:14px;min-width:280px;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.16);">
+        <h3 style="margin:0 0 8px;">
+          환영합니다
+          {{ request.user.profile.nickname|default:request.user.first_name|default:request.user.username }}님!
+        </h3>
+        <p style="margin:0 0 16px;color:#666;">오늘 좋은 하루 보내세요 ☺️</p>
+        <button onclick="document.getElementById('welcome-modal').style.display='none'"
+                style="padding:8px 14px;border:0;border-radius:10px;background:#1f6feb;color:#fff;cursor:pointer;">닫기</button>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var m = document.getElementById('welcome-modal');
+        if (!m) return;
+
+        // ⬇️ 매 방문마다 띄우려면 이 줄만 사용
+        m.style.display = 'flex';
+        }
+    )();
+    </script>
+  {% endif %}
 {% endblock content %}
 
 
 {% block js %}
     <script src="{% static "js/index.js" %}"></script>
 {% endblock js %}
+
