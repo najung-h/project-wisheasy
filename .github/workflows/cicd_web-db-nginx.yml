@@ -263,7 +263,7 @@ jobs:
             cat > docker-compose.yml << 'EOF'
             services:
               db:
-                image: mysql:8
+                image: mysql:8.0
                 container_name: mysql_db
                 restart: always
                 env_file: .env
