@@ -427,15 +427,15 @@ jobs:
               set -Eeuo pipefail
               echo '[deploy:apply-socialapp] (2/3) Django Site 도메인 업데이트...';
               python manage.py shell --settings=config.settings.prod <<'"'"'PY'"'"'
-              from django.conf import settings
-              from django.contrib.sites.models import Site
+            from django.conf import settings
+            from django.contrib.sites.models import Site
 
-              s, created = Site.objects.get_or_create(id=getattr(settings, "SITE_ID", 1))
-              s.domain = "wisheasy.site"
-              s.name = "wisheasy.site"
-              s.save()
-              print("[Site]", s.id, s.domain, "created:", created)
-              PY
+            s, created = Site.objects.get_or_create(id=getattr(settings, "SITE_ID", 1))
+            s.domain = "wisheasy.site"
+            s.name = "wisheasy.site"
+            s.save()
+            print("[Site]", s.id, s.domain, "created:", created)
+            PY
 
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 시작...';
               python manage.py collectstatic --noinput --settings=config.settings.prod;
