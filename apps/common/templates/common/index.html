@@ -11,14 +11,6 @@
 
 {% block content %}
     <div class="app-container">
-        <!-- Flash messages (선택) -->
-        {% if messages %}
-        <ul class="messages">
-            {% for message in messages %}
-            <li class="{{ message.tags }}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
 
         <!-- App Header -->
         <header class="app-header">
