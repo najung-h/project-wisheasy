@@ -426,7 +426,7 @@ jobs:
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
               set -Eeuo pipefail
               echo '[deploy:apply-socialapp] (2/3) Django Site 도메인 업데이트...';
-              python manage.py shell --settings=config.settings.prod -c "from django.conf import settings; from django.contrib.sites.models import Site; site,_=Site.objects.get_or_create(id=getattr(settings, \"SITE_ID\",1)); site.domain=\"wisheasy.site\"; site.name=\"wisheasy.site\"; site.save(); print(\"[deploy:apply-socialapp] Site domain set to:\", site.domain)";
+              python manage.py shell --settings=config.settings.prod -c "from django.conf import settings; from django.contrib.sites.models import Site; site, created =Site.objects.get_or_create(id=getattr(settings, "SITE_ID",1)); site.domain=\"wisheasy.site\"; site.name=\"wisheasy.site\"; site.save(); print(\"[deploy:apply-socialapp] Site domain set to:\", site.domain)";
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 시작...';
               python manage.py collectstatic --noinput --settings=config.settings.prod;
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 완료';
