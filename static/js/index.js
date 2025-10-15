@@ -6,6 +6,18 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeMainPage() {
     // Add any initialization code here
     console.log('쉽길 메인페이지가 로드되었습니다.');
+
+    // 페이지가 표시될 때마다 실행되는 이벤트 리스너
+    window.addEventListener('pageshow', function(event) {
+        // event.persisted가 true이면, 페이지가 bfcache에서 복원된 것입니다.
+        if (event.persisted) {
+            // 모든 메인 버튼을 찾아서 'loading' 클래스를 제거합니다.
+            const mainButtons = document.querySelectorAll('.main-btn');
+            mainButtons.forEach(btn => {
+                btn.classList.remove('loading');
+            });
+        }
+    });
 }
 
 // Navigation functions
