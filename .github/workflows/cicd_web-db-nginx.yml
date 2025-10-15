@@ -130,6 +130,8 @@ jobs:
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
 
+            SITE_DOMAIN=wisheasy.site
+
             EOF
             COMPOSE_FILE=docker-compose.yml
             WEB_SVC=wisheasy_web
@@ -297,6 +299,9 @@ jobs:
                   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
                   MYSQL_DB: ${MYSQL_DATABASE}
                   DJANGO_SETTINGS_MODULE: config.settings.prod
+                  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+                  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+                  SITE_DOMAIN: ${SITE_DOMAIN}
                 volumes:
                   - ./staticfiles:/app/staticfiles
                   - ./logs:/app/logs
@@ -436,14 +441,14 @@ jobs:
               'from django.contrib.sites.models import Site; s,_=Site.objects.get_or_create(id=1); s.domain=\"wisheasy.site\"; s.name=\"wisheasy.site\"; s.save(); print(s.id, s.domain)'
 
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 시작...';
-              python manage.py collectstatic --noinput --settings=config.settings.prod;
+              python manage.py apply_socialapp --settings=config.settings.prod;
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 완료';
             "
 
             # (3) 정적 파일 수집
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
               echo '[deploy:migrate-and-static] (3/3) 정적 파일 수집 시작...';
-              python manage.py collectstatic --noinput;
+              python manage.py collectstatic --noinput --settings=config.settings.prod;
               echo '[deploy:migrate-and-static] (3/3) 정적 파일 수집 완료';
             "
 
