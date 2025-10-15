@@ -296,6 +296,7 @@ jobs:
                   MYSQL_USER: ${MYSQL_USER}
                   MYSQL_PASSWORD: ${MYSQL_PASSWORD}
                   MYSQL_DB: ${MYSQL_DATABASE}
+                  DJANGO_SETTINGS_MODULE: config.settings.prod
                 volumes:
                   - ./staticfiles:/app/staticfiles
                 networks: [appnet]
