@@ -15,10 +15,15 @@ body {
     justify-content: center;
 }
 
+#wisheasy-app {
+    width: 100%;
+}
+
 .app-container {
     width: 100%;
     max-width: 400px;
     padding: 20px;
+    margin: 0 auto;  /* 꽉 찬 #wisheasy-app 내부에서 스스로 수평 중앙 정렬 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -80,6 +85,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+    text-decoration: none;
 }
 
 .login-btn:hover, .mypage-btn:hover {
