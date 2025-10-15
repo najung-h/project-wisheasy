@@ -2,6 +2,7 @@
 
 from .base import *
 import environ
+import os
 
 # environ 초기화
 env = environ.Env()
@@ -37,4 +38,33 @@ DATABASES = {
         },
         "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=0),
     }
+}
+
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+
+# Django 로깅: 콘솔 + 파일(7일 보관)
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {"format": "[{asctime}] {levelname} {name}:{lineno} | {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+        "file_rotating": {
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "filename": str(LOG_DIR / "django.log"),
+            "when": "D",
+            "interval": 1,
+            "backupCount": 7,
+            "encoding": "utf-8",
+            "formatter": "verbose",
+        },
+    },
+    "root": {"handlers": ["console", "file_rotating"], "level": "INFO"},
+    "loggers": {
+        "django": {"handlers": ["console", "file_rotating"], "level": "WARNING", "propagate": False},
+        "django.request": {"handlers": ["console", "file_rotating"], "level": "ERROR", "propagate": False},
+    },
 }

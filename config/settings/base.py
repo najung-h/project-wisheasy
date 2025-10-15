@@ -112,6 +112,9 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+'''
+local.py와 prod.py에서 재정의하기 때문에
+base.py에서는 정의하지 않음.
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
@@ -126,6 +129,7 @@ DATABASES = {
         "CONN_MAX_AGE": env.int("DB_CONN_MAX_AGE", default=0),
     }
 }
+'''
 
 
 # Password validation
