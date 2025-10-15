@@ -299,6 +299,7 @@ jobs:
                   DJANGO_SETTINGS_MODULE: config.settings.prod
                 volumes:
                   - ./staticfiles:/app/staticfiles
+                  - ./logs:/app/logs
                 networks: [appnet]
                 expose:
                   - "8000"
@@ -307,7 +308,11 @@ jobs:
                     condition: service_healthy
                 command: >
                   sh -lc "
-                  gunicorn config.wsgi:application --bind 0.0.0.0:8000
+                  gunicorn config.wsgi:application
+                  --bind 0.0.0.0:8000
+                  --access-logfile /app/logs/gunicorn_access.log
+                  --error-logfile /app/logs/gunicorn_error.log
+                  --log-level debug
                   "
 
               nginx:
