@@ -33,7 +33,7 @@ function initializeRoutePage() {
 function setupStationInputs() {
     const startInput = document.getElementById('startStation');
     const endInput = document.getElementById('endStation');
-    
+
     setupAutocomplete(startInput, 'startSuggestions');
     setupAutocomplete(endInput, 'endSuggestions');
 }
@@ -47,7 +47,7 @@ function setupAutocomplete(input, suggestionsId) {
             selectStation(e.target.dataset.stationName, input.id);
         }
     });
-    
+
     input.addEventListener('input', function() {
         const value = this.value;
         suggestionsContainer.innerHTML = ''; // Clear previous suggestions
@@ -56,11 +56,11 @@ function setupAutocomplete(input, suggestionsId) {
             suggestionsContainer.style.display = 'none';
             return;
         }
-        
-        const filtered = stations.filter(station => 
+
+        const filtered = stations.filter(station =>
             hangulStartsWith(station.name, value)
         );
-        
+
         if (filtered.length > 0) {
             filtered.forEach(station => {
                 const div = document.createElement('div');
@@ -74,7 +74,7 @@ function setupAutocomplete(input, suggestionsId) {
             suggestionsContainer.style.display = 'none';
         }
     });
-    
+
     input.addEventListener('blur', function() {
         // Use a short delay to allow click events on suggestions to fire
         setTimeout(() => {
@@ -86,7 +86,7 @@ function setupAutocomplete(input, suggestionsId) {
 function selectStation(stationName, inputId) {
     const input = document.getElementById(inputId);
     const suggestions = document.getElementById(inputId.replace('Station', 'Suggestions'));
-    
+
     input.value = stationName;
     suggestions.style.display = 'none';
 }
@@ -95,24 +95,24 @@ function selectStation(stationName, inputId) {
 function startRouteSearch() {
     const startStationName = document.getElementById('startStation').value;
     const endStationName = document.getElementById('endStation').value;
-    
+
     if (!startStationName || !endStationName) {
         alert('출발역과 도착역을 모두 입력해주세요.');
         return;
     }
-    
+
     if (startStationName === endStationName) {
         alert('출발역과 도착역이 같을 수 없습니다.');
         return;
     }
-    
+
     const searchBtn = document.querySelector('.search-btn');
     searchBtn.disabled = true;
     searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 경로 탐색 중...';
-    
+
     setTimeout(() => {
         document.getElementById('inputSection').style.display = 'none';
-        
+
         // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
         // 각 역 객체에는 역명, 호선 목록, 소요 시간 등의 정보가 포함되어야 합니다.
         // --- Set Marker Colors and Names ---
@@ -138,16 +138,16 @@ function startRouteSearch() {
         // --- End of Marker Color Logic ---
 
         document.getElementById('routeGuidance').style.display = 'block';
-        
+
         currentRoute = {
             start: startStationName,
             end: endStationName,
             steps: generateRouteSteps(startStationName, endStationName)
         };
         totalSteps = currentRoute.steps.length;
-        
+
         updateRouteStep();
-        
+
         searchBtn.disabled = false;
         searchBtn.innerHTML = '<i class="fas fa-search"></i> 길찾기 시작';
     }, 1500);
@@ -241,23 +241,23 @@ function previousStep() {
 
 function updateRouteStep() {
     if (!currentRoute) return;
-    
+
     const step = currentRoute.steps[currentStep - 1];
-    
+
     // Update instruction icon
     const instructionIcon = document.getElementById('instructionIcon').querySelector('i');
     instructionIcon.className = `fas ${getIcon(step.icon)}`;
 
     // Update instruction text
     const instructionText = document.getElementById('instructionText');
-    instructionText.innerHTML = step.instruction.map(line => 
+    instructionText.innerHTML = step.instruction.map(line =>
         `<div class="instruction-line">${line}</div>`
     ).join('');
-    
+
     // Update time labels (2 segments only)
     document.getElementById('startTime').textContent = step.times[0];
     document.getElementById('endTime').textContent = step.times[1];
-    
+
     // Update progress bar color based on line
     const progressBar = document.querySelector('.progress-line');
     const lineClass = getLineClass(step.line);
@@ -270,17 +270,17 @@ function updateRouteStep() {
 
     // Show/hide transfer marker
     const transferMarker = document.getElementById('transferMarker');
-    
+
     if (step.position === 'transfer') {
         transferMarker.style.display = 'flex';
     } else {
         transferMarker.style.display = 'none';
     }
-    
+
     // Update train position based on step position (centered on markers)
     const trainIcon = document.getElementById('trainIcon');
     let trainPosition;
-    
+
     switch(step.position) {
         case 'start':
             trainPosition = '10%';
@@ -294,15 +294,15 @@ function updateRouteStep() {
         default:
             trainPosition = '10%';
     }
-    
+
     trainIcon.style.left = trainPosition;
-    
+
     // Update buttons
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    
+
     prevBtn.style.display = currentStep > 1 ? 'flex' : 'none';
-    
+
     if (currentStep === totalSteps) {
         nextBtn.innerHTML = '<span>완료</span>';
         nextBtn.onclick = endGuidance;
@@ -315,7 +315,7 @@ function updateRouteStep() {
 function updateRouteVisual(stations) {
     const stationLine = document.getElementById('stationLine');
     stationLine.innerHTML = '';
-    
+
     stations.forEach((station, index) => {
         // Add station
         const stationEl = document.createElement('div');
@@ -323,7 +323,7 @@ function updateRouteVisual(stations) {
         if (index === 0) stationEl.classList.add('current');
         stationEl.textContent = station;
         stationLine.appendChild(stationEl);
-        
+
         // Add line segment (except for last station)
         if (index < stations.length - 1) {
             const segment = document.createElement('div');
@@ -339,19 +339,19 @@ function updateRouteVisual(stations) {
 
 function endGuidance() {
     alert('경로 안내가 종료되었습니다.');
-    
+
     // Show input section again
     document.getElementById('inputSection').style.display = 'block';
     document.getElementById('routeGuidance').style.display = 'none';
-    
+
     // Reset state
     currentStep = 1;
     currentRoute = null;
-    
+
     // Reset form
     document.getElementById('startStation').value = '';
     document.getElementById('endStation').value = '';
-    
+
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -360,16 +360,16 @@ function endGuidance() {
 function playAudio() {
     const instructionLines = document.querySelectorAll('.instruction-line');
     const instruction = Array.from(instructionLines).map(line => line.textContent).join(' ');
-    
+
     // Mock audio playback
     console.log('Playing audio:', instruction);
-    
+
     // Show audio feedback
     const btn = event.target.closest('.action-btn');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-volume-up"></i><span>재생 중...</span>';
     btn.disabled = true;
-    
+
     setTimeout(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
@@ -391,7 +391,7 @@ function selectFacilityStation(stationName) {
         btn.classList.remove('active');
     });
     event.target.classList.add('active');
-    
+
     // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
     // 각 역 객체에는 고유 ID, 역명, 편의 시설 등의 정보가 포함되어야 합니다.
     // Update facility details
@@ -401,7 +401,7 @@ function selectFacilityStation(stationName) {
         'seolleung': '선릉역',
         'samsung': '삼성역'
     };
-    
+
     details.innerHTML = `
         <h4>${stationNames[stationName]} 편의시설</h4>
         <div class="facility-list">
@@ -425,7 +425,7 @@ function selectFacilityStation(stationName) {
 function reportClosure() {
     if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
         alert('죄송합니다. 빠른 대체 경로를 안내합니다');
-        
+
         // Mock alternative route
         setTimeout(() => {
             currentStep = 1;
@@ -463,12 +463,20 @@ function generateAlternativeRoute() {
 const appContainer = document.getElementById('wisheasy-app');
 
 function goBack() {
+    const routeGuidance = document.getElementById('routeGuidance');
+    // 경로 안내 카드가 화면에 표시된 상태라면, 경로 안내 카드를 숨기고 다시 검색 화면으로 이동
+    if (routeGuidance.style.display === 'block') {
+        routeGuidance.style.display = 'none';
+        document.querySelector('.input-section').style.display = 'block';
+        document.getElementById('startStation').value = ''
+        document.getElementById('endStation').value = ''
+    }
     // 방문 기록이 있으면서, 동시에 외부 페이지를 통해 정상적으로 들어온 경우에만 뒤로가기
-    if (window.history.length > 1 && document.referrer) {
+    else if (window.history.length > 1 && document.referrer) {
         window.history.back();
-    } 
+    }
     // 그렇지 않다면, 메인 페이지로 이동
-    else {  
+    else {
         const mainPageUrl = appContainer.dataset.mainPageUrl;
         window.location.href = mainPageUrl;
     }
@@ -492,7 +500,7 @@ document.addEventListener('keydown', function(e) {
             goBack();
         }
     }
-    
+
     // Route navigation shortcuts
     if (document.getElementById('routeGuidance').style.display !== 'none') {
         if (e.key === 'ArrowLeft') {
