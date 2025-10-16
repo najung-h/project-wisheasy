@@ -11,10 +11,13 @@ function initializeMainPage() {
     window.addEventListener('pageshow', function(event) {
         // event.persisted가 true이면, 페이지가 bfcache에서 복원된 것입니다.
         if (event.persisted) {
-            // 모든 메인 버튼을 찾아서 'loading' 클래스를 제거합니다.
+            // 모든 메인 버튼을 찾습니다.
             const mainButtons = document.querySelectorAll('.main-btn');
             mainButtons.forEach(btn => {
+                // 'loading' 클래스를 제거합니다.
                 btn.classList.remove('loading');
+                // 버튼의 비활성화 속성을 제거합니다.
+                btn.disabled = false;
             });
         }
     });
