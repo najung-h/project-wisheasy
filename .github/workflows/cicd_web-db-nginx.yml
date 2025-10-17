@@ -137,6 +137,8 @@ jobs:
             WEB_SVC=wisheasy_web
             DB_SVC=mysql_db
             NGINX_SVC=nginx_edge
+            UWV=default
+            
             # ----------/deploy:env---------
 
             # -----------deploy:mysql-conf---------
