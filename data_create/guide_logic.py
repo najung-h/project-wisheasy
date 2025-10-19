@@ -2,6 +2,109 @@ import pandas as pd
 from collections import deque
 from typing import List, Tuple, Optional, Dict
 import os
+import networkx as nx
+
+def build_subway_graph(lines):
+    G = nx.Graph()
+    for line_name, stations in lines.items():
+        for i, station in enumerate(stations):
+            G.add_node(f"{station}-{line_name}")
+            if i > 0:
+                G.add_edge(f"{stations[i-1]}-{line_name}", f"{station}-{line_name}", weight=0)
+    # 환승 연결
+    all_nodes = list(G.nodes)
+    for n1 in all_nodes:
+        name1, line1 = n1.split("-")
+        for n2 in all_nodes:
+            name2, line2 = n2.split("-")
+            if name1 == name2 and line1 != line2:
+                G.add_edge(n1, n2, weight=1)
+    return G
+
+
+lines = {"7호선": line7, "2호선": line2}
+G = build_subway_graph(lines)
+
+
+def find_station_nodes(G, name):
+    return [n for n in G.nodes if n.startswith(name)]
+
+
+def get_next_station_name(line_list, curr, forward=True):
+    if curr not in line_list:
+        return None
+    idx = line_list.index(curr)
+    if forward and idx + 1 < len(line_list):
+        return line_list[idx + 1]
+    elif not forward and idx - 1 >= 0:
+        return line_list[idx - 1]
+    return None
+
+
+def make_direction_str(line, next_station):
+    if next_station:
+        return f"{line} {next_station} 방면 승강장"
+    return f"{line} 방면 승강장"
+
+
+def get_subway_route(start_station, start_exit, end_station, end_exit):
+    start_nodes = find_station_nodes(G, start_station)
+    end_nodes = find_station_nodes(G, end_station)
+
+    best_path, best_cost = None, float("inf")
+    for s in start_nodes:
+        for e in end_nodes:
+            try:
+                path = nx.shortest_path(G, s, e, weight="weight")
+                cost = nx.path_weight(G, path, weight="weight")
+                if cost < best_cost:
+                    best_path, best_cost = path, cost
+            except nx.NetworkXNoPath:
+                continue
+
+    path = best_path
+    output = []
+    skip_next = False
+    line_data = {"7호선": line7, "2호선": line2}
+
+    for i in range(len(path)):
+        if skip_next:
+            skip_next = False
+            continue
+
+        station, line = path[i].split("-")
+
+        # 출발역
+        if i == 0:
+            next_station = path[i + 1].split("-")[0]
+            direction_station = get_next_station_name(line_data[line], station, forward=True)
+            output.append((station, start_exit, make_direction_str(line, direction_station)))
+
+        # 도착역 (마지막)
+        elif i == len(path) - 1:
+            prev_line = path[i - 1].split("-")[1]
+            prev_station = path[i - 1].split("-")[0]
+            line_list = line_data[line]
+            # 내가 타고 온 노선(prev_line)의 진행 방향 유지
+            direction_station = get_next_station_name(line_list, station, forward=True)
+            output.append((station, make_direction_str(line, direction_station), end_exit))
+
+        # 중간(환승)
+        else:
+            prev_line = path[i - 1].split("-")[1]
+            next_line = path[i + 1].split("-")[1]
+            curr_station = station
+
+            if prev_line != next_line:
+                prev_dir = get_next_station_name(line_data[prev_line], curr_station, forward=True)
+                next_dir = get_next_station_name(line_data[next_line], curr_station, forward=True)
+                dir_prev = make_direction_str(prev_line, prev_dir)
+                dir_next = make_direction_str(next_line, next_dir)
+                output.append((curr_station, dir_prev, dir_next))
+                skip_next = True
+
+    return output
+
 
 # 0) CSV 로드
 def load_graph(
@@ -216,7 +319,7 @@ if __name__ == "__main__":
     # CSV 로드
     df_nodes, df_edges = load_graph("line2_nodes_최종.csv", "line2_edges_최종.csv")
 
-    short_path_list = [("신도림", "2번출구", "2호선 대림 방면 승강장"), ("강남", "2호선 역삼 방면 승강장", "7번출구")]  # 여기에 short_path 결과를 넣으면 됨 
+    short_path_list = get_subway_route(input.split())
 
     steps = build_full_guidance(df_nodes, df_edges, short_path_list)
     for s in steps:
