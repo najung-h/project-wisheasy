@@ -307,7 +307,7 @@ jobs:
                 volumes:
                   - ./staticfiles:/app/staticfiles
                   - ./logs:/app/logs
-                  - app_data:/data
+                
                 networks: [appnet]
                 expose:
                   - "8000"
