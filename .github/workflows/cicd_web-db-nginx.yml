@@ -447,7 +447,13 @@ jobs:
               echo '[deploy:apply-socialapp] (2/3) Google SocialApp 적용 완료';
             "
 
-            # (3) 정적 파일 수집
+            # (3) CSV 파일 DB에 업로드
+            # 최초 1회 실행 예정
+            python manage.py load_csv --file line2_7_edges.csv --settings=config.settings.prod
+            python manage.py load_csv --file line2_7_nodes.csv --settings=config.settings.prod
+            python manage.py load_csv --file line2_7_lines.csv --settings=config.settings.prod
+
+            # (4) 정적 파일 수집
             sudo docker compose -f "$COMPOSE_FILE" run --rm web sh -lc "
               echo '[deploy:migrate-and-static] (3/3) 정적 파일 수집 시작...';
               python manage.py collectstatic --noinput --settings=config.settings.prod;
