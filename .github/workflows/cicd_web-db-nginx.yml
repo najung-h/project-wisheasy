@@ -345,6 +345,7 @@ jobs:
 
             volumes:
               mysql_data:
+              app_data:
             EOF
             # ----------/deploy:compose-file---------
 
