@@ -43,15 +43,25 @@ class Command(BaseCommand):
 
     # --- Lines ---
     def load_lines(self, reader):
-        count = 0
+        count_new = 0
+        count_update = 0
+
         for row in reader:
-            Lines.objects.create(
+            obj, created = Lines.objects.update_or_create(
                 line=row["line"],
-                station=row["station"],
                 order_in_line=row["order_in_line"],
+                defaults={
+                    "station": row["station"],
+                },
             )
-            count += 1
-        self.stdout.write(self.style.SUCCESS(f"✅ line2_7_lines.csv 업로드 완료 ({count}개 행 추가됨)"))
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(f"✅ line2_7_lines.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨")
+        )
 
     # --- Edges ---
     def load_edges(self, reader):
