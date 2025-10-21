@@ -8,4 +8,5 @@ django-environ
 mysqlclient==2.2.7
 PyJWT==2.8.0
 cryptography==46.0.2
+pandas
 networkx>=3.3, 
