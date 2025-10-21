@@ -4,156 +4,230 @@
 {% block title %}길찾기 - 쉽길{% endblock title %}
 
 {% block css %}
-    <link rel="stylesheet" href="{% static "css/route.css" %}">
+  <link rel="stylesheet" href="{% static "css/route.css" %}">
 {% endblock css %}
 
-
 {% block content %}
-    <div class="app-container">
-        <!-- Header -->
-        <header class="page-header">
-            <button class="back-btn" onclick="goBack()">
-                <i class="fas fa-arrow-left"></i>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="page-header">
+      <a href="{% url 'journeys:leave' %}" class="home-btn" aria-label="메인으로 돌아가기">
+        <i class="fas fa-home"></i>
+      </a>
+    </header>
+
+    {# 에러 메시지 전용 #}
+    {% if messages %}
+      <div class="messages" style="margin: 12px;">
+        {% for message in messages %}
+          {% if message.tags == 'error' %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Main -->
+    <main class="main-content">
+      {% if mode == "form" %}
+        <form class="input-section" id="inputSection" method="post" action="{% url 'journeys:route' %}">
+          {% csrf_token %}
+          <div class="input-group">
+            <label class="input-label">출발역</label>
+            <div class="input-container">
+              <input type="text" id="startStation" name="start_station" class="station-input"
+                     placeholder="역 이름을 입력하세요" autocomplete="off" required>
+              <div class="suggestions" id="startSuggestions"></div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">출발 출구(선택)</label>
+            <div class="input-container">
+              <input type="text" id="startExit" name="start_exit" class="station-input"
+                     placeholder="예: 2번출구" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">도착역</label>
+            <div class="input-container">
+              <input type="text" id="endStation" name="end_station" class="station-input"
+                     placeholder="역 이름을 입력하세요" autocomplete="off" required>
+              <div class="suggestions" id="endSuggestions"></div>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">도착 출구(선택)</label>
+            <div class="input-container">
+              <input type="text" id="endExit" name="end_exit" class="station-input"
+                     placeholder="예: 4번출구" autocomplete="off">
+            </div>
+          </div>
+
+          <button class="search-btn" type="submit">
+            <i class="fas fa-search"></i>
+            길찾기 시작
+          </button>
+        </form>
+
+      {% elif mode == "guide" %}
+        <div class="route-guidance" id="routeGuidance" style="display: block;">
+          <!-- Progress -->
+          <div class="route-progress">
+            <div class="progress-line">
+              <div class="station-marker start">
+                <span class="station-name" id="startStationName">{{ start_station }}</span>
+              </div>
+
+              <div class="transfer-marker" id="transferMarker" style="display: none;">
+                <span class="station-name" id="transferStationName">환승</span>
+              </div>
+
+              <div class="station-marker end">
+                <span class="station-name" id="endStationName">{{ end_station }}</span>
+              </div>
+
+              <div class="train-icon"
+                   id="trainIcon"
+                   data-idx="{{ idx|default:0 }}"
+                   data-count="{{ count|default:1 }}">
+                <i class="fas fa-subway"></i>
+              </div>
+            </div>
+
+            <div class="time-segments" id="timeSegments">
+              <div class="time-segment"><span class="time-label" id="startTime"></span></div>
+              <div class="time-segment"><span class="time-label" id="endTime"></span></div>
+            </div>
+          </div>
+
+          <!-- Instructions -->
+          <div class="instruction-section">
+            <form method="post" style="display: contents;">
+              {% csrf_token %}
+              <button class="nav-btn prev-btn" id="prevBtn" name="action" value="prev" {% if not has_prev %}disabled{% endif %}>
+                <span>이전</span>
+              </button>
+
+              <div class="instruction-content">
+                <div class="instruction-icon" id="instructionIcon">
+                  <i class="fas fa-walking"></i>
+                </div>
+                <div class="instruction-text" id="instructionText">
+                  <div class="instruction-line"><strong>스텝 {{ idx|add:1 }} / {{ count }}</strong></div>
+                  <div class="instruction-line">{{ step_text }}</div>
+                </div>
+              </div>
+
+              <button class="nav-btn next-btn"
+                      id="nextBtn"
+                      name="action"
+                      value="next"
+                      data-has-next="{{ has_next|yesno:'1,0' }}">
+                <span>다음</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Actions -->
+          <div class="action-buttons">
+            <form method="post" style="display:inline;">
+              {% csrf_token %}
+              <button class="action-btn" name="action" value="restart" title="처음부터">
+                <i class="fas fa-rotate-left"></i>
+                <span>처음부터</span>
+              </button>
+            </form>
+            <button class="action-btn" onclick="showFacilities()">
+              <i class="fas fa-wheelchair"></i>
+              <span>편의 시설</span>
             </button>
-            <div class="page-title">경로 안내</div>
-            <a href="{% url "common:index" %}" class="home-btn" aria-label="메인으로 돌아가기">
-                <i class="fas fa-home"></i>
-            </a>
-        </header>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Station Input Form (Hidden after search) -->
-            <div class="input-section" id="inputSection">
-                <div class="input-group">
-                    <label class="input-label">출발역</label>
-                    <div class="input-container">
-                        <input type="text" id="startStation" class="station-input" placeholder="역 이름을 입력하세요" autocomplete="off">
-                        <div class="suggestions" id="startSuggestions"></div>
-                    </div>
-                </div>
-
-                <div class="input-group">
-                    <label class="input-label">도착역</label>
-                    <div class="input-container">
-                        <input type="text" id="endStation" class="station-input" placeholder="역 이름을 입력하세요" autocomplete="off">
-                        <div class="suggestions" id="endSuggestions"></div>
-                    </div>
-                </div>
-
-                <button class="search-btn" onclick="startRouteSearch()">
-                    <i class="fas fa-search"></i>
-                    길찾기 시작
-                </button>
-            </div>
-
-            <!-- Route Guidance (Hidden initially) -->
-            <div class="route-guidance" id="routeGuidance" style="display: none;">
-                <!-- Route Progress Bar -->
-                <div class="route-progress">
-                    <div class="progress-line">
-                        <div class="station-marker start">
-                            <span class="station-name" id="startStationName">사당</span>
-                        </div>
-                        <div class="transfer-marker" id="transferMarker" style="display: none;">
-                            <span class="station-name" id="transferStationName">선릉</span>
-                        </div>
-                        <div class="station-marker end">
-                            <span class="station-name" id="endStationName">이수</span>
-                        </div>
-                        <div class="train-icon" id="trainIcon">
-                            <i class="fas fa-subway"></i>
-                        </div>
-                    </div>
-                    <div class="time-segments" id="timeSegments">
-                        <div class="time-segment">
-                            <span class="time-label" id="startTime">2분</span>
-                        </div>
-                        <div class="time-segment">
-                            <span class="time-label" id="endTime">5분</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Instruction -->
-                <div class="instruction-section">
-                    <button class="nav-btn prev-btn" id="prevBtn" onclick="previousStep()" style="display: none;">
-                        <span>이전</span>
-                    </button>
-
-                    <div class="instruction-content">
-                        <div class="instruction-icon" id="instructionIcon">
-                            <i class="fas fa-walking"></i>
-                        </div>
-                        <div class="instruction-text" id="instructionText">
-                            <div class="instruction-line">5번 출구 방향으로</div>
-                            <div class="instruction-line">20m 직진.</div>
-                        </div>
-                    </div>
-
-                    <button class="nav-btn next-btn" id="nextBtn" onclick="nextStep()">
-                        <span>다음</span>
-                    </button>
-                </div>
-
-                <!-- Bottom Action Buttons -->
-                <div class="action-buttons">
-                    <button class="action-btn" onclick="playAudio()">
-                        <i class="fas fa-volume-up"></i>
-                        <span>음성 재생</span>
-                    </button>
-                    <button class="action-btn" onclick="showFacilities()">
-                        <i class="fas fa-wheelchair"></i>
-                        <span>편의 시설</span>
-                    </button>
-                    <button class="action-btn" onclick="reportClosure()">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>이용 불가</span>
-                    </button>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Facilities Modal -->
-    <div class="modal" id="facilitiesModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>편의시설 정보</h3>
-                <button class="close-btn" onclick="closeFacilitiesModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="facility-stations">
-                    <button class="station-btn active" onclick="selectFacilityStation('gangnam')">강남역</button>
-                    <button class="station-btn" onclick="selectFacilityStation('seolleung')">선릉역</button>
-                    <button class="station-btn" onclick="selectFacilityStation('samsung')">삼성역</button>
-                </div>
-                <div class="facility-details" id="facilityDetails">
-                    <h4>강남역 편의시설</h4>
-                    <div class="facility-list">
-                        <div class="facility-item">
-                            <i class="fas fa-walking"></i>
-                            <span>에스컬레이터: 1,2,3,4번 출구</span>
-                        </div>
-                        <div class="facility-item">
-                            <i class="fas fa-wheelchair"></i>
-                            <span>엘리베이터: 2,4번 출구</span>
-                        </div>
-                        <div class="facility-item">
-                            <i class="fas fa-restroom"></i>
-                            <span>화장실: 1,3번 출구 근처</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <button class="action-btn" onclick="reportClosure()">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>이용 불가</span>
+            </button>
+          </div>
         </div>
+      {% endif %}
+    </main>
+  </div>
+
+  <!-- Facilities Modal -->
+  <div class="modal" id="facilitiesModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>편의시설 정보</h3>
+        <button class="close-btn" onclick="closeFacilitiesModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="facility-stations">
+          <button class="station-btn active" onclick="selectFacilityStation('gangnam')">강남역</button>
+          <button class="station-btn" onclick="selectFacilityStation('seolleung')">선릉역</button>
+          <button class="station-btn" onclick="selectFacilityStation('samsung')">삼성역</button>
+        </div>
+        <div class="facility-details" id="facilityDetails">
+          <h4>강남역 편의시설</h4>
+          <div class="facility-list">
+            <div class="facility-item"><i class="fas fa-walking"></i><span>에스컬레이터: 1,2,3,4번 출구</span></div>
+            <div class="facility-item"><i class="fas fa-wheelchair"></i><span>엘리베이터: 2,4번 출구</span></div>
+            <div class="facility-item"><i class="fas fa-restroom"></i><span>화장실: 1,3번 출구 근처</span></div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  {# prev POST용 숨은 폼 #}
+  <form id="hiddenPrevForm" method="post" action="{% url 'journeys:route' %}" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="prev">
+  </form>
+
+  {# 마지막 스텝 완료 모달 #}
+  <div id="thankyouModal"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:14px;padding:22px 26px;min-width:280px;max-width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.18);">
+      <div style="font-size:22px;font-weight:700;margin-bottom:8px;">이용해주셔서 감사합니다!</div>
+      <div style="color:#666;margin-bottom:16px;">잠시 후 홈으로 이동합니다…</div>
+      <div>
+        <a href="{% url 'journeys:leave' %}" style="display:inline-block;padding:8px 14px;border-radius:10px;background:#1f6feb;color:#fff;text-decoration:none;">지금 홈으로</a>
+      </div>
+    </div>
+  </div>
 {% endblock content %}
 
-
 {% block js %}
-    <script src="{% static "js/search-util.js" %}"></script>
-    <script src="{% static "js/route.js" %}"></script>
+<script>
+  // 열차 아이콘 이동
+  (function () {
+    var icon = document.getElementById('trainIcon');
+    if (!icon) return;
+    var idx = parseInt(icon.dataset.idx || '0', 10);
+    var count = parseInt(icon.dataset.count || '1', 10);
+    var ratio = (count > 1) ? (idx / (count - 1)) : 0;
+    icon.style.left = 'calc(' + (ratio * 100) + '% - 12px)';
+  })();
+</script>
+
+<script>
+  // 마지막 스텝: '다음' 클릭 시 모달 → 홈 이동
+  (function () {
+    var nextBtn = document.getElementById('nextBtn');
+    if (!nextBtn) return;
+    nextBtn.addEventListener('click', function (ev) {
+      var hasNext = this.dataset.hasNext === '1';
+      if (hasNext) return; // 다음이 있으면 정상 submit
+      ev.preventDefault();
+      var m = document.getElementById('thankyouModal');
+      if (m) m.style.display = 'flex';
+      setTimeout(function () {
+        window.location.href = "{% url 'journeys:leave' %}";
+      }, 1400);
+    });
+  })();
+</script>
 {% endblock js %}
