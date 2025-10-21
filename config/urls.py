@@ -19,10 +19,9 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("", include("apps.common.urls")),
-    path("accounts/", include("apps.accounts.urls")),
-    path("accounts/", include("allauth.urls")), 
-    path("stations/", include("apps.stations.urls")),
-    path("journeys/", include("apps.journeys.urls")),
+    path("", include(("apps.common.urls", "common"), namespace="common")),
+    path("accounts/", include(("apps.accounts.urls", "accounts"), namespace="accounts")),
+    path("accounts/", include("allauth.urls")),  # allauth는 그대로
+    path("stations/", include(("apps.stations.urls", "stations"), namespace="stations")),
+    path("journeys/", include(("apps.journeys.urls", "journeys"), namespace="journeys")),
 ]
