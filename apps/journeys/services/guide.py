@@ -270,6 +270,6 @@ def build_full_guidance(df_nodes: pd.DataFrame, df_edges: pd.DataFrame, short_pa
     all_steps: List[str] = []
     for (station, start_name, goal_name) in short_path_list:
         seg_steps = build_guidance_for_segment(df_nodes, df_edges, station, start_name, goal_name)
-        all_steps.append(f"--- [{station}] {start_name} → {goal_name} ---")
+        # all_steps.append(f"--- [{station}] {start_name} → {goal_name} ---")
         all_steps.extend(seg_steps)
     return all_steps
