@@ -14,3 +14,10 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# End session when browser closes (session cookie)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Local runs over HTTP → allow non-secure cookies
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
