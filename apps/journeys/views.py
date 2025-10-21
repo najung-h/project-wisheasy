@@ -4,7 +4,6 @@ from django.views.decorators.http import require_http_methods
 from apps.journeys.services.guide import (
     load_graph_from_db,
     load_lines_from_db,
-    build_subway_graph,
     get_subway_route,
     build_full_guidance,
 )

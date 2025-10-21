@@ -4,6 +4,8 @@ from collections import deque
 import networkx as nx
 
 from apps.journeys.models import Nodes, Edges, Lines
+from apps.journeys.management.commands.build_graph import get_graph
+
 
 # Lines → dict 로드
 def load_lines_from_db() -> dict[str, list[str]]:
@@ -58,28 +60,6 @@ def load_graph_from_db() -> tuple[pd.DataFrame, pd.DataFrame]:
     return df_nodes, df_edges
 
 
-# short_path_list 생성에 필요한 G 빌드
-def build_subway_graph(lines: dict[str, list[str]]) -> nx.Graph:
-    """
-    lines = {"7호선": [...], "2호선": [...]}
-    노선 내 인접 역 간 weight=0, 동일역 환승 간선 weight=1
-    """
-    G = nx.Graph()
-    for line_name, stations in lines.items():
-        for i, station in enumerate(stations):
-            G.add_node(f"{station}-{line_name}")
-            if i > 0:
-                G.add_edge(f"{stations[i-1]}-{line_name}", f"{station}-{line_name}", weight=0)
-    # 환승 연결 (동일 역명, 다른 노선)
-    all_nodes = list(G.nodes)
-    for n1 in all_nodes:
-        name1, line1 = n1.split("-")
-        for n2 in all_nodes:
-            name2, line2 = n2.split("-")
-            if name1 == name2 and line1 != line2:
-                G.add_edge(n1, n2, weight=1)
-    return G
-
 def find_station_nodes(G: nx.Graph, name: str) -> list[str]:
     return [n for n in G.nodes if n.startswith(name + "-")]
 
@@ -110,7 +90,7 @@ def get_subway_route(
     if lines is None:
         lines = load_lines_from_db()
     if G is None:
-        G = build_subway_graph(lines)
+        G = get_graph()
 
     # 출발/도착 노드 후보
     start_nodes = find_station_nodes(G, start_station)
