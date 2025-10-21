@@ -10,6 +10,7 @@ from apps.journeys.services.guide import (
     get_subway_route,
     build_full_guidance,
 )
+from apps.journeys.management.commands.build_graph import get_graph
 
 # Session namespace for journey progress
 SESSION_KEY = "journey"
@@ -103,7 +104,7 @@ def route(request):
 
         try:
             lines = load_lines_from_db()
-            G = build_subway_graph(lines)
+            G = get_graph()
 
             short_path_list = get_subway_route(
                 start_station=start_station,
