@@ -3,7 +3,7 @@ from typing import List, Tuple, Optional, Dict
 from collections import deque
 import networkx as nx
 
-from journeys.models import Nodes, Edges, Lines
+from apps.journeys.models import Nodes, Edges, Lines
 
 # Lines → dict 로드
 def load_lines_from_db() -> dict[str, list[str]]:
