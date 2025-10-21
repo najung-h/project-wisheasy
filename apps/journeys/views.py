@@ -1,7 +1,7 @@
 from django.shortcuts import render
 # 뷰 데코레이터(특정 요청만 처리하도록 제한)
 from django.views.decorators.http import require_http_methods
-from journeys.services.guide import (
+from apps.journeys.services.guide import (
     load_graph_from_db,
     load_lines_from_db,
     build_subway_graph,
