@@ -320,6 +320,8 @@ jobs:
                 container_name: wisheasy_web
                 restart: always
                 env_file: .env.prod
+                environment:
+                  - DJANGO_SETTINGS_MODULE=config.settings.prod
                 volumes:
                   - ./staticfiles:/wisheasy_app/staticfiles
                   - ./logs:/wisheasy_app/logs
