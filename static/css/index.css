@@ -118,6 +118,7 @@ body {
     gap: 12px;
     position: relative;
     overflow: hidden;
+    text-decoration: none;
 }
 
 .main-btn:hover {
@@ -186,38 +187,38 @@ body {
     .app-container {
         padding: 16px;
     }
-    
+
     .app-icon {
         width: 70px;
         height: 70px;
     }
-    
+
     .icon-text {
         font-size: 28px;
     }
-    
+
     .app-title {
         font-size: 28px;
     }
-    
+
     .app-subtitle {
         font-size: 14px;
     }
-    
+
     .main-card {
         padding: 20px;
     }
-    
+
     .main-btn {
         padding: 20px;
     }
-    
+
     .btn-icon {
         width: 44px !important;
         height: 44px !important;
         font-size: 18px !important;
     }
-    
+
     .btn-text {
         font-size: 16px;
     }

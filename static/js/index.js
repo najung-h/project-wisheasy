@@ -23,36 +23,36 @@ function initializeMainPage() {
     });
 }
 
-// Navigation functions
-const appContainer = document.getElementById('wisheasy-app');
+// Navigation functions (a 태그로 대체함)
+// const appContainer = document.getElementById('wisheasy-app');
 
-function goToRoutePage() {
-    // event.target에서부터 가장 가까운 조상 중에 .route-btn 이라는 클래스를 가진 요소를 찾는다.
-    // 찾아낸 버튼에 loading이라는 CSS 클래스를 추가한다. (로딩 중인 ... 표시)
-    const btn = event.target.closest('.route-btn');
-    btn.classList.add('loading');
+// function goToRoutePage() {
+//     // event.target에서부터 가장 가까운 조상 중에 .route-btn 이라는 클래스를 가진 요소를 찾는다.
+//     // 찾아낸 버튼에 loading이라는 CSS 클래스를 추가한다. (로딩 중인 ... 표시)
+//     const btn = event.target.closest('.route-btn');
+//     btn.classList.add('loading');
 
-    // 0.5초(500ms)간 기다렸다가 코드를 실행한다.
-    // 사용자가 "아, 내 클릭이 잘 인식되었구나"라고 인지할 시간을 벌어주는 UX 장치
-    setTimeout(() => {
-        const routePageUrl = appContainer.dataset.routePageUrl;
-        window.location.href = routePageUrl;
-    }, 500);
-}
+//     // 0.5초(500ms)간 기다렸다가 코드를 실행한다.
+//     // 사용자가 "아, 내 클릭이 잘 인식되었구나"라고 인지할 시간을 벌어주는 UX 장치
+//     setTimeout(() => {
+//         const routePageUrl = appContainer.dataset.routePageUrl;
+//         window.location.href = routePageUrl;
+//     }, 500);
+// }
 
-function goToStationPage() {
-    // event.target에서부터 가장 가까운 조상 중에 .route-btn 이라는 클래스를 가진 요소를 찾는다.
-    // 찾아낸 버튼에 loading이라는 CSS 클래스를 추가한다. (로딩 중인 ... 표시)
-    const btn = event.target.closest('.station-btn');
-    btn.classList.add('loading');
+// function goToStationPage() {
+//     // event.target에서부터 가장 가까운 조상 중에 .route-btn 이라는 클래스를 가진 요소를 찾는다.
+//     // 찾아낸 버튼에 loading이라는 CSS 클래스를 추가한다. (로딩 중인 ... 표시)
+//     const btn = event.target.closest('.station-btn');
+//     btn.classList.add('loading');
 
-    // 0.5초(500ms)간 기다렸다가 코드를 실행한다.
-    // 사용자가 "아, 내 클릭이 잘 인식되었구나"라고 인지할 시간을 벌어주는 UX 장치
-    setTimeout(() => {
-        const stationPageUrl = appContainer.dataset.stationPageUrl;
-        window.location.href = stationPageUrl;
-    }, 500);
-}
+//     // 0.5초(500ms)간 기다렸다가 코드를 실행한다.
+//     // 사용자가 "아, 내 클릭이 잘 인식되었구나"라고 인지할 시간을 벌어주는 UX 장치
+//     setTimeout(() => {
+//         const stationPageUrl = appContainer.dataset.stationPageUrl;
+//         window.location.href = stationPageUrl;
+//     }, 500);
+// }
 
 function showLoginModal() {
     const loginModal = document.getElementById('loginModal');
