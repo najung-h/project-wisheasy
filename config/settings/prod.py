@@ -4,7 +4,11 @@ from .base import *
 
 # base.py에서 env 객체가 이미 초기화되었으므로, 여기서는 .env.prod 파일만 로드합니다.
 # 이 파일의 변수들이 base.py의 설정을 덮어쓰게 됩니다.
-environ.Env.read_env(BASE_DIR / ".env.prod")
+env_file = "/home/ubuntu/wisheasy_app/.env.prod"
+environ.Env.read_env(env_file)
+
+DEBUG = False
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
