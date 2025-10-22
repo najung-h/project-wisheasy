@@ -321,7 +321,9 @@ jobs:
                 restart: always
                 env_file: .env.prod
                 environment:
-                  - DJANGO_SETTINGS_MODULE=config.settings.prod
+                  DJANGO_SETTINGS_MODULE: config.settings.prod
+                  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+                  SECRET_KEY: ${DJANGO_SECRET_KEY}
                 volumes:
                   - ./staticfiles:/wisheasy_app/staticfiles
                   - ./logs:/wisheasy_app/logs
