@@ -422,20 +422,25 @@ function selectFacilityStation(stationName) {
     `;
 }
 
-// '이용 불가' 버튼 -> 대체 경로 안내
-// TODO: '아직 구현되지 않은 기능입니다' 모달 변경
+// '이용 불가' 버튼 -> 임시 알림창
 function reportClosure() {
-    if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
-        alert('죄송합니다. 빠른 대체 경로를 안내합니다');
-
-        // Mock alternative route
-        setTimeout(() => {
-            currentStep = 1;
-            currentRoute.steps = generateAlternativeRoute();
-            updateRouteStep();
-        }, 2000);
-    }
+    // '아직 구현되지 않은 기능입니다.' 라는 알림창을 띄웁니다.
+    alert('아직 구현되지 않은 기능입니다.');
 }
+
+// // '이용 불가' 버튼 -> 대체 경로 안내
+// function reportClosure() {
+//     if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
+//         alert('죄송합니다. 빠른 대체 경로를 안내합니다');
+
+//         // Mock alternative route
+//         setTimeout(() => {
+//             currentStep = 1;
+//             currentRoute.steps = generateAlternativeRoute();
+//             updateRouteStep();
+//         }, 2000);
+//     }
+// }
 
 // function generateAlternativeRoute() {
 //     // TODO: 실제 길찾기 API를 호출하고 그 결과를 파싱하여 경로 단계를 생성하는 로직으로 대체해야 합니다.
