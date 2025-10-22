@@ -1,26 +1,10 @@
 # config/settings/prod.py
 
 from .base import *
-import environ
-from pathlib import Path
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# environ 초기화
-env = environ.Env()
-
-DEBUG = env.bool("DJANGO_DEBUG", default=False)
-
-# .env 파일 로드
+# base.py에서 env 객체가 이미 초기화되었으므로, 여기서는 .env.prod 파일만 로드합니다.
+# 이 파일의 변수들이 base.py의 설정을 덮어쓰게 됩니다.
 environ.Env.read_env(BASE_DIR / ".env.prod")
-
-ALLOWED_HOSTS = [h.strip() for h in env("DJANGO_ALLOWED_HOSTS").split(",")]
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
