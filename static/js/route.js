@@ -239,6 +239,7 @@ function selectStation(stationName, inputId) {
 //     }
 // }
 
+// 경로 안내 시 위치 안내 헤더(route-progress)
 function updateRouteStep() {
     if (!currentRoute) return;
 
@@ -422,18 +423,19 @@ function selectFacilityStation(stationName) {
 }
 
 // '이용 불가' 버튼 -> 대체 경로 안내
-// function reportClosure() {
-//     if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
-//         alert('죄송합니다. 빠른 대체 경로를 안내합니다');
+// TODO: '아직 구현되지 않은 기능입니다' 모달 변경
+function reportClosure() {
+    if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
+        alert('죄송합니다. 빠른 대체 경로를 안내합니다');
 
-//         // Mock alternative route
-//         setTimeout(() => {
-//             currentStep = 1;
-//             currentRoute.steps = generateAlternativeRoute();
-//             updateRouteStep();
-//         }, 2000);
-//     }
-// }
+        // Mock alternative route
+        setTimeout(() => {
+            currentStep = 1;
+            currentRoute.steps = generateAlternativeRoute();
+            updateRouteStep();
+        }, 2000);
+    }
+}
 
 // function generateAlternativeRoute() {
 //     // TODO: 실제 길찾기 API를 호출하고 그 결과를 파싱하여 경로 단계를 생성하는 로직으로 대체해야 합니다.
@@ -460,27 +462,27 @@ function selectFacilityStation(stationName) {
 // }
 
 // Navigation
-const appContainer = document.getElementById('wisheasy-app');
+// const appContainer = document.getElementById('wisheasy-app');
 
-function goBack() {
-    const routeGuidance = document.getElementById('routeGuidance');
-    // 경로 안내 카드가 화면에 표시된 상태라면, 경로 안내 카드를 숨기고 다시 검색 화면으로 이동
-    if (routeGuidance.style.display === 'block') {
-        routeGuidance.style.display = 'none';
-        document.querySelector('.input-section').style.display = 'block';
-        document.getElementById('startStation').value = ''
-        document.getElementById('endStation').value = ''
-    }
-    // 방문 기록이 있으면서, 동시에 외부 페이지를 통해 정상적으로 들어온 경우에만 뒤로가기
-    else if (window.history.length > 1 && document.referrer) {
-        window.history.back();
-    }
-    // 그렇지 않다면, 메인 페이지로 이동
-    else {
-        const mainPageUrl = appContainer.dataset.mainPageUrl;
-        window.location.href = mainPageUrl;
-    }
-}
+// function goBack() {
+//     const routeGuidance = document.getElementById('routeGuidance');
+//     // 경로 안내 카드가 화면에 표시된 상태라면, 경로 안내 카드를 숨기고 다시 검색 화면으로 이동
+//     if (routeGuidance.style.display === 'block') {
+//         routeGuidance.style.display = 'none';
+//         document.querySelector('.input-section').style.display = 'block';
+//         document.getElementById('startStation').value = ''
+//         document.getElementById('endStation').value = ''
+//     }
+//     // 방문 기록이 있으면서, 동시에 외부 페이지를 통해 정상적으로 들어온 경우에만 뒤로가기
+//     else if (window.history.length > 1 && document.referrer) {
+//         window.history.back();
+//     }
+//     // 그렇지 않다면, 메인 페이지로 이동
+//     else {
+//         const mainPageUrl = appContainer.dataset.mainPageUrl;
+//         window.location.href = mainPageUrl;
+//     }
+// }
 
 // Close modals when clicking outside
 document.addEventListener('click', function(e) {

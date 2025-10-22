@@ -11,9 +11,15 @@
   <div class="app-container">
     <!-- Header -->
     <header class="page-header">
-      <button class="back-btn" onclick="goBack()">
+      {% if mode == "form" %}
+      <a href="{% url "journeys:leave" %}" class="back-btn" aria-label="메인으로 돌아가기">
         <i class="fas fa-arrow-left"></i>
-      </button>
+      </a>
+      {% elif mode == "guide" %}
+      <a href="{% url "journeys:route" %}?new=1" class="back-btn" aria-label="경로 입력 페이지로 돌아가기">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      {% endif %}
       <div class="page-title">길찾기</div>
       <a href="{% url 'journeys:leave' %}" class="home-btn" aria-label="메인으로 돌아가기">
         <i class="fas fa-home"></i>
