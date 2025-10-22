@@ -142,11 +142,7 @@ jobs:
             DOCKERHUB_TOKEN=${{ env.DOCKERHUB_TOKEN }}
             DOCKERHUB_IMAGE=${{ env.DOCKERHUB_IMAGE }}
             IMAGE_TAG=${{ env.IMAGE_TAG }}
-
-            EC2_HOST=${{ env.EC2_HOST }}
-            EC2_USER=${{ env.EC2_USER }}
-            EC2_SSH_KEY=${{ env.EC2_SSH_KEY }}
-
+            
             APP_DIR=${{ env.APP_DIR }}
 
             MYSQL_USER=${{ env.MYSQL_USER }}
