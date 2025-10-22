@@ -11,15 +11,15 @@ DEBUG=True  # 개발 끝나면 False로 해둘 예정
 
 
 # .env 파일 로드
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+environ.Env.read_env(os.path.join(BASE_DIR, ".env.prod"))
 
 # 이제 설정 읽기
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
 
 # EC2 추가
-EC2 = env.list("DJANGO_EC2_HOSTS", default=[])
+EC2 = env.list("EC2_HOST", default=[])
 ALLOWED_HOSTS += EC2
 
 # Database
@@ -28,11 +28,11 @@ ALLOWED_HOSTS += EC2
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": env.str("MYSQL_DB"),
+        "NAME": env.str("MYSQL_DATABASE"),
         "USER": env.str("MYSQL_USER"),
         "PASSWORD": env.str("MYSQL_PASSWORD"),
-        "HOST": env.str("MYSQL_HOST", default="localhost"),
-        "PORT": env.int("MYSQL_PORT", default=3306),
+        "HOST": env.str("DB_HOST", default="localhost"),
+        "PORT": env.int("DB_PORT", default=3306),
         "OPTIONS": {
             "charset": "utf8mb4",
         },

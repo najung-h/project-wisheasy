@@ -11,6 +11,36 @@ on:
       - dev          # ← PR에서도 린트/빌드가 돌도록 명시
 # --------------- /triggers ---------------------------------------------
 
+# 최상단 env: 모든 값은 여기서만 정의하고 아래에서 `${{ env.* }}`로만 참조할 예정
+env:
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  DOCKERHUB_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/wisheasy_app
+  IMAGE_TAG: sha-${{ github.sha }}
+
+  EC2_HOST: ${{ secrets.EC2_HOST }}
+  EC2_USER: ${{ secrets.EC2_USER }}
+  EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+
+  APP_DIR: "/home/ubuntu/wisheasy_app"
+
+  MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+  MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+  MYSQL_USER: ${{ secrets.MYSQL_USER }}
+  MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+  DB_HOST: mysql_db
+  DB_PORT: 3306
+
+  DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+  DJANGO_DEBUG: ${{ secrets.DJANGO_DEBUG }}
+  DJANGO_ALLOWED_HOSTS: ${{ secrets.DJANGO_ALLOWED_HOSTS }}
+
+  
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+
+  SITE_DOMAIN: wisheasy.site
+
 
 jobs:
   build-and-push:
@@ -60,8 +90,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
       #-------------/Build:registry-login-------------
           
         
@@ -73,9 +103,9 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/wisheasy:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/wisheasy:sha-${{ github.sha }}
-          
+            ${{ env.DOCKERHUB_USERNAME }}/wisheasy_app:latest
+            ${{ env.DOCKERHUB_USERNAME }}/wisheasy_app:sha-${{ github.sha }}
+
       #-------------/Build:build_n_push-------------
   #-------------/Build-------------
 
@@ -89,51 +119,56 @@ jobs:
       - name: Deploy to EC2 with Docker Compose (nginx + web + db)
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ env.EC2_SSH_KEY }}
           script: |
             set -Eeuo pipefail
 
             # -----------deploy:prep---------
             # -p 명령어(폴더가 없으면 만들고, 있어도 실패 안함)를 통해, 다음 단계에서 필요한 폴더 구조가 확실하게 존재하도록 보장
-            APP_DIR="/home/ubuntu/app"
+            # APP_DIR="/home/ubuntu/app"
             mkdir -p "$APP_DIR/nginx/conf.d"
             cd "$APP_DIR"
             # ----------/deploy:prep---------
 
             # -----------deploy:env---------
-            # .env 파일 재생성, -f 명령어를 통해 파일 존재여부와 관계없이 삭제를 (안전하게 == 실패 안하게)보장하려고 함.
-            rm -f .env
+            # .env.prod 파일 재생성, -f 명령어를 통해 파일 존재여부와 관계없이 삭제를 (안전하게 == 실패 안하게)보장하려고 함.
+            rm -f .env.prod
             # 아래 명령어를 통해 스크립트 내에서 환경 변수와 같은 여러 줄의 데이터를 파일(.env)로 만들 수 있음 
-            cat > .env << 'EOF'
-            MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-            MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
-            MYSQL_USER=${{ secrets.MYSQL_USER }}
-            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            cat > .env.prod << 'EOF'
 
-            DB_HOST=mysql_db
-            DB_NAME=${{ secrets.MYSQL_DATABASE }}
-            DB_USER=${{ secrets.MYSQL_USER }}
-            DB_PASS=${{ secrets.MYSQL_PASSWORD }}
-            DB_PORT=3306
+            DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
+            DOCKERHUB_TOKEN=${{ env.DOCKERHUB_TOKEN }}
+            DOCKERHUB_IMAGE=${{ env.DOCKERHUB_IMAGE }}
+            IMAGE_TAG=${{ env.IMAGE_TAG }}
 
-            DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
-            DJANGO_DEBUG=True
-            DJANGO_ALLOWED_HOSTS=*
+            EC2_HOST=${{ env.EC2_HOST }}
+            EC2_USER=${{ env.EC2_USER }}
+            EC2_SSH_KEY=${{ env.EC2_SSH_KEY }}
 
-            DJANGO_EC2_HOSTS=${{ secrets.DJANGO_EC2_HOSTS }}
-            
-            DOCKERHUB_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/wisheasy
-            IMAGE_TAG=sha-${{ github.sha }}
-            
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            APP_DIR=${{ env.APP_DIR }}
 
-            SITE_DOMAIN=wisheasy.site
+            MYSQL_USER=${{ env.MYSQL_USER }}
+            MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}
+            MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}
+            MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}
+
+            DB_HOST= ${{ env.DB_HOST }}
+            DB_PORT=${{ env.DB_PORT }}
+
+            DJANGO_SECRET_KEY=${{ env.DJANGO_SECRET_KEY }}
+            DJANGO_DEBUG=${{ env.DJANGO_DEBUG }}
+            DJANGO_ALLOWED_HOSTS=${{ env.DJANGO_ALLOWED_HOSTS }}
+
+            GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
+
+            SITE_DOMAIN=${{ env.SITE_DOMAIN }}
 
             EOF
-            COMPOSE_FILE=docker-compose.yml
+
+            COMPOSE_FILE=docker-compose.prod.yml
             WEB_SVC=wisheasy_web
             DB_SVC=mysql_db
             NGINX_SVC=nginx_edge
@@ -211,8 +246,8 @@ jobs:
             fi
 
             # Hub 로그인
-            if [ -n "${{ secrets.DOCKERHUB_TOKEN }}" ]; then
-              echo "${{ secrets.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+            if [ -n "${{ env.DOCKERHUB_TOKEN }}" ]; then
+              echo "${{ env.DOCKERHUB_TOKEN }}" | sudo docker login -u "${{ env.DOCKERHUB_USERNAME }}" --password-stdin
             fi
 
             # 네트워크 생성 - 야멜 파일 안에 정의된 컨테이너 들이 appnet에 연결되어, 서로 다른 컨테이너 들이 통신할 수 있게 만들어줍니다. 반대로 appnet 네트워크에 속하지 않은 다른 컨테이너들과는 격리되어 보안은 강화됩니다.
@@ -263,19 +298,14 @@ jobs:
             # ----------/deploy:nginx-conf---------
 
             # -----------deploy:compose-file---------
-            # 개발 과정임을 고려하여 docker-compose.yml 작성, 추후 운영환경을 위해 docker-compose.prod.yml 별도 작성 예정.
-            cat > docker-compose.yml << 'EOF'
+            # docker-compose.prod.yml 파일을 재생성
+            cat > docker-compose.prod.yml << 'EOF'
             services:
               db:
                 image: mysql:8.0
                 container_name: mysql_db
                 restart: always
-                env_file: .env
-                environment:
-                  MYSQL_DATABASE: ${MYSQL_DATABASE}
-                  MYSQL_USER: ${MYSQL_USER}
-                  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-                  MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+                env_file: .env.prod
                 volumes:
                   - mysql_data:/var/lib/mysql
                   - ./mysql/conf.d:/etc/mysql/conf.d:ro 
@@ -290,25 +320,11 @@ jobs:
                 image: "${DOCKERHUB_IMAGE}:${IMAGE_TAG}"
                 container_name: wisheasy_web
                 restart: always
-                env_file: .env
-                environment:
-                  SECRET_KEY: ${DJANGO_SECRET_KEY}
-                  DJANGO_DEBUG: ${DJANGO_DEBUG}
-                  MYSQL_HOST: ${DB_HOST:-db}
-                  MYSQL_PORT: ${DB_PORT:-3306}
-                  MYSQL_DATABASE: ${MYSQL_DATABASE}
-                  MYSQL_USER: ${MYSQL_USER}
-                  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-                  MYSQL_DB: ${MYSQL_DATABASE}
-                  DJANGO_SETTINGS_MODULE: config.settings.prod
-                  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-                  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-                  SITE_DOMAIN: ${SITE_DOMAIN}
+                env_file: .env.prod
                 volumes:
                   - ./staticfiles:/app/staticfiles
                   - ./logs:/app/logs
                   - app_data:/data
-                
                 networks: [appnet]
                 expose:
                   - "8000"
@@ -409,7 +425,7 @@ jobs:
             #       정적 파일을 모아 Nginx가 서비스할 수 있도록 준비하는 단계입니다.
             #       (== 웹앱이 실제로 뜨기 전에 내부 구조와 자산을 세팅하는 작업)
             echo "[deploy:migrate-and-static] Django migrate과 collectstatic 수행하겠습니다."
-            # ? 왜 웹앱(Gunicorn)이 뜨기 전에 migrate를 하나요?
+            # 왜 웹앱(Gunicorn)이 뜨기 전에 migrate를 하나요?
             #  └ manage.py migrate 명령은 웹 서버(gunicorn) 실행과 무관하게, 
             #    Django ORM을 통해 직접 DB에 접속하여 스키마를 적용
             #  └ 즉, DB만 살아있으면 (웹앱이 뜨기 전이라도) 독립적으로 실행 가능
@@ -508,13 +524,13 @@ jobs:
       - name: Cleanup old Docker images on EC2 (retain last 3)
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ env.EC2_HOST }}
+          username: ${{ env.EC2_USER }}
+          key: ${{ env.EC2_SSH_KEY }}
           script: |
             set -Eeuo pipefail
             echo "[cleanup] 오래된 Docker 이미지를 정리합니다."
-            REPO="${{ secrets.DOCKERHUB_USERNAME }}/wisheasy"
+            REPO="${{ env.DOCKERHUB_IMAGE }}"
             KEEP_N=3
 
 
@@ -548,7 +564,7 @@ jobs:
               | awk -v r="$REPO" '$1 ~ r":sha-" {print $1}'
             )"
 
-            # 4) atest 이미지가 있으면 보호 리스트에 추가
+            # 4) latest 이미지가 있으면 보호 리스트에 추가
             PROTECT_LIST=("${KEEP_SHA[@]}")
             if sudo docker images --format '{{.Repository}}:{{.Tag}}' | grep -q "^${REPO}:latest$"; then
               PROTECT_LIST+=("${REPO}:latest")
