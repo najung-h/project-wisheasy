@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # environ 초기화
 env = environ.Env()
 
-DEBUG="True"  # 기본값 False
+DEBUG=True  # 기본값 False
 
 
 # .env 파일 로드
