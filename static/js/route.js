@@ -1,23 +1,23 @@
 // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
 // 각 역 객체에는 고유 ID, 역명, 호선 목록, 좌표 등의 정보가 포함되어야 합니다.
 // Mock data for stations
-const stations = [
-    { name: '강남역', lines: ['2호선', '분당선'] },
-    { name: '선릉역', lines: ['2호선', '분당선'] },
-    { name: '삼성역', lines: ['2호선'] },
-    { name: '신도림역', lines: ['2호선', '1호선'] },
-    { name: '여의도역', lines: ['5호선', '9호선'] },
-    { name: '여의나루역', lines: ['5호선', '9호선'] },
-    { name: '시청역', lines: ['1호선', '2호선'] },
-    { name: '종각역', lines: ['1호선', '3호선'] },
-    { name: '홍대입구역', lines: ['2호선', '6호선', '경의중앙선'] },
-    { name: '합정역', lines: ['2호선', '6호선'] }
-];
+// const stations = [
+//     { name: '강남역', lines: ['2호선', '분당선'] },
+//     { name: '선릉역', lines: ['2호선', '분당선'] },
+//     { name: '삼성역', lines: ['2호선'] },
+//     { name: '신도림역', lines: ['2호선', '1호선'] },
+//     { name: '여의도역', lines: ['5호선', '9호선'] },
+//     { name: '여의나루역', lines: ['5호선', '9호선'] },
+//     { name: '시청역', lines: ['1호선', '2호선'] },
+//     { name: '종각역', lines: ['1호선', '3호선'] },
+//     { name: '홍대입구역', lines: ['2호선', '6호선', '경의중앙선'] },
+//     { name: '합정역', lines: ['2호선', '6호선'] }
+// ];
 
 // Current route state
-let currentStep = 1;
-let totalSteps = 5;
-let currentRoute = null;
+// let currentStep = 1;
+// let totalSteps = 5;
+// let currentRoute = null;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
@@ -29,7 +29,7 @@ function initializeRoutePage() {
     console.log('길찾기 페이지가 로드되었습니다.');
 }
 
-// Station input with autocomplete
+// 역 입력 시 자동완성 기능
 function setupStationInputs() {
     const startInput = document.getElementById('startStation');
     const endInput = document.getElementById('endStation');
@@ -91,153 +91,153 @@ function selectStation(stationName, inputId) {
     suggestions.style.display = 'none';
 }
 
-// Start route search
-function startRouteSearch() {
-    const startStationName = document.getElementById('startStation').value;
-    const endStationName = document.getElementById('endStation').value;
+// '길찾기 시작' 버튼 -> 경로 찾기
+// function startRouteSearch() {
+//     const startStationName = document.getElementById('startStation').value;
+//     const endStationName = document.getElementById('endStation').value;
 
-    if (!startStationName || !endStationName) {
-        alert('출발역과 도착역을 모두 입력해주세요.');
-        return;
-    }
+//     if (!startStationName || !endStationName) {
+//         alert('출발역과 도착역을 모두 입력해주세요.');
+//         return;
+//     }
 
-    if (startStationName === endStationName) {
-        alert('출발역과 도착역이 같을 수 없습니다.');
-        return;
-    }
+//     if (startStationName === endStationName) {
+//         alert('출발역과 도착역이 같을 수 없습니다.');
+//         return;
+//     }
 
-    const searchBtn = document.querySelector('.search-btn');
-    searchBtn.disabled = true;
-    searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 경로 탐색 중...';
+//     const searchBtn = document.querySelector('.search-btn');
+//     searchBtn.disabled = true;
+//     searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 경로 탐색 중...';
 
-    setTimeout(() => {
-        document.getElementById('inputSection').style.display = 'none';
+//     setTimeout(() => {
+//         document.getElementById('inputSection').style.display = 'none';
 
-        // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
-        // 각 역 객체에는 역명, 호선 목록, 소요 시간 등의 정보가 포함되어야 합니다.
-        // --- Set Marker Colors and Names ---
-        const startStation = stations.find(s => s.name === startStationName) || { lines: ['2호선'] };
-        const endStation = stations.find(s => s.name === endStationName) || { lines: ['3호선'] };
-        const transferStation = stations.find(s => s.name === '선릉역') || { lines: ['분당선'] };
+//         // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
+//         // 각 역 객체에는 역명, 호선 목록, 소요 시간 등의 정보가 포함되어야 합니다.
+//         // --- Set Marker Colors and Names ---
+//         const startStation = stations.find(s => s.name === startStationName) || { lines: ['2호선'] };
+//         const endStation = stations.find(s => s.name === endStationName) || { lines: ['3호선'] };
+//         const transferStation = stations.find(s => s.name === '선릉역') || { lines: ['분당선'] };
 
-        document.getElementById('startStationName').textContent = startStationName;
-        document.getElementById('endStationName').textContent = endStationName;
-        document.getElementById('transferStationName').textContent = '선릉';
+//         document.getElementById('startStationName').textContent = startStationName;
+//         document.getElementById('endStationName').textContent = endStationName;
+//         document.getElementById('transferStationName').textContent = '선릉';
 
-        const startMarker = document.querySelector('.station-marker.start');
-        const endMarker = document.querySelector('.station-marker.end');
-        const transferMarker = document.getElementById('transferMarker');
+//         const startMarker = document.querySelector('.station-marker.start');
+//         const endMarker = document.querySelector('.station-marker.end');
+//         const transferMarker = document.getElementById('transferMarker');
 
-        startMarker.className = 'station-marker start '; // Reset classes
-        endMarker.className = 'station-marker end ';
-        transferMarker.className = 'transfer-marker ';
+//         startMarker.className = 'station-marker start '; // Reset classes
+//         endMarker.className = 'station-marker end ';
+//         transferMarker.className = 'transfer-marker ';
 
-        startMarker.classList.add(getLineClass(startStation.lines[0]));
-        endMarker.classList.add(getLineClass(endStation.lines[0]));
-        transferMarker.classList.add(getLineClass(transferStation.lines[0]));
-        // --- End of Marker Color Logic ---
+//         startMarker.classList.add(getLineClass(startStation.lines[0]));
+//         endMarker.classList.add(getLineClass(endStation.lines[0]));
+//         transferMarker.classList.add(getLineClass(transferStation.lines[0]));
+//         // --- End of Marker Color Logic ---
 
-        document.getElementById('routeGuidance').style.display = 'block';
+//         document.getElementById('routeGuidance').style.display = 'block';
 
-        currentRoute = {
-            start: startStationName,
-            end: endStationName,
-            steps: generateRouteSteps(startStationName, endStationName)
-        };
-        totalSteps = currentRoute.steps.length;
+//         currentRoute = {
+//             start: startStationName,
+//             end: endStationName,
+//             steps: generateRouteSteps(startStationName, endStationName)
+//         };
+//         totalSteps = currentRoute.steps.length;
 
-        updateRouteStep();
+//         updateRouteStep();
 
-        searchBtn.disabled = false;
-        searchBtn.innerHTML = '<i class="fas fa-search"></i> 길찾기 시작';
-    }, 1500);
-}
+//         searchBtn.disabled = false;
+//         searchBtn.innerHTML = '<i class="fas fa-search"></i> 길찾기 시작';
+//     }, 1500);
+// }
 
-function getIcon(iconKeyword) {
-    const iconMap = {
-        'subway': 'fa-subway',
-        'walk': 'fa-walking',
-        'escalator': 'fa-arrow-up', // Changed icon
-        'stairs': 'fa-walking', // Using fa-walking as a stand-in
-        'exit': 'fa-door-open',
-        'arrive': 'fa-flag-checkered',
-        'transfer': 'fa-exchange-alt'
-    };
-    return iconMap[iconKeyword] || 'fa-question-circle';
-}
+// function getIcon(iconKeyword) {
+//     const iconMap = {
+//         'subway': 'fa-subway',
+//         'walk': 'fa-walking',
+//         'escalator': 'fa-arrow-up', // Changed icon
+//         'stairs': 'fa-walking', // Using fa-walking as a stand-in
+//         'exit': 'fa-door-open',
+//         'arrive': 'fa-flag-checkered',
+//         'transfer': 'fa-exchange-alt'
+//     };
+//     return iconMap[iconKeyword] || 'fa-question-circle';
+// }
 
 // TODO: 실제 길찾기 API를 호출하고 그 결과를 파싱하여 경로 단계를 생성하는 로직으로 대체해야 합니다.
 // API는 출발지, 도착지, 사용자 설정(최단 시간, 최소 환승 등)을 인자로 받아야 합니다.
 // 현재는 고정된 모의 경로를 반환합니다.
-function generateRouteSteps(start, end) {
-    // Mock route steps with realistic subway guidance and icons
-    return [
-        {
-            instruction: [`<span class="highlight">${start}</span>`, '승강장으로 이동하세요'],
-            position: 'start',
-            times: ['2분', '5분'],
-            icon: 'walk',
-            line: '2호선' // Added line property
-        },
-        {
-            instruction: ['<span class="highlight">2호선</span> 승차 후', '3개 역 이동'],
-            position: 'start',
-            times: ['2분', '5분'],
-            icon: 'subway',
-            line: '2호선'
-        },
-        {
-            instruction: ['<span class="highlight">선릉역</span>에서 하차', '환승 통로로 이동'],
-            position: 'transfer',
-            times: ['2분', '5분'],
-            icon: 'walk',
-            line: '2호선'
-        },
-        {
-            instruction: ['<span class="highlight">분당선</span>으로 환승', '<span class="highlight">수원</span> 방향'],
-            position: 'transfer',
-            times: ['2분', '5분'],
-            icon: 'transfer',
-            line: '분당선' // Changed line
-        },
-        {
-            instruction: [`<span class="highlight">${end}</span>에서 하차`, '<span class="highlight">3번 출구</span>로 이동'],
-            position: 'end',
-            times: ['2분', '5분'],
-            icon: 'walk',
-            line: '분당선'
-        },
-        {
-            instruction: [`<span class="highlight">에스컬레이터</span>를 타고`, '지상으로 올라가세요'], // Highlighted text
-            position: 'end',
-            times: ['1분', '0분'],
-            icon: 'escalator',
-            line: '분당선'
-        },
-        {
-            instruction: ['목적지에', '도착했습니다!'],
-            position: 'end',
-            times: ['0분', '0분'],
-            icon: 'arrive',
-            line: '분당선'
-        }
-    ];
-}
+// function generateRouteSteps(start, end) {
+//     // Mock route steps with realistic subway guidance and icons
+//     return [
+//         {
+//             instruction: [`<span class="highlight">${start}</span>`, '승강장으로 이동하세요'],
+//             position: 'start',
+//             times: ['2분', '5분'],
+//             icon: 'walk',
+//             line: '2호선' // Added line property
+//         },
+//         {
+//             instruction: ['<span class="highlight">2호선</span> 승차 후', '3개 역 이동'],
+//             position: 'start',
+//             times: ['2분', '5분'],
+//             icon: 'subway',
+//             line: '2호선'
+//         },
+//         {
+//             instruction: ['<span class="highlight">선릉역</span>에서 하차', '환승 통로로 이동'],
+//             position: 'transfer',
+//             times: ['2분', '5분'],
+//             icon: 'walk',
+//             line: '2호선'
+//         },
+//         {
+//             instruction: ['<span class="highlight">분당선</span>으로 환승', '<span class="highlight">수원</span> 방향'],
+//             position: 'transfer',
+//             times: ['2분', '5분'],
+//             icon: 'transfer',
+//             line: '분당선' // Changed line
+//         },
+//         {
+//             instruction: [`<span class="highlight">${end}</span>에서 하차`, '<span class="highlight">3번 출구</span>로 이동'],
+//             position: 'end',
+//             times: ['2분', '5분'],
+//             icon: 'walk',
+//             line: '분당선'
+//         },
+//         {
+//             instruction: [`<span class="highlight">에스컬레이터</span>를 타고`, '지상으로 올라가세요'], // Highlighted text
+//             position: 'end',
+//             times: ['1분', '0분'],
+//             icon: 'escalator',
+//             line: '분당선'
+//         },
+//         {
+//             instruction: ['목적지에', '도착했습니다!'],
+//             position: 'end',
+//             times: ['0분', '0분'],
+//             icon: 'arrive',
+//             line: '분당선'
+//         }
+//     ];
+// }
 
-// Route navigation
-function nextStep() {
-    if (currentStep < totalSteps) {
-        currentStep++;
-        updateRouteStep();
-    }
-}
+// 경로 안내 카드
+// function nextStep() {
+//     if (currentStep < totalSteps) {
+//         currentStep++;
+//         updateRouteStep();
+//     }
+// }
 
-function previousStep() {
-    if (currentStep > 1) {
-        currentStep--;
-        updateRouteStep();
-    }
-}
+// function previousStep() {
+//     if (currentStep > 1) {
+//         currentStep--;
+//         updateRouteStep();
+//     }
+// }
 
 function updateRouteStep() {
     if (!currentRoute) return;
@@ -337,46 +337,46 @@ function updateRouteVisual(stations) {
     });
 }
 
-function endGuidance() {
-    alert('경로 안내가 종료되었습니다.');
+// function endGuidance() {
+//     alert('경로 안내가 종료되었습니다.');
 
-    // Show input section again
-    document.getElementById('inputSection').style.display = 'block';
-    document.getElementById('routeGuidance').style.display = 'none';
+//     // Show input section again
+//     document.getElementById('inputSection').style.display = 'block';
+//     document.getElementById('routeGuidance').style.display = 'none';
 
-    // Reset state
-    currentStep = 1;
-    currentRoute = null;
+//     // Reset state
+//     currentStep = 1;
+//     currentRoute = null;
 
-    // Reset form
-    document.getElementById('startStation').value = '';
-    document.getElementById('endStation').value = '';
+//     // Reset form
+//     document.getElementById('startStation').value = '';
+//     document.getElementById('endStation').value = '';
 
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
+//     // Scroll to top
+//     window.scrollTo({ top: 0, behavior: 'smooth' });
+// }
 
 // Audio functions
-function playAudio() {
-    const instructionLines = document.querySelectorAll('.instruction-line');
-    const instruction = Array.from(instructionLines).map(line => line.textContent).join(' ');
+// function playAudio() {
+//     const instructionLines = document.querySelectorAll('.instruction-line');
+//     const instruction = Array.from(instructionLines).map(line => line.textContent).join(' ');
 
-    // Mock audio playback
-    console.log('Playing audio:', instruction);
+//     // Mock audio playback
+//     console.log('Playing audio:', instruction);
 
-    // Show audio feedback
-    const btn = event.target.closest('.action-btn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-volume-up"></i><span>재생 중...</span>';
-    btn.disabled = true;
+//     // Show audio feedback
+//     const btn = event.target.closest('.action-btn');
+//     const originalText = btn.innerHTML;
+//     btn.innerHTML = '<i class="fas fa-volume-up"></i><span>재생 중...</span>';
+//     btn.disabled = true;
 
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }, 2000);
-}
+//     setTimeout(() => {
+//         btn.innerHTML = originalText;
+//         btn.disabled = false;
+//     }, 2000);
+// }
 
-// Facilities modal
+// '편의 시설' 버튼 -> 출발역/환승역/도착역의 시설 정보(모달)
 function showFacilities() {
     document.getElementById('facilitiesModal').classList.add('show');
 }
@@ -421,43 +421,43 @@ function selectFacilityStation(stationName) {
     `;
 }
 
-// Report closure
-function reportClosure() {
-    if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
-        alert('죄송합니다. 빠른 대체 경로를 안내합니다');
+// '이용 불가' 버튼 -> 대체 경로 안내
+// function reportClosure() {
+//     if (confirm('현재 경로에서 문제가 발생했나요? 대체 경로를 안내해드리겠습니다.')) {
+//         alert('죄송합니다. 빠른 대체 경로를 안내합니다');
 
-        // Mock alternative route
-        setTimeout(() => {
-            currentStep = 1;
-            currentRoute.steps = generateAlternativeRoute();
-            updateRouteStep();
-        }, 2000);
-    }
-}
+//         // Mock alternative route
+//         setTimeout(() => {
+//             currentStep = 1;
+//             currentRoute.steps = generateAlternativeRoute();
+//             updateRouteStep();
+//         }, 2000);
+//     }
+// }
 
-function generateAlternativeRoute() {
-    // TODO: 실제 길찾기 API를 호출하고 그 결과를 파싱하여 경로 단계를 생성하는 로직으로 대체해야 합니다.
-    // API는 출발지, 도착지, 사용자 설정(최단 시간, 최소 환승 등)을 인자로 받아야 합니다.
-    // 차순위 경로 또는 장애물 회피 경로를 반환해야 합니다.
-    // 현재는 고정된 모의 경로를 반환합니다.
-    return [
-        {
-            instruction: '대체 경로로 안내합니다',
-            detail: '에스컬레이터 이용이 어려우시군요. 엘리베이터를 이용한 경로로 안내해드립니다.',
-            stations: [currentRoute.start, '선릉', '삼성', currentRoute.end]
-        },
-        {
-            instruction: '엘리베이터를 이용하세요',
-            detail: '2번 출구 엘리베이터를 이용하여 승강장으로 이동하세요.',
-            stations: ['선릉']
-        },
-        {
-            instruction: '목적지에 도착했습니다',
-            detail: '안전한 여행 되세요!',
-            stations: [currentRoute.end]
-        }
-    ];
-}
+// function generateAlternativeRoute() {
+//     // TODO: 실제 길찾기 API를 호출하고 그 결과를 파싱하여 경로 단계를 생성하는 로직으로 대체해야 합니다.
+//     // API는 출발지, 도착지, 사용자 설정(최단 시간, 최소 환승 등)을 인자로 받아야 합니다.
+//     // 차순위 경로 또는 장애물 회피 경로를 반환해야 합니다.
+//     // 현재는 고정된 모의 경로를 반환합니다.
+//     return [
+//         {
+//             instruction: '대체 경로로 안내합니다',
+//             detail: '에스컬레이터 이용이 어려우시군요. 엘리베이터를 이용한 경로로 안내해드립니다.',
+//             stations: [currentRoute.start, '선릉', '삼성', currentRoute.end]
+//         },
+//         {
+//             instruction: '엘리베이터를 이용하세요',
+//             detail: '2번 출구 엘리베이터를 이용하여 승강장으로 이동하세요.',
+//             stations: ['선릉']
+//         },
+//         {
+//             instruction: '목적지에 도착했습니다',
+//             detail: '안전한 여행 되세요!',
+//             stations: [currentRoute.end]
+//         }
+//     ];
+// }
 
 // Navigation
 const appContainer = document.getElementById('wisheasy-app');
