@@ -44,10 +44,10 @@
           <span class="btn-text">길찾기</span>
         </a>
 
-        <button class="main-btn station-btn" onclick="goToStationPage()">
+        <a class="main-btn station-btn" href="{% url 'stations:station_info' %}">
           <div class="btn-icon"><i class="fas fa-search"></i></div>
           <span class="btn-text">역 정보</span>
-        </button>
+        </a>
       </div>
     </main>
   </div>
