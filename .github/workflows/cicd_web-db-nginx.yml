@@ -320,6 +320,8 @@ jobs:
                 container_name: wisheasy_web
                 restart: always
                 env_file: .env.prod
+                environment:
+                  - DJANGO_SETTINGS_MODULE=config.settings.prod
                 volumes:
                   - ./staticfiles:/wisheasy_app/staticfiles
                   - ./logs:/wisheasy_app/logs
@@ -446,7 +448,7 @@ jobs:
             # 3. 웹 서버 메모리/상태에 영향 없이 마이그레이션 작업만 수행
             
             # (1) DB 마이그레이션: 이미 만들어진 테이블이 있어도 기록만 맞추도록 안전장치 포함
-            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm web sh -lc "
+            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm --no-deps web sh -lc "
               echo '[deploy:migrate] (1/5) DB 마이그레이션 시작...';
               python manage.py migrate --noinput --settings=config.settings.prod || \
               python manage.py migrate --fake-initial --noinput --settings=config.settings.prod;
@@ -454,7 +456,7 @@ jobs:
             "
 
             # (2) Google SocialApp 적용
-            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm web sh -lc "
+            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm --no-deps web sh -lc "
               set -Eeuo pipefail
               echo '[deploy:apply-socialapp] (2/5) Django Site 도메인 업데이트...';
               python manage.py shell --settings=config.settings.prod -c \
@@ -467,7 +469,7 @@ jobs:
 
             # (3) CSV 파일 DB에 업로드
             # 최초  1회 / 내용 변경 시에만 실행 예정
-            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm web sh -lc "
+            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm --no-deps web sh -lc "
               set -Eeuo pipefail
               echo '[deploy:load_csv] (3/5) CSV 데이터 적재 시작...';
               mkdir -p /data && touch /data/.keep
@@ -484,14 +486,14 @@ jobs:
             "
 
             # (4) 정적 파일 수집
-            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm web sh -lc "
+            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm --no-deps web sh -lc "
               echo '[deploy:migrate-and-static] (4/5) 정적 파일 수집 시작...';
               python manage.py collectstatic --noinput --settings=config.settings.prod;
               echo '[deploy:migrate-and-static] (4/5) 정적 파일 수집 완료';
             "
 
             # (5) Subway 그래프 빌드
-            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm web sh -lc "
+            sudo docker compose -f "$COMPOSE_FILE" --env-file .env.prod run --rm --no-deps web sh -lc "
               set -Eeuo pipefail
               echo '[deploy:build-graph] (5/5) Subway 그래프 빌드 시작...';
               python manage.py build_graph --settings=config.settings.prod;
