@@ -33,7 +33,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
 # 이제 설정 읽기
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-secret-key-for-development-only-change-me")
+SECRET_KEY = env("DJANGO_SECRET_KEY") # 운영 환경에서는 반드시 설정되어야 함
 
 # env.list will parse a comma-separated string from the environment variable
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
