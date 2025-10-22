@@ -30,7 +30,7 @@ DEBUG=True  # 기본값 False
 
 
 # .env 파일 로드
-environ.Env.read_env(BASE_DIR / ".env")
+environ.Env.read_env(BASE_DIR / ".env.prod")
 
 # 이제 설정 읽기
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-secret-key-for-development-only-change-me")
