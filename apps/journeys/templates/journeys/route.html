@@ -11,6 +11,10 @@
   <div class="app-container">
     <!-- Header -->
     <header class="page-header">
+      <button class="back-btn" onclick="goBack()">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="page-title">길찾기</div>
       <a href="{% url 'journeys:leave' %}" class="home-btn" aria-label="메인으로 돌아가기">
         <i class="fas fa-home"></i>
       </a>
