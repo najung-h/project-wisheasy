@@ -46,6 +46,7 @@ body {
     font-size: 18px;
     border-radius: 8px;
     transition: background 0.2s ease;
+    text-decoration: none;
 }
 
 .back-btn:hover {
@@ -556,33 +557,33 @@ body {
     .main-content {
         padding: 16px;
     }
-    
+
     .story-card {
         padding: 20px;
     }
-    
+
     .card-actions {
         flex-direction: column;
     }
-    
+
     .card-bottom {
         flex-direction: column;
     }
-    
+
     .action-btn {
         flex: none;
     }
-    
+
     .station-line {
         flex-direction: column;
         gap: 12px;
     }
-    
+
     .line-segment {
         flex-direction: row;
         margin: 0;
     }
-    
+
     .line {
         width: 40px;
         height: 2px;
