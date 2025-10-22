@@ -34,7 +34,7 @@ DEBUG=env.bool("DJANGO_DEBUG", default=False)  # 기본값 False
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # 이제 설정 읽기
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-secret-key-for-development-only")
 
 ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
 
