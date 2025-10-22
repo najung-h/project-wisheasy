@@ -120,14 +120,14 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ env.EC2_HOST }}
-          username: ${{ env.EC2_USERNAME }}
+          username: ${{ env.EC2_USER }}
           key: ${{ env.EC2_SSH_KEY }}
           script: |
             set -Eeuo pipefail
 
             # -----------deploy:prep---------
             # -p 명령어(폴더가 없으면 만들고, 있어도 실패 안함)를 통해, 다음 단계에서 필요한 폴더 구조가 확실하게 존재하도록 보장
-            # APP_DIR="/home/ubuntu/app"
+            APP_DIR=${{ env.APP_DIR }}
             mkdir -p "$APP_DIR/nginx/conf.d"
             cd "$APP_DIR"
             # ----------/deploy:prep---------
@@ -262,7 +262,7 @@ jobs:
             cat > nginx/conf.d/default.conf << 'EOF'
             server {
               listen 80;
-              server_name wisheasy.site;
+              server_name wisheasy.site www.wisheasy.site;
               return 301 https://$host$request_uri;
             }
 
@@ -281,7 +281,7 @@ jobs:
               add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
               location /static/ {
-                alias /app/staticfiles/;
+                alias /wisheasy_app/staticfiles/;
                 try_files $uri $uri/ =404;
               }
 
@@ -322,8 +322,8 @@ jobs:
                 restart: always
                 env_file: .env.prod
                 volumes:
-                  - ./staticfiles:/app/staticfiles
-                  - ./logs:/app/logs
+                  - ./staticfiles:/wisheasy_app/staticfiles
+                  - ./logs:/wisheasy_app/logs
                   - app_data:/data
                 networks: [appnet]
                 expose:
@@ -335,8 +335,8 @@ jobs:
                   sh -lc "
                   gunicorn config.wsgi:application
                   --bind 0.0.0.0:8000
-                  --access-logfile /app/logs/gunicorn_access.log
-                  --error-logfile /app/logs/gunicorn_error.log
+                  --access-logfile /wisheasy_app/logs/gunicorn_access.log
+                  --error-logfile /wisheasy_app/logs/gunicorn_error.log
                   --log-level debug
                   "
 
@@ -352,7 +352,7 @@ jobs:
                 volumes:
                   - ./nginx/conf.d:/etc/nginx/conf.d:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
-                  - ./staticfiles:/app/staticfiles:ro
+                  - ./staticfiles:/wisheasy_app/staticfiles:ro
                 networks: [appnet]
 
             networks:
