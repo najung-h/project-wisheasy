@@ -26,17 +26,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # environ 초기화
 env = environ.Env()
 
-DEBUG=True  # 기본값 False
+# 개발 환경을 위해 기본 .env 파일 로드 (운영 환경에서는 .env.prod에 의해 덮어쓰기됨)
+environ.Env.read_env(BASE_DIR / ".env")
 
-
-# .env 파일 로드
-environ.Env.read_env(BASE_DIR / ".env.prod")
+# DEBUG 모드는 환경 변수에서 읽어오며, 기본값은 False(운영)입니다.
+DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
 # 이제 설정 읽기
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-secret-key-for-development-only-change-me")
 
 # env.list will parse a comma-separated string from the environment variable
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
 # 신뢰된 오리진 목록 
 CSRF_TRUSTED_ORIGINS = [
