@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import environ
-import os
 from pathlib import Path
 
 
@@ -27,20 +26,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # environ 초기화
 env = environ.Env()
 
-DEBUG=env.bool("DJANGO_DEBUG", default=False)  # 기본값 False
+DEBUG="True"  # 기본값 False
 
 
 # .env 파일 로드
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+environ.Env.read_env(BASE_DIR / ".env")
 
 # 이제 설정 읽기
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-secret-key-for-development-only")
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="insecure-secret-key-for-development-only-change-me")
 
-ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
-
-# EC2 추가
-EC2 = env.list("DJANGO_EC2_HOSTS", default=[])
-ALLOWED_HOSTS += EC2
+# env.list will parse a comma-separated string from the environment variable
+ALLOWED_HOSTS = []
 
 # 신뢰된 오리진 목록 
 CSRF_TRUSTED_ORIGINS = [
