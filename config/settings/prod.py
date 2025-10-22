@@ -2,12 +2,6 @@
 
 from .base import *
 import environ
-import os
-
-# environ 초기화
-env = environ.Env()
-
-DEBUG=True  # 개발 끝나면 False로 해둘 예정
 
 
 # .env 파일 로드
