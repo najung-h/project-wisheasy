@@ -150,7 +150,7 @@ jobs:
             MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}
             MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}
 
-            DB_HOST= ${{ env.DB_HOST }}
+            DB_HOST=${{ env.DB_HOST }}
             DB_PORT=${{ env.DB_PORT }}
 
             DJANGO_SECRET_KEY=${{ env.DJANGO_SECRET_KEY }}
@@ -163,6 +163,9 @@ jobs:
             SITE_DOMAIN=${{ env.SITE_DOMAIN }}
 
             EOF
+            # 스마트 따옴표 방지 (워드/메신저 복붙 문제 해결)
+            sed -i 's/[“”]/"/g' .env.prod
+            sed -i "s/[‘’]/'/g" .env.prod
 
             COMPOSE_FILE=docker-compose.prod.yml
             WEB_SVC=wisheasy_web
