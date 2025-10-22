@@ -2,10 +2,24 @@
 
 from .base import *
 import environ
+from pathlib import Path
+
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+# environ 초기화
+env = environ.Env()
+
+DEBUG="True"  # 기본값 False
 
 
 # .env 파일 로드
-environ.Env.read_env(os.path.join(BASE_DIR, ".env.prod"))
+environ.Env.read_env(BASE_DIR / ".env.prod")
 
 # 이제 설정 읽기
 SECRET_KEY = env("DJANGO_SECRET_KEY")
@@ -13,7 +27,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
 
 # EC2 추가
-EC2 = env.list("EC2_HOST", default=[])
+EC2 = env.list("EC2_HOST")
 ALLOWED_HOSTS += EC2
 
 # Database
