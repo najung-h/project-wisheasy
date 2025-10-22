@@ -15,20 +15,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # environ 초기화
 env = environ.Env()
 
-DEBUG="True"  # 기본값 False
-
+DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
 # .env 파일 로드
 environ.Env.read_env(BASE_DIR / ".env.prod")
 
-# 이제 설정 읽기
-SECRET_KEY = env("DJANGO_SECRET_KEY")
-
-ALLOWED_HOSTS = ["wisheasy.site", "www.wisheasy.site"]
-
-# EC2 추가
-EC2 = env.list("EC2_HOST")
-ALLOWED_HOSTS += EC2
+ALLOWED_HOSTS = [h.strip() for h in env("DJANGO_ALLOWED_HOSTS").split(",")]
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
