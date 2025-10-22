@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 
 # 이후 명령이 실행될 작업 디렉터리 지정
-WORKDIR /app
+WORKDIR /wisheasy_app
 
 
 COPY requirements.txt .
