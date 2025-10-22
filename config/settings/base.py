@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 env = environ.Env()
 
 # 개발 환경을 위해 기본 .env 파일 로드 (운영 환경에서는 .env.prod에 의해 덮어쓰기됨)
-environ.Env.read_env(BASE_DIR / ".env")
+environ.Env.read_env(BASE_DIR / ".env.prod")
 
 # DEBUG 모드는 환경 변수에서 읽어오며, 기본값은 False(운영)입니다.
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
