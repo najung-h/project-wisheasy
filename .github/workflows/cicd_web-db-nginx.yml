@@ -132,35 +132,65 @@ jobs:
             cd "$APP_DIR"
             # ----------/deploy:prep---------
 
+            # deploy: export-env---------
+            echo "[deploy: export-env] 환경 변수 등록 중..."
+            export DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
+            export DOCKERHUB_TOKEN=${{ env.DOCKERHUB_TOKEN }}
+            export DOCKERHUB_IMAGE=${{ env.DOCKERHUB_IMAGE }}
+            export IMAGE_TAG=${{ env.IMAGE_TAG }}
+
+            export APP_DIR=${{ env.APP_DIR }} 
+            
+            export MYSQL_USER=${{ env.MYSQL_USER }}
+            export MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}
+            export MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}
+            export MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}
+
+            export DB_HOST=${{ env.DB_HOST }}
+            export DB_PORT=${{ env.DB_PORT }}
+
+            export DJANGO_SECRET_KEY=${{ env.DJANGO_SECRET_KEY }}
+            export DJANGO_DEBUG=${{ env.DJANGO_DEBUG }}
+            export DJANGO_ALLOWED_HOSTS=${{ env.DJANGO_ALLOWED_HOSTS }}
+
+            export GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
+            export GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
+
+            export SITE_DOMAIN=${{ env.SITE_DOMAIN }}
+
+            echo "[deploy: export-env] 완료되었습니다."   
+            # ----------/deploy: export-env---------
+              
+
             # -----------deploy:env---------
             # .env.prod 파일 재생성, -f 명령어를 통해 파일 존재여부와 관계없이 삭제를 (안전하게 == 실패 안하게)보장하려고 함.
             rm -f .env.prod
             # 아래 명령어를 통해 스크립트 내에서 환경 변수와 같은 여러 줄의 데이터를 파일(.env)로 만들 수 있음 
             cat > .env.prod << 'EOF'
 
-            DOCKERHUB_USERNAME=${{ env.DOCKERHUB_USERNAME }}
-            DOCKERHUB_TOKEN=${{ env.DOCKERHUB_TOKEN }}
-            DOCKERHUB_IMAGE=${{ env.DOCKERHUB_IMAGE }}
-            IMAGE_TAG=${{ env.IMAGE_TAG }}
-            
-            APP_DIR=${{ env.APP_DIR }}
+            DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
+            DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN
+            DOCKERHUB_IMAGE=$DOCKERHUB_IMAGE
+            IMAGE_TAG=$IMAGE_TAG
 
-            MYSQL_USER=${{ env.MYSQL_USER }}
-            MYSQL_PASSWORD=${{ env.MYSQL_PASSWORD }}
-            MYSQL_ROOT_PASSWORD=${{ env.MYSQL_ROOT_PASSWORD }}
-            MYSQL_DATABASE=${{ env.MYSQL_DATABASE }}
+            APP_DIR=$APP_DIR
 
-            DB_HOST=${{ env.DB_HOST }}
-            DB_PORT=${{ env.DB_PORT }}
+            MYSQL_USER=$MYSQL_USER
+            MYSQL_PASSWORD=$MYSQL_PASSWORD
+            MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+            MYSQL_DATABASE=$MYSQL_DATABASE
 
-            DJANGO_SECRET_KEY=${{ env.DJANGO_SECRET_KEY }}
-            DJANGO_DEBUG=${{ env.DJANGO_DEBUG }}
-            DJANGO_ALLOWED_HOSTS=${{ env.DJANGO_ALLOWED_HOSTS }}
+            DB_HOST=$DB_HOST
+            DB_PORT=$DB_PORT
 
-            GOOGLE_CLIENT_ID=${{ env.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ env.GOOGLE_CLIENT_SECRET }}
+            DJANGO_SECRET_KEY=$DJANGO_SECRET_KEY
+            DJANGO_DEBUG=$DJANGO_DEBUG
+            DJANGO_ALLOWED_HOSTS=$DJANGO_ALLOWED_HOSTS
 
-            SITE_DOMAIN=${{ env.SITE_DOMAIN }}
+            GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+            GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+
+            SITE_DOMAIN=$SITE_DOMAIN
 
             EOF
             # 스마트 따옴표 방지 (워드/메신저 복붙 문제 해결)
