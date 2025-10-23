@@ -166,7 +166,7 @@ jobs:
             # .env.prod 파일 재생성, -f 명령어를 통해 파일 존재여부와 관계없이 삭제를 (안전하게 == 실패 안하게)보장하려고 함.
             rm -f .env.prod
             # 아래 명령어를 통해 스크립트 내에서 환경 변수와 같은 여러 줄의 데이터를 파일(.env)로 만들 수 있음 
-            cat > .env.prod << 'EOF'
+            cat > .env.prod << EOF
 
             DOCKERHUB_USERNAME=$DOCKERHUB_USERNAME
             DOCKERHUB_TOKEN=$DOCKERHUB_TOKEN
@@ -328,7 +328,7 @@ jobs:
 
             # -----------deploy:compose-file---------
             # docker-compose.prod.yml 파일을 재생성
-            cat > docker-compose.prod.yml << 'EOF'
+            cat > docker-compose.prod.yml << EOF
             services:
               db:
                 image: mysql:8.0
