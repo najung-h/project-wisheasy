@@ -28,7 +28,6 @@
                 {% comment %} signals로 Profile이 항상 만들어진다는 전제 {% endcomment %}
                 <div class="profile-card">
                     <img src="{{ user.profile.profile_image }}" alt="profile" class="profile-image">
-                    <br>
                     <div>
                         <div><strong>{{ user.profile.name }}</strong> ({{ user.profile.nickname }})</div>
                         <div style="color:#666;">{{ user.profile.google_mail }}</div>
