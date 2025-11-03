@@ -100,6 +100,27 @@ body {
     font-size: 14px;
 }
 
+/* Profile */
+.profile-card {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+}
+
+.profile-image { 
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    padding-left: auto;
+    padding-right: auto;
+    object-fit: cover;
+}
+
+
 /* Priority List */
 .priority-list {
     display: flex;

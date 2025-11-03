@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}설정 - 쉽길{% endblock title %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static "css/settings.css" %}">
+{% endblock css %}
+
+
+{% block content %}
+    <div class="app-container">
+        <!-- Header -->
+        <header class="page-header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="page-title">마이페이지</div>
+            <a href="{% url "common:index" %}" class="home-btn" aria-label="메인으로 돌아가기">
+                <i class="fas fa-home"></i>
+            </a>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            {# 프로필 프리뷰: 로그인 상태에서만 노출, 테스트용 코드 #}
+            {% if user.is_authenticated %}
+                {% comment %} signals로 Profile이 항상 만들어진다는 전제 {% endcomment %}
+                <div class="profile-card">
+                    <img src="{{ user.profile.profile_image }}" alt="profile" class="profile-image">
+                    <br>
+                    <div>
+                        <div><strong>{{ user.profile.name }}</strong> ({{ user.profile.nickname }})</div>
+                        <div style="color:#666;">{{ user.profile.google_mail }}</div>
+                    </div>
+                </div>
+            {% endif %}
+        </main>
+    </div>
+{% endblock content %}
+
+
+{% block js %}
+    <script src="{% static "js/settings.js" %}"></script>
+{% endblock js %}
