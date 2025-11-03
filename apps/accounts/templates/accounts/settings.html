@@ -15,7 +15,7 @@
             <button class="back-btn" onclick="goBack()">
                 <i class="fas fa-arrow-left"></i>
             </button>
-            <div class="page-title">설정</div>
+            <div class="page-title">경로 우선순위 설정</div>
             <a href="{% url "common:index" %}" class="home-btn" aria-label="메인으로 돌아가기">
                 <i class="fas fa-home"></i>
             </a>
@@ -23,17 +23,6 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            {# 프로필 프리뷰: 로그인 상태에서만 노출, 테스트용 코드#}
-            {% if user.is_authenticated %}
-                {% comment %} signals로 Profile이 항상 만들어진다는 전제 {% endcomment %}
-                <div class="profile-card" style="display:flex;gap:12px;align-items:center;margin-bottom:16px;padding:12px;border:1px solid #eee;border-radius:12px;">
-                <img src="{{ user.profile.profile_image }}" alt="profile" width="40" height="40" style="border-radius:50%;object-fit:cover;">
-                <div>
-                    <div><strong>{{ user.profile.name }}</strong> ({{ user.profile.nickname }})</div>
-                    <div style="color:#666;">{{ user.profile.google_mail }}</div>
-                </div>
-                </div>
-            {% endif %}
             <div class="info-box">
                 <p>드래그하여 선호하는 경로의 우선순위를 변경하세요.</p>
             </div>
