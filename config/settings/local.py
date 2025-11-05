@@ -2,9 +2,6 @@
 
 from .base import *
 
-env_file = os.path.join(BASE_DIR, ".env")
-environ.Env.read_env(env_file)
-
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
