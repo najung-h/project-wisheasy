@@ -1,181 +1,181 @@
 // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
 // 각 역 객체에는 고유 ID, 역명, 호선 목록, 시설 정보, 실시간 도착 정보 등이 포함되어야 합니다.
 // Mock data for stations with detailed information
-const stations = [
-    {
-        name: '강남역',
-        lines: ['2호선', '분당선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '분당선', detail: '왕십리 ↔ 수원' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-            { line: '2호선', direction: '까치산행', time: '5분 후 도착' },
-            { line: '분당선', direction: '왕십리행', time: '3분 후 도착' },
-            { line: '분당선', direction: '수원행', time: '7분 후 도착' }
-        ]
-    },
-    {
-        name: '선릉역',
-        lines: ['2호선', '분당선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '분당선', detail: '왕십리 ↔ 수원' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '1,3번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '1분 후 도착' },
-            { line: '2호선', direction: '까치산행', time: '4분 후 도착' }
-        ]
-    },
-    {
-        name: '삼성역',
-        lines: ['2호선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '1번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '3분 후 도착' },
-            { line: '2호선', direction: '까치산행', time: '6분 후 도착' }
-        ]
-    },
-    {
-        name: '신도림역',
-        lines: ['2호선', '1호선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '1호선', detail: '소요산 ↔ 인천' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-            { line: '1호선', direction: '소요산행', time: '4분 후 도착' }
-        ]
-    },
-    {
-        name: '여의도역',
-        lines: ['5호선', '9호선'],
-        lineInfo: [
-            { line: '5호선', detail: '방화 ↔ 마천' },
-            { line: '9호선', detail: '개화 ↔ 중앙보훈병원' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '5호선', direction: '방화행', time: '3분 후 도착' },
-            { line: '9호선', direction: '개화행', time: '5분 후 도착' }
-        ]
-    },
-    {
-        name: '여의나루역',
-        lines: ['5호선', '9호선'],
-        lineInfo: [
-            { line: '5호선', detail: '방화 ↔ 마천' },
-            { line: '9호선', detail: '개화 ↔ 중앙보훈병원' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '1번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '5호선', direction: '방화행', time: '1분 후 도착' },
-            { line: '9호선', direction: '개화행', time: '4분 후 도착' }
-        ]
-    },
-    {
-        name: '시청역',
-        lines: ['1호선', '2호선'],
-        lineInfo: [
-            { line: '1호선', detail: '소요산 ↔ 인천' },
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '1호선', direction: '소요산행', time: '2분 후 도착' },
-            { line: '2호선', direction: '신정네거리행', time: '3분 후 도착' }
-        ]
-    },
-    {
-        name: '종각역',
-        lines: ['1호선', '3호선'],
-        lineInfo: [
-            { line: '1호선', detail: '소요산 ↔ 인천' },
-            { line: '3호선', detail: '대화 ↔ 수서' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '1호선', direction: '소요산행', time: '4분 후 도착' },
-            { line: '3호선', direction: '대화행', time: '2분 후 도착' }
-        ]
-    },
-    {
-        name: '홍대입구역',
-        lines: ['2호선', '6호선', '경의중앙선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '6호선', detail: '응암순환 ↔ 신내' },
-            { line: '경의중앙선', detail: '문산 ↔ 용문' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '1분 후 도착' },
-            { line: '6호선', direction: '응암순환행', time: '3분 후 도착' },
-            { line: '경의중앙선', direction: '문산행', time: '5분 후 도착' }
-        ]
-    },
-    {
-        name: '합정역',
-        lines: ['2호선', '6호선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '6호선', detail: '응암순환 ↔ 신내' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-            { line: '6호선', direction: '응암순환행', time: '4분 후 도착' }
-        ]
-    }
-];
+// const stations = [
+//     {
+//         name: '강남역',
+//         lines: ['2호선', '분당선'],
+//         lineInfo: [
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+//             { line: '분당선', detail: '왕십리 ↔ 수원' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
+//             { line: '2호선', direction: '까치산행', time: '5분 후 도착' },
+//             { line: '분당선', direction: '왕십리행', time: '3분 후 도착' },
+//             { line: '분당선', direction: '수원행', time: '7분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '선릉역',
+//         lines: ['2호선', '분당선'],
+//         lineInfo: [
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+//             { line: '분당선', detail: '왕십리 ↔ 수원' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '1,3번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '2호선', direction: '신정네거리행', time: '1분 후 도착' },
+//             { line: '2호선', direction: '까치산행', time: '4분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '삼성역',
+//         lines: ['2호선'],
+//         lineInfo: [
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '1번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '2호선', direction: '신정네거리행', time: '3분 후 도착' },
+//             { line: '2호선', direction: '까치산행', time: '6분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '신도림역',
+//         lines: ['2호선', '1호선'],
+//         lineInfo: [
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+//             { line: '1호선', detail: '소요산 ↔ 인천' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
+//             { line: '1호선', direction: '소요산행', time: '4분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '여의도역',
+//         lines: ['5호선', '9호선'],
+//         lineInfo: [
+//             { line: '5호선', detail: '방화 ↔ 마천' },
+//             { line: '9호선', detail: '개화 ↔ 중앙보훈병원' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '5호선', direction: '방화행', time: '3분 후 도착' },
+//             { line: '9호선', direction: '개화행', time: '5분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '여의나루역',
+//         lines: ['5호선', '9호선'],
+//         lineInfo: [
+//             { line: '5호선', detail: '방화 ↔ 마천' },
+//             { line: '9호선', detail: '개화 ↔ 중앙보훈병원' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '1번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '5호선', direction: '방화행', time: '1분 후 도착' },
+//             { line: '9호선', direction: '개화행', time: '4분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '시청역',
+//         lines: ['1호선', '2호선'],
+//         lineInfo: [
+//             { line: '1호선', detail: '소요산 ↔ 인천' },
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '1호선', direction: '소요산행', time: '2분 후 도착' },
+//             { line: '2호선', direction: '신정네거리행', time: '3분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '종각역',
+//         lines: ['1호선', '3호선'],
+//         lineInfo: [
+//             { line: '1호선', detail: '소요산 ↔ 인천' },
+//             { line: '3호선', detail: '대화 ↔ 수서' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '1호선', direction: '소요산행', time: '4분 후 도착' },
+//             { line: '3호선', direction: '대화행', time: '2분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '홍대입구역',
+//         lines: ['2호선', '6호선', '경의중앙선'],
+//         lineInfo: [
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+//             { line: '6호선', detail: '응암순환 ↔ 신내' },
+//             { line: '경의중앙선', detail: '문산 ↔ 용문' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '2호선', direction: '신정네거리행', time: '1분 후 도착' },
+//             { line: '6호선', direction: '응암순환행', time: '3분 후 도착' },
+//             { line: '경의중앙선', direction: '문산행', time: '5분 후 도착' }
+//         ]
+//     },
+//     {
+//         name: '합정역',
+//         lines: ['2호선', '6호선'],
+//         lineInfo: [
+//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+//             { line: '6호선', detail: '응암순환 ↔ 신내' }
+//         ],
+//         facilities: [
+//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
+//             { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
+//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+//         ],
+//         realtime: [
+//             { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
+//             { line: '6호선', direction: '응암순환행', time: '4분 후 도착' }
+//         ]
+//     }
+// ];
 
 // Current state
 let currentStation = null;
@@ -202,32 +202,35 @@ function setupStationSearch() {
         }
     });
     
-    searchInput.addEventListener('input', function() {
+    // debounce와 fetchStations 사용
+    searchInput.addEventListener('input', debounce(async function() { // <--- 1. debounce 적용
         const value = this.value;
-        suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+        suggestionsContainer.innerHTML = ''; // 이전 제안 삭제
 
         if (value.length < 1) {
             suggestionsContainer.style.display = 'none';
             return;
         }
-        
-        const filtered = stations.filter(station => 
-            hangulStartsWith(station.name, value)
-        );
-        
-        if (filtered.length > 0) {
-            filtered.forEach(station => {
+
+        // 2. API 호출로 stations 데이터를 가져옴 (search-util.js의 함수 사용)
+        const stations = await fetchStations(value);
+
+        if (stations.length > 0) {
+            stations.forEach(station => {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
-                div.innerHTML = `${station.name} (${station.lines.join(', ')})`;
-                div.dataset.stationName = station.name; // Store name in data attribute
+                // 3. API 응답 구조에 맞게 수정
+                div.innerHTML = station.line 
+                                ? `${station.name} (${station.line})` 
+                                : station.name;
+                div.dataset.stationName = station.name;
                 suggestionsContainer.appendChild(div);
             });
             suggestionsContainer.style.display = 'block';
         } else {
             suggestionsContainer.style.display = 'none';
         }
-    });
+    }, 300)); // 300ms 지연
     
     searchInput.addEventListener('blur', function() {
         // Use a short delay to allow click events on suggestions to fire

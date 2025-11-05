@@ -48,32 +48,35 @@ function setupAutocomplete(input, suggestionsId) {
         }
     });
 
-    input.addEventListener('input', function() {
+    // debounce와 fetchStations 사용
+    input.addEventListener('input', debounce(async function() { // <--- 1. debounce 적용
         const value = this.value;
-        suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+        suggestionsContainer.innerHTML = ''; // 이전 제안 삭제
 
         if (value.length < 1) {
             suggestionsContainer.style.display = 'none';
             return;
         }
 
-        const filtered = stations.filter(station =>
-            hangulStartsWith(station.name, value)
-        );
+        // 2. API 호출로 stations 데이터를 가져옴 (search-util.js의 함수 사용)
+        const stations = await fetchStations(value);
 
-        if (filtered.length > 0) {
-            filtered.forEach(station => {
+        if (stations.length > 0) {
+            stations.forEach(station => {
                 const div = document.createElement('div');
                 div.className = 'suggestion-item';
-                div.innerHTML = `${station.name} (${station.lines.join(', ')})`;
-                div.dataset.stationName = station.name; // Store name in data attribute
+                // 3. API 응답 구조에 맞게 수정 (station.line이 있는지 확인)
+                div.innerHTML = station.line 
+                                ? `${station.name} (${station.line})` 
+                                : station.name;
+                div.dataset.stationName = station.name;
                 suggestionsContainer.appendChild(div);
             });
             suggestionsContainer.style.display = 'block';
         } else {
             suggestionsContainer.style.display = 'none';
         }
-    });
+    }, 300)); // 300ms 지연
 
     input.addEventListener('blur', function() {
         // Use a short delay to allow click events on suggestions to fire
