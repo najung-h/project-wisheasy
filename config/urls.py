@@ -24,4 +24,6 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),  # allauth는 그대로
     path("stations/", include(("apps.stations.urls", "stations"), namespace="stations")),
     path("journeys/", include(("apps.journeys.urls", "journeys"), namespace="journeys")),
+    # /api/stations/로 시작하는 모든 URL은 stations.urls로 위임
+    path("api/stations/", include("apps.stations.urls")),
 ]
