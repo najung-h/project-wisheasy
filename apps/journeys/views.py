@@ -103,16 +103,11 @@ def route(request):
             return redirect("journeys:route")
 
         try:
-            lines = load_lines_from_db()
-            G = get_graph()
-
             short_path_list = get_subway_route(
                 start_station=start_station,
                 start_exit=start_exit,
                 end_station=end_station,
                 end_exit=end_exit,
-                lines=lines,
-                G=G,
             )
 
             if not short_path_list:

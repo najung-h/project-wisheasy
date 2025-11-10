@@ -1,112 +1,157 @@
 import csv
 import os
+from typing import Optional
+
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from apps.journeys.models import Lines, Edges, Nodes
+
+from apps.journeys.models import (
+    Station,
+    Line,
+    Node,
+    Edge,
+    FastGate,
+    Lines,
+)
 
 
 class Command(BaseCommand):
-    help = "static/data 폴더의 CSV 파일(line2_7_edges.csv, line2_7_lines.csv, line2_7_nodes.csv)을 DB에 로드"
+    help = (
+        "static/data 폴더의 CSV 파일들을 DB에 로드합니다.\n"
+        "지원 파일: station.csv, line.csv, node.csv, edge.csv, stationline.csv, FastGate.csv, lines.csv"
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--file',
+            "--file",
             type=str,
-            help='불러올 CSV 파일 이름 (예: line2_7_lines.csv)',
+            help="불러올 CSV 파일 이름 (예: station.csv, line.csv, node.csv 등)",
         )
 
     def handle(self, *args, **options):
-        csv_file = options['file']
+        csv_file = options["file"]
 
         if not csv_file:
-            raise CommandError("CSV 파일 이름을 '--file' 옵션으로 지정해야 합니다. 예: python manage.py load_csv --file line2_7_lines.csv")
+            raise CommandError(
+                "CSV 파일 이름을 '--file' 옵션으로 지정해야 합니다. "
+                "예: python manage.py load_csv --file station.csv"
+            )
 
-        # static/data 폴더 기준 경로 설정
-        csv_path = os.path.join(settings.BASE_DIR, 'static', 'data', csv_file)
+        # static/data 기준 경로
+        csv_path = os.path.join(settings.BASE_DIR, "static", "data", csv_file)
         if not os.path.exists(csv_path):
             raise CommandError(f"파일을 찾을 수 없습니다: {csv_path}")
 
         self.stdout.write(f"📂 '{csv_file}' 불러오는 중...")
 
-        with open(csv_path, newline='', encoding='utf-8-sig') as csvfile:
+        with open(csv_path, newline="", encoding="utf-8-sig") as csvfile:
             reader = csv.DictReader(csvfile)
 
             # 파일 이름으로 분기
-            if 'lines' in csv_file:
+            lower = csv_file.lower()
+            if "stationline" in lower:
+                self.load_stationline(reader)
+            elif "fastgate" in lower or "fast_gate" in lower:
+                self.load_fastgate(reader)
+            elif lower.startswith("station") and "stationline" not in lower:
+                self.load_station(reader)
+            elif lower.startswith("line") and lower != "lines.csv":
+                # line.csv (노선 마스터)
+                self.load_line(reader)
+            elif lower == "lines.csv":
+                # Lines(line, station, order_in_line) → 노선별 역순서
                 self.load_lines(reader)
-            elif 'edges' in csv_file:
-                self.load_edges(reader)
-            elif 'nodes' in csv_file:
+            elif "node" in lower:
                 self.load_nodes(reader)
+            elif "edge" in lower:
+                self.load_edges(reader)
             else:
                 raise CommandError(f"⚠️ '{csv_file}'은(는) 인식되지 않는 파일입니다.")
 
-    # --- Lines ---
+    # -------------------
+    # Station
+    # -------------------
+    def load_station(self, reader):
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            station_id = row.get("id") or row.get("station_id")
+            name = row.get("name") or row.get("station_name")
+
+            if not station_id or not name:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ station row 건너뜀 (id/name 누락): {row}")
+                )
+                continue
+
+            obj, created = Station.objects.update_or_create(
+                id=station_id,
+                defaults={"name": name.strip()},
+            )
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ Station 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
+    # -------------------
+    # Line
+    # -------------------
+    def load_line(self, reader):
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            line_id = row.get("id") or row.get("line_id")
+            name = row.get("name") or row.get("line_name")
+
+            if not line_id or not name:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ line row 건너뜀 (id/name 누락): {row}")
+                )
+                continue
+
+            obj, created = Line.objects.update_or_create(
+                id=line_id,
+                defaults={"name": name.strip()},
+            )
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ Line 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
+    # -------------------
+    # Lines (노선별 역 순서)
+    # -------------------
     def load_lines(self, reader):
+        """
+        Lines(line, station, order_in_line)
+        """
         count_new = 0
         count_update = 0
 
         for row in reader:
+            line_name = row["line"].strip()
+            station_name = row["station"].strip()
+            order_in_line = int(row["order_in_line"])
+
             obj, created = Lines.objects.update_or_create(
-                line=row["line"],
-                order_in_line=row["order_in_line"],
+                line=line_name,
+                order_in_line=order_in_line,
                 defaults={
-                    "station": row["station"],
-                },
-            )
-            if created:
-                count_new += 1
-            else:
-                count_update += 1
-
-        self.stdout.write(
-            self.style.SUCCESS(f"✅ line2_7_lines.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨")
-        )
-
-    # --- Edges ---
-    def load_edges(self, reader):
-        count_new = 0
-        count_update = 0
-
-        for row in reader:
-            obj, created = Edges.objects.update_or_create(
-                edge_key=row["edge_key"],  # PK 기준으로 찾음
-                defaults={
-                    "relation": row["relation"],
-                    "escalator": row.get("escalator", 0),
-                    "out_of_order": row.get("out_of_order", 0),
-                    "is_escalator": row.get("is_escalator") or None,
-                    "source": row["source"],
-                    "target": row["target"],
-                },
-            )
-            if created:
-                count_new += 1
-            else:
-                count_update += 1
-
-        self.stdout.write(
-            self.style.SUCCESS(f"✅ edges.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨")
-        )
-
-
-    # --- Nodes ---
-    def load_nodes(self, reader):
-        count_new = 0
-        count_update = 0
-
-        def parse_str(value):
-            return value.strip() if value else None
-
-        for row in reader:
-            obj, created = Nodes.objects.update_or_create(
-                node_id=row["node_id"],  # PK 기준으로 중복 체크
-                defaults={
-                    "line": parse_str(row.get("line")),
-                    "node_name": parse_str(row.get("node_name")),
-                    "floor": parse_str(row.get("floor")),
-                    "type": parse_str(row.get("type")),
-                    "station": parse_str(row.get("station")),
+                    "station": station_name,
                 },
             )
             if created:
@@ -116,6 +161,238 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f"✅ nodes.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+                f"✅ lines.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
+    # -------------------
+    # Node
+    # -------------------
+    def load_nodes(self, reader):
+        count_new = 0
+        count_update = 0
+
+        def parse_str(value: Optional[str]):
+            return value.strip() if value else None
+
+        for row in reader:
+            # CSV에 node_id 또는 id 둘 중 하나가 있을 것으로 가정
+            node_id = row.get("id") or row.get("node_id")
+            if not node_id:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ node row 건너뜀 (id/node_id 누락): {row}")
+                )
+                continue
+
+            station_id = row.get("station_id")
+            station_name = row.get("station")
+
+            station_obj = None
+            if station_id:
+                station_obj = Station.objects.filter(id=station_id).first()
+            elif station_name:
+                station_obj = Station.objects.filter(name=station_name).first()
+
+            if not station_obj:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ node row 건너뜀 (Station 미존재): {row}"
+                    )
+                )
+                continue
+
+            obj, created = Node.objects.update_or_create(
+                id=node_id,
+                defaults={
+                    "name": parse_str(row.get("name") or row.get("node_name")),
+                    "floor": parse_str(row.get("floor")),
+                    "type": parse_str(row.get("type")),
+                    "station": station_obj,
+                },
+            )
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ node.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
+    # -------------------
+    # Edge
+    # -------------------
+    def load_edges(self, reader):
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            # edge_key, edge_id, id 중 하나
+            edge_id = row.get("id") or row.get("edge_id") or row.get("edge_key")
+            if not edge_id:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ edge row 건너뜀 (id/edge_id/edge_key 누락): {row}"
+                    )
+                )
+                continue
+
+            # source_node / source
+            source_node_id = row.get("source_node") or row.get("source")
+            target_node_id = row.get("target_node") or row.get("target")
+
+            if not source_node_id or not target_node_id:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ edge row 건너뜀 (source/target 누락): {row}"
+                    )
+                )
+                continue
+
+            source_obj = Node.objects.filter(id=source_node_id).first()
+            target_obj = Node.objects.filter(id=target_node_id).first()
+
+            if not source_obj or not target_obj:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ edge row 건너뜀 (Node 미존재): {row}"
+                    )
+                )
+                continue
+
+            esc_raw = (row.get("escalator") or "").strip()
+            is_escalator = esc_raw in ("1", "True", "true", "Y", "y")
+
+            obj, created = Edge.objects.update_or_create(
+                id=edge_id,
+                defaults={
+                    "escalator": is_escalator,
+                    "source_node": source_obj,
+                    "target_node": target_obj,
+                },
+            )
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ edge.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
+    # -------------------
+    # FastGate
+    # -------------------
+    def load_fastgate(self, reader):
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            station_id = (row.get("station_id") or "").strip()
+            line_id = (row.get("line_id") or "").strip()
+
+            if not station_id or not line_id:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ FastGate row 건너뜀 (station_id/line_id 누락): {row}"
+                    )
+                )
+                continue
+
+            # station_obj = Station.objects.filter(name=station_id).first()
+            # line_obj = Line.objects.filter(name=line_id).first()
+
+            station_obj = Station.objects.filter(id=str(station_id)).first()
+            line_obj = Line.objects.filter(id=str(line_id)).first()
+
+            if not station_obj or not line_obj:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ FastGate row 건너뜀 (Station/Line 미존재): {row}"
+                    )
+                )
+                continue
+
+            esc_raw = (row.get("escalator") or "").strip()
+            escalator = esc_raw in ("1", "True", "true", "Y", "y")
+
+            boarding_gate = (row.get("boarding_gate") or "").strip()
+
+            obj, created = FastGate.objects.update_or_create(
+                station=station_obj,
+                line=line_obj,
+                boarding_gate=boarding_gate,
+                defaults={
+                    "escalator": escalator,
+                },
+            )
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ FastGate.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
+    # -------------------
+    # StationLine (ManyToMany through 테이블)
+    # -------------------
+    def load_stationline(self, reader):
+        """
+        stationline.csv
+        - station_id, line_id 또는
+        - station(역 이름), line(호선 이름) 형태라고 가정
+        """
+        ThroughModel = Station.lines.through
+
+        count_new = 0
+        count_exist = 0
+
+        for row in reader:
+            station_id = row.get("station_id")
+            line_id = row.get("line_id")
+            station_name = row.get("station")
+            line_name = row.get("line")
+
+            station_obj = None
+            line_obj = None
+
+            if station_id:
+                station_obj = Station.objects.filter(id=station_id).first()
+            elif station_name:
+                station_obj = Station.objects.filter(name=station_name).first()
+
+            if line_id:
+                line_obj = Line.objects.filter(id=line_id).first()
+            elif line_name:
+                line_obj = Line.objects.filter(name=line_name).first()
+
+            if not station_obj or not line_obj:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ stationline row 건너뜀 (Station/Line 미존재): {row}"
+                    )
+                )
+                continue
+
+            obj, created = ThroughModel.objects.get_or_create(
+                station_id=station_obj.id,
+                line_id=line_obj.id,
+            )
+            if created:
+                count_new += 1
+            else:
+                count_exist += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ stationline.csv 업로드 완료: {count_new}개 추가, {count_exist}개 이미 존재"
             )
         )
