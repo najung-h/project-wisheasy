@@ -3,7 +3,7 @@ from typing import List, Tuple, Optional, Dict
 from collections import deque
 import networkx as nx
 
-from apps.journeys.models import Nodes, Edges, Lines
+from apps.journeys.models import Station, Line, Node, Edge, FastGate, Lines
 from apps.journeys.management.commands.build_graph import get_graph
 
 
@@ -23,39 +23,71 @@ def load_lines_from_db() -> dict[str, list[str]]:
 
 
 # DB → DataFrame 로드
+# 1) 전체 그래프 로딩 (모든 역 공통으로 쓰는 용도)
 def load_graph_from_db() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    models에서 Nodes/Edges를 불러와서 df_nodes, df_edges(DataFrame) 반환.
-    df_edges.station 은 source 기준으로 Nodes.station을 조인해 생성.
-    """
-    qs_nodes = Nodes.objects.values("node_id","line","node_name","floor","type","station")
-    df_nodes = pd.DataFrame(list(qs_nodes)) if qs_nodes.exists() else pd.DataFrame(
-        columns=["node_id","line","node_name","floor","type","station"]
+    # --- Station ---
+    qs_station = Station.objects.values("id", "name")
+    df_station = pd.DataFrame(list(qs_station)) if qs_station.exists() else pd.DataFrame(
+        columns=["id", "name"]
     )
 
-    qs_edges = Edges.objects.values("edge_key","relation","escalator","out_of_order","is_escalator","source","target")
-    df_edges = pd.DataFrame(list(qs_edges)) if qs_edges.exists() else pd.DataFrame(
-        columns=["edge_key","relation","escalator","out_of_order","is_escalator","source","target"]
+    # --- Node ---
+    qs_node = Node.objects.values("id", "name", "floor", "type", "station_id")
+    df_node_raw = pd.DataFrame(list(qs_node)) if qs_node.exists() else pd.DataFrame(
+        columns=["id", "name", "floor", "type", "station_id"]
     )
 
-    # station 붙이기 (source 기준)
-    if not df_edges.empty and not df_nodes.empty:
-        df_edges = df_edges.merge(
-            df_nodes[["node_id","station"]],
-            left_on="source", right_on="node_id", how="left"
-        ).drop(columns=["node_id"]).rename(columns={"station":"station"})
+    # --- Line (현재 그래프 구성에는 안 쓰이지만, 필요하면 유지) ---
+    qs_line = Line.objects.values("id", "name")
+    df_line = pd.DataFrame(list(qs_line)) if qs_line.exists() else pd.DataFrame(
+        columns=["id", "name"]
+    )
 
-    # 가벼운 정리
-    for c in ["relation","source","target","station"]:
-        if c in df_edges.columns:
-            df_edges[c] = df_edges[c].astype(str).str.strip()
-    for c in ["station","node_id","node_name","type"]:
+    # Node + Station 조인해서 df_nodes 생성
+    df_nodes = df_node_raw.merge(
+        df_station.rename(columns={"id": "station_id", "name": "station"}),
+        on="station_id",
+        how="left",
+    )
+
+    df_nodes = df_nodes.rename(
+        columns={
+            "id": "node_id",
+            "name": "node_name",
+        }
+    )[["node_id", "station", "node_name", "floor", "type", "station_id"]]
+
+    # --- Edge ---
+    qs_edge = Edge.objects.values("id", "escalator", "source_node", "target_node")
+    df_edge_raw = pd.DataFrame(list(qs_edge)) if qs_edge.exists() else pd.DataFrame(
+        columns=["id", "escalator", "source_node", "target_node"]
+    )
+
+    df_edges = df_edge_raw.merge(
+        df_node_raw[["id", "station_id"]].rename(columns={"id": "source_node"}),
+        on="source_node",
+        how="left",
+    ).merge(
+        df_station.rename(columns={"id": "station_id", "name": "station"}),
+        on="station_id",
+        how="left",
+    )
+
+    df_edges = df_edges.rename(
+        columns={
+            "id": "edge_id",
+            "source_node": "source",
+            "target_node": "target",
+        }
+    )[["edge_id", "source", "target", "escalator", "station"]]
+
+    # 문자열 정리
+    for c in ["station", "node_id", "node_name", "type"]:
         if c in df_nodes.columns:
             df_nodes[c] = df_nodes[c].astype(str).str.strip()
-    if "out_of_order" not in df_edges.columns:
-        df_edges["out_of_order"] = 0
-    if "is_escalator" not in df_edges.columns:
-        df_edges["is_escalator"] = 0
+    for c in ["source", "target", "station"]:
+        if c in df_edges.columns:
+            df_edges[c] = df_edges[c].astype(str).str.strip()
 
     return df_nodes, df_edges
 
@@ -162,6 +194,7 @@ def get_node_id(df_nodes: pd.DataFrame, station: str, node_name: str) -> Optiona
         return None
     return sub["node_id"].iloc[0]
 
+
 def bfs_path_node_ids(df_edges_sub: pd.DataFrame, start_id: str, goal_id: str) -> Optional[List[str]]:
     adj: Dict[str, List[str]] = {}
     for _, r in df_edges_sub.iterrows():
@@ -190,6 +223,7 @@ def bfs_path_node_ids(df_edges_sub: pd.DataFrame, start_id: str, goal_id: str) -
     path.reverse()
     return path
 
+
 def to_edge_rows(df_edges_sub: pd.DataFrame, node_path: List[str]) -> pd.DataFrame:
     rows = []
     for a, b in zip(node_path, node_path[1:]):
@@ -201,27 +235,60 @@ def to_edge_rows(df_edges_sub: pd.DataFrame, node_path: List[str]) -> pd.DataFra
         return pd.DataFrame(columns=df_edges_sub.columns)
     return pd.DataFrame(rows)
 
-def render_relation(relation: str, malfunction: int) -> str:
-    if int(malfunction) == 1:
-        return relation.replace("에스컬레이터", "계단/도보(에스컬레이터 점검)")
-    return relation
 
-def extend_platform_to_gate(df_nodes_sub: pd.DataFrame, df_edges_sub: pd.DataFrame, platform_node_id: str) -> Optional[pd.DataFrame]:
-    out_edges = df_edges_sub[df_edges_sub["source"] == platform_node_id].copy()
-    if out_edges.empty:
-        return None
-    gate_targets = out_edges.merge(
-        df_nodes_sub[["node_id","type"]],
-        left_on="target", right_on="node_id", how="left"
+def build_relation_from_edge(row, df_nodes_sub: pd.DataFrame) -> str:
+    src_id = row["source"]
+    tgt_id = row["target"]
+    is_escalator = bool(row.get("escalator", False))
+
+    src = df_nodes_sub[df_nodes_sub["node_id"] == src_id].iloc[0]
+    tgt = df_nodes_sub[df_nodes_sub["node_id"] == tgt_id].iloc[0]
+
+    move_str = "에스컬레이터를 이용하여" if is_escalator else "계단/도보를 이용하여"
+
+    return (
+        f"{src['node_name']}({src['floor']})에서 "
+        f"{move_str} "
+        f"{tgt['node_name']}({tgt['floor']})로 이동하세요."
     )
-    gate_targets = gate_targets[gate_targets["type"] == "탑승구"].copy()
-    if gate_targets.empty:
-        return None
-    gate_targets = gate_targets.sort_values(by="is_escalator", ascending=False)
-    chosen = gate_targets.iloc[0:1]
-    return chosen[gate_targets.columns.intersection(df_edges_sub.columns)]
 
-def build_guidance_for_segment(df_nodes: pd.DataFrame, df_edges: pd.DataFrame, station: str, start_name: str, goal_name: str) -> List[str]:
+def build_fastgate_message(station_name: str, line_name: str) -> Optional[str]:
+    try:
+        st = Station.objects.get(name=station_name)
+        ln = Line.objects.get(name=line_name)
+    except (Station.DoesNotExist, Line.DoesNotExist):
+        return None
+
+    qs = FastGate.objects.filter(station=st, line=ln)  # FK 객체로 필터
+    if not qs.exists():
+        return None
+
+    # escalator=True 우선, 없으면 escalator=False 사용
+    if qs.filter(escalator=True).exists():
+        chosen = qs.filter(escalator=True)
+        move_type = "에스컬레이터 이용 가능"
+    else:
+        chosen = qs.filter(escalator=False)
+        move_type = "계단 이용 가능"
+
+    gates = chosen.values_list("boarding_gate", flat=True).distinct()
+    gates = [g for g in gates if g]
+    if not gates:
+        return None
+
+    gates_str = " / ".join(map(str, gates))
+    return f"{gates_str}에서 승차하세요. 하차 시 {move_type}"
+
+
+def build_guidance_for_segment(
+    df_nodes: pd.DataFrame,
+    df_edges: pd.DataFrame,
+    station: str,
+    start_name: str,
+    goal_name: str,
+    line_name: str,
+) -> List[str]:
+    # 해당 역만 서브셋
     df_nodes_sub = df_nodes[df_nodes["station"] == station].copy()
     df_edges_sub = df_edges[df_edges["station"] == station].copy()
 
@@ -235,21 +302,45 @@ def build_guidance_for_segment(df_nodes: pd.DataFrame, df_edges: pd.DataFrame, s
         return [f"[{station}] 안내 실패: 경로 없음 (start='{start_name}', goal='{goal_name}')"]
 
     edges_path = to_edge_rows(df_edges_sub, node_path)
-    steps = [render_relation(r["relation"], r.get("out_of_order", 0)) for _, r in edges_path.iterrows()]
 
+    steps: List[str] = []
+    for _, r in edges_path.iterrows():
+        steps.append(build_relation_from_edge(r, df_nodes_sub))
+
+    # 마지막 노드 타입 확인
     goal_row = df_nodes_sub[df_nodes_sub["node_id"] == goal_id]
-    if not goal_row.empty and goal_row["type"].iloc[0] == "승강장":
-        chosen_edge_to_gate = extend_platform_to_gate(df_nodes_sub, df_edges_sub, goal_id)
-        if chosen_edge_to_gate is not None and not chosen_edge_to_gate.empty:
-            er = chosen_edge_to_gate.iloc[0]
-            steps.append(render_relation(er["relation"], er.get("out_of_order", 0)))
+    if not goal_row.empty:
+        goal_type = goal_row["type"].iloc[0]
+        if goal_type == "승강장":
+            # FastGate로 탑승구 안내
+            msg = build_fastgate_message(station_name=station, line_name=line_name)
+            if msg:
+                steps.append(msg)
+        elif goal_type == "출구":
+            steps.append("이용해주셔서 감사합니다.")
 
     return steps
 
-def build_full_guidance(df_nodes: pd.DataFrame, df_edges: pd.DataFrame, short_path_list: List[Tuple[str, str, str]]) -> List[str]:
+def build_full_guidance(
+    df_nodes: pd.DataFrame,
+    df_edges: pd.DataFrame,
+    route_with_meta: List[tuple]
+) -> List[str]:
+    """
+    route_with_meta:
+      [ (station, start_name, goal_name, (line_name, leg_target_station)), ... ]
+    """
     all_steps: List[str] = []
-    for (station, start_name, goal_name) in short_path_list:
-        seg_steps = build_guidance_for_segment(df_nodes, df_edges, station, start_name, goal_name)
-        # all_steps.append(f"--- [{station}] {start_name} → {goal_name} ---")
+
+    for (station, start_name, goal_name, line_and_target) in route_with_meta:
+        line_name, target_station = line_and_target  # target_station은 지금은 메시지용으로만 필요하면 활용
+        seg_steps = build_guidance_for_segment(
+            df_nodes, df_edges,
+            station=station,
+            start_name=start_name,
+            goal_name=goal_name,
+            line_name=line_name,
+        )
         all_steps.extend(seg_steps)
+
     return all_steps
