@@ -1,52 +1,73 @@
-# Create your models here.
-
 from django.db import models
 
+# --- Station 테이블 --- 
+class Station(models.Model):
+    id = models.CharField(max_length=10, primary_key=True)  # station_id
+    name = models.CharField(max_length=20)  # station name
 
-# --- Edges 테이블 ---
-class Edges(models.Model):
-    edge_key = models.CharField(max_length=100, primary_key=True)
-    relation = models.CharField(max_length=100)
-    escalator = models.IntegerField(default=0)
-    out_of_order = models.IntegerField(default=0)
-    is_escalator = models.IntegerField(null=True, blank=True)
-    source = models.CharField(max_length=100)
-    target = models.CharField(max_length=100)
+    # Line과 다대다 관계
+    # (Django가 자동으로 중간 테이블 생성)
+    lines = models.ManyToManyField('Line', related_name='station', db_table='stationline')
 
     class Meta:
-        db_table = 'edges'
+        db_table = 'station'
 
     def __str__(self):
-        return f"{self.edge_key} ({self.relation})"
+        return self.name
 
-
-# --- Stations 테이블 ---
-class Stations(models.Model):
-    station = models.CharField(max_length=100)
-    line = models.CharField(max_length=50)
+# --- Line 테이블 --- 
+class Line(models.Model):
+    id = models.CharField(max_length=10, primary_key=True)  # line_id
+    name = models.CharField(max_length=50)  # line name
 
     class Meta:
-        db_table = 'stations'
-        unique_together = ('station', 'line')
+        db_table = 'line'
 
     def __str__(self):
-        return f"{self.station} ({self.line})"
+        return self.name
 
 
-# --- Nodes 테이블 ---
-class Nodes(models.Model):
-    node_id = models.CharField(max_length=100, primary_key=True)
-    line = models.CharField(max_length=50)
-    node_name = models.CharField(max_length=100)
-    floor = models.CharField(max_length=20)
-    type = models.CharField(max_length=50)
-    station = models.CharField(max_length=100)
+# --- Node 테이블 --- 
+class Node(models.Model):
+    id = models.CharField(max_length=20, primary_key=True)  # node_id
+    name = models.CharField(max_length=50)  # node_name (ex: platform, stair)
+    floor = models.CharField(max_length=10)  # floor information
+    type = models.CharField(max_length=50)  # type of node (ex: platform, stair, escalator)
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)  # station_id (FK)
 
     class Meta:
-        db_table = 'nodes'
+        db_table = 'node'
 
     def __str__(self):
-        return f"{self.node_name} ({self.line})"
+        return f"{self.name} ({self.station.name})"
+
+
+# --- Fast_Gate 테이블 (빠른하차탑승구) --- 
+class FastGate(models.Model):
+    boarding_gate = models.CharField(max_length=50)  # boarding gate info
+    escalator = models.BooleanField(default=False)  # whether there is an escalator (True/False)
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)  # station_id (FK)
+    line = models.ForeignKey(Line, on_delete=models.CASCADE)  # line_id (FK)
+
+    class Meta:
+        db_table = 'fast_gate'
+
+    def __str__(self):
+        return f"Fast Gate {self.boarding_gate} at {self.station.name} ({self.line.name})"
+
+
+# --- Edge 테이블 (노드 간의 연결) --- 
+class Edge(models.Model):
+    id = models.CharField(max_length=30, primary_key=True)  # edge_key
+    escalator = models.BooleanField(default=False) 
+    source_node = models.ForeignKey(Node, related_name="source_edges", on_delete=models.CASCADE)  # source_node_id
+    target_node = models.ForeignKey(Node, related_name="target_edges", on_delete=models.CASCADE)  # target_node_id
+
+    class Meta:
+        db_table = 'edge'
+
+    def __str__(self):
+        return f"{self.source_node.name} -> {self.target_node.name}"
 
 
 # --- Users 테이블 ---
