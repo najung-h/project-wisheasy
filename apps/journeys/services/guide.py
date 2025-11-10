@@ -13,13 +13,15 @@ def load_lines_from_db() -> dict[str, list[str]]:
     Lines(line, station, order_in_line)에서 노선별 역순서를 dict로 생성
     예: {"7호선": ["장암", "도봉산", ...], "2호선": [...]}
     """
-    lines = {}
+    lines: dict[str, list[str]] = {}
     qs = Lines.objects.values("line", "station", "order_in_line")
-    # 정렬 보장
     rows = sorted(list(qs), key=lambda r: (r["line"], r["order_in_line"]))
     for r in rows:
         lines.setdefault(r["line"], []).append(r["station"])
     return lines
+
+
+RING_LINES = {"2호선"}  # 순환선 목록
 
 
 # DB → DataFrame 로드
@@ -93,46 +95,120 @@ def load_graph_from_db() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def find_station_nodes(G: nx.Graph, name: str) -> list[str]:
-    return [n for n in G.nodes if n.startswith(name + "-")]
+    # "역명-호선" 형태라서, 안전하게 name + "-" 로 시작하는 노드를 찾자
+    prefix = name + "-"
+    return [n for n in G.nodes if n.startswith(prefix)]
 
-def get_next_station_name(line_list: list[str], curr: str, forward: bool=True) -> Optional[str]:
-    if curr not in line_list:
-        return None
-    idx = line_list.index(curr)
-    if forward and idx + 1 < len(line_list):
-        return line_list[idx + 1]
-    elif not forward and idx - 1 >= 0:
-        return line_list[idx - 1]
-    return None
 
-def make_direction_str(line: str, next_station: Optional[str]) -> str:
-    return f"{line} {next_station} 방면 승강장" if next_station else f"{line} 방면 승강장"
+def make_direction_str(line: str, towards_station: str) -> str:
+    return f"{line} {towards_station} 방면 승강장"
 
-# 사용자 입력 → short_path_list
+
+def get_legs(path: List[str]) -> List[Tuple[str, List[str], List[int]]]:
+    """
+    path: ["신도림-2호선", "문래-2호선", ..., "건대입구-7호선", ...]
+    => 호선(line) 단위로 끊어서 [ (호선명, [역리스트], [인덱스들]), ... ] 형태로 변환
+    """
+    parsed = [node.split("-") for node in path]  # ["역","호선"]
+    legs: List[Tuple[str, List[str], List[int]]] = []
+    i = 0
+    while i < len(parsed):
+        st, ln = parsed[i]
+        stations = [st]
+        idxs = [i]
+        j = i + 1
+        while j < len(parsed) and parsed[j][1] == ln:
+            stations.append(parsed[j][0])
+            idxs.append(j)
+            j += 1
+        legs.append((ln, stations, idxs))
+        i = j
+    return legs
+
+
+def compute_leg_orientation(
+    line_name: str,
+    stations: List[str],
+    line_data: dict[str, list[str]],
+) -> int:
+    """
+    이 leg에서 역들이 line_list 상에서 정방향(+1)으로 가는지 역방향(-1)으로 가는지 계산
+    """
+    line_list = line_data[line_name]
+    n = len(line_list)
+    if len(stations) >= 2:
+        a, b = stations[0], stations[1]
+        ia, ib = line_list.index(a), line_list.index(b)
+        if line_name in RING_LINES:
+            # 순환선: 모듈러 연산으로 한 칸 차이 확인
+            if (ib - ia) % n == 1:
+                return 1
+            elif (ia - ib) % n == 1:
+                return -1
+        else:
+            # 비순환선: 단순 index 차이
+            if ib - ia == 1:
+                return 1
+            elif ib - ia == -1:
+                return -1
+    # 기본값: 정방향
+    return 1
+
+
+def next_station_linear(line_list: list[str], idx: int, step: int) -> str:
+    """
+    비순환선에서 idx에서 step(+1/-1) 방향으로 한 칸 이동
+    - 범위 밖이면 반대쪽 또는 자기 자신으로 fallback
+    """
+    n = len(line_list)
+    j = idx + step
+    if 0 <= j < n:
+        return line_list[j]
+    j2 = idx - step
+    if 0 <= j2 < n:
+        return line_list[j2]
+    return line_list[idx]
+
+
 def get_subway_route(
     start_station: str,
     start_exit: str,
     end_station: str,
     end_exit: str,
-    *,
-    lines: Optional[dict[str, list[str]]] = None,
-    G: Optional[nx.Graph] = None
-) -> List[Tuple[str, str, str]]:
+) -> List[Tuple[str, str, str, Tuple[str, str]]]:
+    """
+    사용자 입력 → 최종 안내 세그먼트 리스트 반환
 
-    if lines is None:
-        lines = load_lines_from_db()
-    if G is None:
-        G = get_graph()
+    반환 형식:
+      [
+        (station, start_node_name, goal_node_name, (line_name, leg_target_station)),
+        ...
+      ]
 
-    # 출발/도착 노드 후보
+    예:
+      [
+        ("시청", "2번출구", "2호선 충정로 방면 승강장", ("2호선", "아현")),
+        ("아현", "2호선 이대 방면 승강장", "1번출구", ("2호선", "도착역")),
+      ]
+    """
+    # 1) DB에서 노선별 역 순서 로드 + 그래프 로드
+    line_data = load_lines_from_db()
+    G = get_graph()
+
+    # 2) 그래프에서 출발/도착 노드 후보 찾기
     start_nodes = find_station_nodes(G, start_station)
-    end_nodes   = find_station_nodes(G, end_station)
+    end_nodes = find_station_nodes(G, end_station)
+
     if not start_nodes or not end_nodes:
         # 역명이 잘못되었거나 DB에 없음
-        return [(start_station, start_exit, f"[오류] 역명 확인 필요"), (end_station, f"[오류] 역명 확인 필요", end_exit)]
+        return [
+            (start_station, start_exit, "[오류] 역명 확인 필요", ("", "")),
+            (end_station, "[오류] 역명 확인 필요", end_exit, ("", "")),
+        ]
 
-    # 최단 경로(환승 가중치=1 최소화)
-    best_path, best_cost = None, float("inf")
+    # 3) 최단 경로(환승 가중치=1 최소화)
+    best_path: Optional[List[str]] = None
+    best_cost = float("inf")
     for s in start_nodes:
         for e in end_nodes:
             try:
@@ -144,47 +220,117 @@ def get_subway_route(
                 continue
 
     if best_path is None:
-        return [(start_station, start_exit, "[오류] 연결 경로 없음")]
+        return [(start_station, start_exit, "[오류] 연결 경로 없음", ("", ""))]
 
-    # 경로를 short_path_list로 변환
-    output: List[Tuple[str, str, str]] = []
-    skip_next = False
-    line_data = lines  # {"7호선": [...], "2호선": [...]}
+    path = best_path
 
-    for i in range(len(best_path)):
-        if skip_next:
-            skip_next = False
-            continue
+    # 4) path를 호선별 leg로 나누고, 각 leg의 진행 방향 계산
+    legs = get_legs(path)
+    leg_steps = [
+        compute_leg_orientation(ln, sts, line_data) for ln, sts, idxs in legs
+    ]
 
-        station, line = best_path[i].split("-")
+    instructions: List[Tuple[str, str, str, Tuple[str, str]]] = []
 
-        if i == 0:
-            # 출발 세그먼트
-            next_station_name = best_path[i + 1].split("-")[0]
-            direction_station = get_next_station_name(line_data[line], station, forward=True)
-            output.append((station, start_exit, make_direction_str(line, direction_station)))
+    # 5) 출발역 안내
+    first_line, first_stations, first_idxs = legs[0]
+    first_step = leg_steps[0]
+    line_list_first = line_data[first_line]
+    start_station_name = first_stations[0]
 
-        elif i == len(best_path) - 1:
-            # 도착 세그먼트
-            line_list = line_data[line]
-            direction_station = get_next_station_name(line_list, station, forward=True)
-            output.append((station, make_direction_str(line, direction_station), end_exit))
-
+    # 출발역 방면명 = "현재역에서 다음 역" (path 상의 다음 역 기준)
+    if len(first_stations) >= 2:
+        dir_station0 = first_stations[1]
+    else:
+        idx = line_list_first.index(start_station_name)
+        if first_line in RING_LINES:
+            dir_station0 = line_list_first[(idx + first_step) % len(line_list_first)]
         else:
-            # 중간(환승) 판단
-            prev_line = best_path[i - 1].split("-")[1]
-            next_line = best_path[i + 1].split("-")[1]
-            curr_station = station
+            dir_station0 = next_station_linear(line_list_first, idx, first_step)
 
-            if prev_line != next_line:
-                prev_dir = get_next_station_name(line_data[prev_line], curr_station, forward=True)
-                next_dir = get_next_station_name(line_data[next_line], curr_station, forward=True)
-                dir_prev = make_direction_str(prev_line, prev_dir)
-                dir_next = make_direction_str(next_line, next_dir)
-                output.append((curr_station, dir_prev, dir_next))
-                skip_next = True
+    first_target = first_stations[-1]  # 이 leg에서 내릴 역 (환승역 or 도착역)
+    instructions.append(
+        (
+            start_station_name,
+            start_exit,
+            make_direction_str(first_line, dir_station0),
+            (first_line, first_target),
+        )
+    )
 
-    return output
+    # 6) 중간 환승 안내
+    for k in range(len(legs) - 1):
+        prev_line, prev_stations, prev_idxs = legs[k]
+        next_line, next_stations, next_idxs = legs[k + 1]
+        prev_step = leg_steps[k]
+        next_step = leg_steps[k + 1]
+
+        transfer_station = prev_stations[-1]  # 환승역 이름
+
+        # 이전에 타고 온 호선의 방면 (환승역 기준, 한 칸 더 진행한 역)
+        line_list_prev = line_data[prev_line]
+        idx_tr_prev = line_list_prev.index(transfer_station)
+        if prev_line in RING_LINES:
+            dir_prev_station = line_list_prev[
+                (idx_tr_prev + prev_step) % len(line_list_prev)
+            ]
+        else:
+            dir_prev_station = next_station_linear(
+                line_list_prev, idx_tr_prev, prev_step
+            )
+
+        # 새로 갈아탈 호선의 방면
+        line_list_next = line_data[next_line]
+        if len(next_stations) >= 2:
+            dir_next_station = next_stations[1]
+        else:
+            idx_tr_next = line_list_next.index(transfer_station)
+            if next_line in RING_LINES:
+                dir_next_station = line_list_next[
+                    (idx_tr_next + next_step) % len(line_list_next)
+                ]
+            else:
+                dir_next_station = next_station_linear(
+                    line_list_next, idx_tr_next, next_step
+                )
+
+        next_target = next_stations[-1]
+
+        instructions.append(
+            (
+                transfer_station,
+                make_direction_str(prev_line, dir_prev_station),
+                make_direction_str(next_line, dir_next_station),
+                (next_line, next_target),
+            )
+        )
+
+    # 7) 도착역 안내
+    last_line, last_stations, last_idxs = legs[-1]
+    last_step = leg_steps[-1]
+    arrival_station = last_stations[-1]
+    line_list_last = line_data[last_line]
+    idx_last = line_list_last.index(arrival_station)
+
+    if last_line in RING_LINES:
+        dir_last_station = line_list_last[
+            (idx_last + last_step) % len(line_list_last)
+        ]
+    else:
+        dir_last_station = next_station_linear(
+            line_list_last, idx_last, last_step
+        )
+
+    instructions.append(
+        (
+            arrival_station,
+            make_direction_str(last_line, dir_last_station),
+            end_exit,
+            (last_line, "도착역"),
+        )
+    )
+
+    return instructions
 
 
 # BFS
@@ -239,7 +385,13 @@ def to_edge_rows(df_edges_sub: pd.DataFrame, node_path: List[str]) -> pd.DataFra
 def build_relation_from_edge(row, df_nodes_sub: pd.DataFrame) -> str:
     src_id = row["source"]
     tgt_id = row["target"]
-    is_escalator = bool(row.get("escalator", False))
+
+    esc_val = row.get("escalator", False)
+    # NaN, None 같은 값은 False 처리
+    if pd.isna(esc_val):
+        is_escalator = False
+    else:
+        is_escalator = bool(esc_val)
 
     src = df_nodes_sub[df_nodes_sub["node_id"] == src_id].iloc[0]
     tgt = df_nodes_sub[df_nodes_sub["node_id"] == tgt_id].iloc[0]
