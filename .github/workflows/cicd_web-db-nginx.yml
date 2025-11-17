@@ -211,7 +211,7 @@ jobs:
             sudo mkdir -p ./mysql/conf.d
             sudo rm -f ./mysql/conf.d/my.cnf
 
-            cat > ./mysql/conf.d/my.cnf << 'EOF'
+            sudo cat > ./mysql/conf.d/my.cnf << 'EOF'
             [mysqld]
             innodb_buffer_pool_size=64M
             max_connections=50
