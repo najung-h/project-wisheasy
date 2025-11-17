@@ -208,10 +208,10 @@ jobs:
             # -----------deploy:mysql-conf---------
             # MySQL 설정파일 초기화 및 재생성
             # (기존 파일이 있더라도 강제로 삭제 후 새로 작성)
-            sudo mkdir -p ./mysql/conf.d
-            sudo rm -f ./mysql/conf.d/my.cnf
+            mkdir -p ./mysql/conf.d
+            rm -f ./mysql/conf.d/my.cnf
 
-            sudo cat > ./mysql/conf.d/my.cnf << 'EOF'
+            cat > ./mysql/conf.d/my.cnf << 'EOF'
             [mysqld]
             innodb_buffer_pool_size=64M
             max_connections=50
