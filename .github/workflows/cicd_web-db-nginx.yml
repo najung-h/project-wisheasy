@@ -510,9 +510,13 @@ jobs:
                 echo '[deploy:load_csv] (3/5) 이미 적재 완료됨. 스킵합니다.';
                 exit 0
               fi
-              python manage.py load_csv --file line2_7_edges.csv --settings=config.settings.prod
-              python manage.py load_csv --file line2_7_nodes.csv --settings=config.settings.prod
-              python manage.py load_csv --file line2_7_lines.csv --settings=config.settings.prod
+              python manage.py load_csv --file station.csv --settings=config.settings.prod
+              python manage.py load_csv --file line.csv --settings=config.settings.prod
+              python manage.py load_csv --file stationline.csv --settings=config.settings.prod
+              python manage.py load_csv --file node.csv --settings=config.settings.prod
+              python manage.py load_csv --file edge.csv --settings=config.settings.prod
+              python manage.py load_csv --file FastGate.csv --settings=config.settings.prod
+              python manage.py load_csv --file lines.csv --settings=config.settings.prod
               touch /data/.csv_loaded
               echo '[deploy:load_csv] (3/5) CSV 데이터 적재 완료';
             "
