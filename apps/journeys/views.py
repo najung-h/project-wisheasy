@@ -12,6 +12,8 @@ from apps.journeys.services.guide import (
 )
 from apps.journeys.management.commands.build_graph import get_graph
 
+from apps.journeys.services import services 
+
 # Session namespace for journey progress
 SESSION_KEY = "journey"
 
@@ -101,6 +103,26 @@ def route(request):
         if not start_station or not end_station:
             messages.error(request, "출발역/도착역은 필수입니다.")
             return redirect("journeys:route")
+        
+        # 추가된 부분: 출발역과 도착역이 동일한지 확인
+        if start_station == end_station:
+            messages.error(request, "같은 역을 입력하셨습니다. 서로 다른 역을 입력해주세요.")
+            return redirect("journeys:route")
+        
+        # services.py에서 역 / 출구 유효성 검사 + 보정
+        ok, station_pair_or_msg, norm_start_exit, norm_end_exit = services.validate_stations(
+            start_station, end_station, start_exit, end_exit
+        )
+        if not ok:
+            # station_pair_or_msg 에는 에러 메시지가 들어 있음
+            messages.error(request, station_pair_or_msg)
+            return redirect("journeys:route")
+
+        # 정상인 경우: 정규화된 역 이름/출구 사용
+        start_station, end_station = station_pair_or_msg
+        start_exit = norm_start_exit
+        end_exit = norm_end_exit
+        # ---------- 여기까지 ----------
 
         try:
             short_path_list = get_subway_route(
@@ -125,7 +147,7 @@ def route(request):
                 start_station=start_station,
                 start_exit=start_exit,
                 end_station=end_station,
-                end_exit=end_exit,
+                end_exit=end_exit, # 여기 수정 
             )
             return redirect("journeys:route")
 
