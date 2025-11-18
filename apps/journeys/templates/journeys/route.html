@@ -26,16 +26,28 @@
       </a>
     </header>
 
-    {# 에러 메시지 전용 #}
+    <!-- Error Modal -->
     {% if messages %}
-      <div class="messages" style="margin: 12px;">
-        {% for message in messages %}
-          {% if message.tags == 'error' %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-          {% endif %}
-        {% endfor %}
+      <div id="error-modal"
+          style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999;">
+        <div style="background:#fff;padding:24px 28px;border-radius:14px;min-width:280px;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.16);">
+          <h3 style="margin:0 0 8px;color:#e74c3c;">오류가 발생했습니다</h3>
+
+          {# error 메시지만 모아서 표시 #}
+          {% for message in messages %}
+            {% if message.tags == 'error' %}
+              <p style="margin:0 0 8px;color:#666;">{{ message }}</p>
+            {% endif %}
+          {% endfor %}
+
+          <button onclick="document.getElementById('error-modal').style.display='none'"
+                  style="margin-top:12px;padding:8px 14px;border:0;border-radius:10px;background:#e74c3c;color:#fff;cursor:pointer;">
+            닫기
+          </button>
+        </div>
       </div>
     {% endif %}
+
 
     <!-- Main -->
     <main class="main-content">
@@ -243,4 +255,13 @@
     });
   })();
 </script>
+<script>
+  (function () {
+    var m = document.getElementById('error-modal');
+    if (m) {
+      m.style.display = 'flex';
+    }
+  })();
+</script>
+
 {% endblock js %}
