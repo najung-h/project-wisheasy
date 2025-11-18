@@ -364,15 +364,21 @@ body {
 
 /* Bottom Action Buttons */
 .action-buttons {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 12px;
     padding: 20px;
     background: white;
     border-top: 1px solid #e9ecef;
 }
 
+.action-buttons > form {
+    margin: 0;
+    padding: 0;
+    display: contents;
+}
+
 .action-btn {
-    flex: 1;
     background: white;
     border: 1px solid #BDBDBD; /* Changed */
     border-radius: 12px;
@@ -384,6 +390,8 @@ body {
     align-items: center;
     gap: 8px;
     min-height: 80px;
+    width: 100%;
+    height: 100%;
     justify-content: center;
 }
 
@@ -538,6 +546,19 @@ body {
     color: #2E9AFE; /* Changed */
     width: 16px;
     text-align: center;
+}
+
+/* '이용 불가' 모달 전용 스타일 */
+#reportClosureModal .report-modal-body {
+    padding: 24px 16px 16px 16px; 
+    text-align: center; 
+}
+
+#reportClosureModal .report-modal-body p {
+    margin: 0 0 24px 0; 
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color-secondary); 
 }
 
 /* Animations */
