@@ -548,6 +548,19 @@ body {
     text-align: center;
 }
 
+/* '이용 불가' 모달 전용 스타일 */
+#reportClosureModal .report-modal-body {
+    padding: 24px 16px 16px 16px; 
+    text-align: center; 
+}
+
+#reportClosureModal .report-modal-body p {
+    margin: 0 0 24px 0; 
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-color-secondary); 
+}
+
 /* Animations */
 @keyframes fadeInUp {
     from {

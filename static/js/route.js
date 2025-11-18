@@ -425,10 +425,14 @@ function selectFacilityStation(stationName) {
     `;
 }
 
-// '이용 불가' 버튼 -> 임시 알림창
+// '이용 불가' 버튼 -> 모달 창 띄우기
 function reportClosure() {
-    // '아직 구현되지 않은 기능입니다.' 라는 알림창을 띄웁니다.
-    alert('아직 구현되지 않은 기능입니다.');
+    document.getElementById('reportClosureModal').classList.add('show');
+}
+
+// (추가) '이용 불가' 모달 닫기
+function closeReportClosureModal() {
+    document.getElementById('reportClosureModal').classList.remove('show');
 }
 
 // // '이용 불가' 버튼 -> 대체 경로 안내

@@ -208,6 +208,25 @@
       </div>
     </div>
   </div>
+
+  {# 이용 불가 모달 #}
+  <div id="reportClosureModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3><i class="fas fa-exclamation-triangle"></i> 기능 안내</h3>
+        <button class="close-btn" onclick="closeReportClosureModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="report-modal-body"> 
+        <p>
+          '이용 불가' 신고 기능은 현재 준비 중입니다.
+          <br>
+          빠른 시일 내에 더 좋은 서비스로 찾아뵙겠습니다.
+        </p>
+      </div>
+    </div>
+  </div>
 {% endblock content %}
 
 {% block js %}
