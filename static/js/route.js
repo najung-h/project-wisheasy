@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initializeRoutePage() {
     setupStationInputs();
+    updateTrainPosition();
     console.log('길찾기 페이지가 로드되었습니다.');
 }
 
@@ -92,6 +93,29 @@ function selectStation(stationName, inputId) {
 
     input.value = stationName;
     suggestions.style.display = 'none';
+}
+
+/* 현재 스텝(idx)에 맞춰 진행 바의 기차 아이콘 위치를 설정하는 함수 */
+function updateTrainPosition() {
+    const trainIcon = document.getElementById('trainIcon');
+    if (!trainIcon) return;
+
+    // HTML data 속성에서 값 가져오기 (Django 템플릿에서 렌더링된 값)
+    const idx = parseInt(trainIcon.dataset.idx) || 0;     // 현재 인덱스 (0부터 시작)
+    const count = parseInt(trainIcon.dataset.count) || 1; // 전체 단계 수
+
+    // 진행률 계산 (0% ~ 100%)
+    // idx가 0이면 0%, idx가 count-1이면 100%가 되도록 계산
+    let percentage = 0;
+    if (count > 1) {
+        percentage = (idx / (count - 1)) * 100;
+    }
+
+    // 범위 제한 (0~100)
+    percentage = Math.min(100, Math.max(0, percentage));
+
+    // CSS left 속성 업데이트
+    trainIcon.style.left = `${percentage}%`;
 }
 
 // '길찾기 시작' 버튼 -> 경로 찾기
@@ -243,78 +267,78 @@ function selectStation(stationName, inputId) {
 // }
 
 // 경로 안내 시 위치 안내 헤더(route-progress)
-function updateRouteStep() {
-    if (!currentRoute) return;
+// function updateRouteStep() {
+//     if (!currentRoute) return;
 
-    const step = currentRoute.steps[currentStep - 1];
+//     const step = currentRoute.steps[currentStep - 1];
 
-    // Update instruction icon
-    const instructionIcon = document.getElementById('instructionIcon').querySelector('i');
-    instructionIcon.className = `fas ${getIcon(step.icon)}`;
+//     // Update instruction icon
+//     const instructionIcon = document.getElementById('instructionIcon').querySelector('i');
+//     instructionIcon.className = `fas ${getIcon(step.icon)}`;
 
-    // Update instruction text
-    const instructionText = document.getElementById('instructionText');
-    instructionText.innerHTML = step.instruction.map(line =>
-        `<div class="instruction-line">${line}</div>`
-    ).join('');
+//     // Update instruction text
+//     const instructionText = document.getElementById('instructionText');
+//     instructionText.innerHTML = step.instruction.map(line =>
+//         `<div class="instruction-line">${line}</div>`
+//     ).join('');
 
-    // Update time labels (2 segments only)
-    document.getElementById('startTime').textContent = step.times[0];
-    document.getElementById('endTime').textContent = step.times[1];
+//     // Update time labels (2 segments only)
+//     document.getElementById('startTime').textContent = step.times[0];
+//     document.getElementById('endTime').textContent = step.times[1];
 
-    // Update progress bar color based on line
-    const progressBar = document.querySelector('.progress-line');
-    const lineClass = getLineClass(step.line);
+//     // Update progress bar color based on line
+//     const progressBar = document.querySelector('.progress-line');
+//     const lineClass = getLineClass(step.line);
 
-    // Remove old line classes from progress bar only
-    progressBar.className = 'progress-line';
-    if (lineClass) {
-        progressBar.classList.add(lineClass);
-    }
+//     // Remove old line classes from progress bar only
+//     progressBar.className = 'progress-line';
+//     if (lineClass) {
+//         progressBar.classList.add(lineClass);
+//     }
 
-    // Show/hide transfer marker
-    const transferMarker = document.getElementById('transferMarker');
+//     // Show/hide transfer marker
+//     const transferMarker = document.getElementById('transferMarker');
 
-    if (step.position === 'transfer') {
-        transferMarker.style.display = 'flex';
-    } else {
-        transferMarker.style.display = 'none';
-    }
+//     if (step.position === 'transfer') {
+//         transferMarker.style.display = 'flex';
+//     } else {
+//         transferMarker.style.display = 'none';
+//     }
 
-    // Update train position based on step position (centered on markers)
-    const trainIcon = document.getElementById('trainIcon');
-    let trainPosition;
+//     // Update train position based on step position (centered on markers)
+//     const trainIcon = document.getElementById('trainIcon');
+//     let trainPosition;
 
-    switch(step.position) {
-        case 'start':
-            trainPosition = '10%';
-            break;
-        case 'transfer':
-            trainPosition = '50%';
-            break;
-        case 'end':
-            trainPosition = '90%';
-            break;
-        default:
-            trainPosition = '10%';
-    }
+//     switch(step.position) {
+//         case 'start':
+//             trainPosition = '10%';
+//             break;
+//         case 'transfer':
+//             trainPosition = '50%';
+//             break;
+//         case 'end':
+//             trainPosition = '90%';
+//             break;
+//         default:
+//             trainPosition = '10%';
+//     }
 
-    trainIcon.style.left = trainPosition;
+//     trainIcon.style.left = trainPosition;
 
-    // Update buttons
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
+//     // Update buttons
+//     const prevBtn = document.getElementById('prevBtn');
+//     const nextBtn = document.getElementById('nextBtn');
 
-    prevBtn.style.display = currentStep > 1 ? 'flex' : 'none';
+//     prevBtn.style.display = currentStep > 1 ? 'flex' : 'none';
 
-    if (currentStep === totalSteps) {
-        nextBtn.innerHTML = '<span>완료</span>';
-        nextBtn.onclick = endGuidance;
-    } else {
-        nextBtn.innerHTML = '<span>다음</span>';
-        nextBtn.onclick = nextStep;
-    }
-}
+//     if (currentStep === totalSteps) {
+//         nextBtn.innerHTML = '<span>완료</span>';
+//         nextBtn.onclick = endGuidance;
+//     } else {
+//         nextBtn.innerHTML = '<span>다음</span>';
+//         nextBtn.onclick = nextStep;
+//     }
+// }
 
 function updateRouteVisual(stations) {
     const stationLine = document.getElementById('stationLine');

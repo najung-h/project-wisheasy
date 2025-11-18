@@ -284,82 +284,86 @@ body {
 
 /* Main Instruction */
 .instruction-section {
-    /* flex: 1; */ /* Removed */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px; /* Reduced padding */
     position: relative;
-}
-
-.nav-btn {
-    position: absolute;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: none;
-    background: #0052A4; /* Changed */
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 16px rgba(0, 123, 255, 0.3);
-}
-
-.nav-btn:hover {
-    background: #003B7A; /* Darker shade */
-    transform: scale(1.05);
-}
-
-.prev-btn {
-    background: #BDBDBD; /* Changed */
-}
-
-.prev-btn:hover {
-    background: #9E9E9E; /* Darker grey */
-}
-
-.prev-btn {
-    left: 20px;
-}
-
-.next-btn {
-    right: 20px;
-}
-
-.instruction-content {
+    min-height: 150px;
+    padding: 20px 0;
     text-align: center;
-    max-width: 300px;
-}
-
-.instruction-icon {
-    font-size: 48px;
-    color: #0052A4; /* Changed */
+    background-color: #fff;
+    border-radius: 12px; 
+    /* box-shadow: 0 2px 8px rgba(0,0,0,0.05); */
     margin-bottom: 20px;
 }
 
-.instruction-text {
-    color: #424242; /* Changed */
-    font-size: 22px; /* Slightly smaller font */
+/* 스텝 표시 (아이콘 상단, 작은 글씨) */
+.step-indicator {
+    font-size: 12px;
+    color: #888;
     font-weight: 600;
-    line-height: 1.4;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
 }
 
-.instruction-text .highlight {
-    color: #0052A4; /* Changed */
-    font-weight: 700;
+.nav-btn {
+    position: absolute; 
+    top: 50%;
+    transform: translateY(-50%);
+    
+    background: transparent;
+    border: none;
+    color: #ccc; 
+    font-size: 24px; 
+    padding: 15px; 
+    cursor: pointer;
+    z-index: 10;
+    transition: color 0.2s ease;
 }
 
-.instruction-line {
-    margin-bottom: 8px;
+.nav-btn:hover:not(:disabled) {
+    color: #333; /* 호버 시 진하게 */
 }
 
-.instruction-line:last-child {
-    margin-bottom: 0;
+.nav-btn:disabled {
+    color: #f0f0f0; /* 비활성화 시 아주 연하게 */
+    cursor: default;
+}
+
+/* 버튼 위치 지정 */
+.nav-btn.prev-btn {
+    left: 0;
+}
+
+.nav-btn.next-btn {
+    right: 0;
+}
+
+/* 안내 콘텐츠 영역 */
+.instruction-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0 60px; /* 양옆 버튼과 겹치지 않도록 충분한 여백 (중요!) */
+}
+
+/* 아이콘 스타일 */
+.instruction-icon {
+    font-size: 40px;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+/* 안내 텍스트 (작은 글씨, 가독성) */
+.instruction-text {
+    font-size: 16px; /* 너무 작지 않게 설정 */
+    line-height: 1.5;
+    color: #444;
+    word-break: keep-all; /* 한글 단어 중간 끊김 방지 */
+    font-weight: 500;
 }
 
 /* Bottom Action Buttons */

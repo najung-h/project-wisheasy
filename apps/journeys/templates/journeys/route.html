@@ -117,17 +117,22 @@
           <div class="instruction-section">
             <form method="post" style="display: contents;">
               {% csrf_token %}
+              
               <button class="nav-btn prev-btn" id="prevBtn" name="action" value="prev" {% if not has_prev %}disabled{% endif %}>
-                <span>이전</span>
+                <i class="fas fa-chevron-left"></i>
               </button>
 
               <div class="instruction-content">
+                <div class="step-indicator">
+                    Step {{ idx|add:1 }} / {{ count }}
+                </div>
+
                 <div class="instruction-icon" id="instructionIcon">
                   <i class="fas fa-walking"></i>
                 </div>
+                
                 <div class="instruction-text" id="instructionText">
-                  <div class="instruction-line"><strong>스텝 {{ idx|add:1 }} / {{ count }}</strong></div>
-                  <div class="instruction-line">{{ step_text }}</div>
+                  {{ step_text }}
                 </div>
               </div>
 
@@ -136,7 +141,7 @@
                       name="action"
                       value="next"
                       data-has-next="{{ has_next|yesno:'1,0' }}">
-                <span>다음</span>
+                <i class="fas fa-chevron-right"></i>
               </button>
             </form>
           </div>
@@ -241,7 +246,7 @@
     var idx = parseInt(icon.dataset.idx || '0', 10);
     var count = parseInt(icon.dataset.count || '1', 10);
     var ratio = (count > 1) ? (idx / (count - 1)) : 0;
-    icon.style.left = 'calc(' + (ratio * 100) + '% - 12px)';
+    icon.style.left = 'calc(25px + (100% - 50px) * ' + ratio + ')';
   })();
 </script>
 
