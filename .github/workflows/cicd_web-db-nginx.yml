@@ -517,6 +517,8 @@ jobs:
               python manage.py load_csv --file edge.csv --settings=config.settings.prod
               python manage.py load_csv --file FastGate.csv --settings=config.settings.prod
               python manage.py load_csv --file lines.csv --settings=config.settings.prod
+              python manage.py load_csv --file facility.csv --settings=config.settings.prod
+              python manage.py load_csv --file facilityLoc.csv --settings=config.settings.prod
               touch /data/.csv_loaded
               echo '[deploy:load_csv] (3/5) CSV 데이터 적재 완료';
             "
