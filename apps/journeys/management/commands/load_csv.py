@@ -65,6 +65,11 @@ class Command(BaseCommand):
                 self.load_nodes(reader)
             elif "edge" in lower:
                 self.load_edges(reader)
+            elif "facilityloc" in lower:
+                self.load_facility_loc(reader)
+            elif "facility" in lower:
+                self.load_facility(reader)
+
             else:
                 raise CommandError(f"⚠️ '{csv_file}'은(는) 인식되지 않는 파일입니다.")
 
@@ -394,5 +399,107 @@ class Command(BaseCommand):
         self.stdout.write(
             self.style.SUCCESS(
                 f"✅ stationline.csv 업로드 완료: {count_new}개 추가, {count_exist}개 이미 존재"
+            )
+        )
+
+
+    # -------------------
+    # Facility (편의시설)
+    # -------------------
+    def load_facility(self, reader):
+        from apps.journeys.models import Facility
+
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            facility_id = row.get("facility_id") or row.get("id")
+            name = row.get("facility_name") or row.get("name")
+
+            if not facility_id:
+                self.stdout.write(self.style.WARNING(f"⚠️ facility row 건너뜀 (facility_id 누락): {row}"))
+                continue
+
+            try:
+                facility_id = int(facility_id)
+            except:
+                self.stdout.write(self.style.WARNING(f"⚠️ facility_id 정수 변환 실패: {facility_id}"))
+                continue
+
+            obj, created = Facility.objects.update_or_create(
+                facility_id=facility_id,
+                defaults={"facility_name": (name or "").strip()},
+            )
+
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(f"✅ facility.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨")
+        )
+
+    # -------------------
+    # FacilityLoc (편의시설 위치 정보)
+    # -------------------
+    def load_facility_loc(self, reader):
+        from apps.journeys.models import FacilityLoc, Station, Line, Facility
+
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            station_id = (row.get("station_id") or "").strip()
+            line_id = (row.get("line_id") or "").strip()
+            facility_id = (row.get("facility_id") or "").strip()
+            detail_loc = (row.get("detail_loc") or "").strip()
+
+            if not station_id or not line_id or not facility_id:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ facility_loc row 건너뜀 (station_id/line_id/facility_id 누락): {row}"
+                    )
+                )
+                continue
+
+            station_obj = Station.objects.filter(id=station_id).first()
+            line_obj = Line.objects.filter(id=line_id).first()
+
+            try:
+                facility_id_int = int(facility_id)
+            except:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ facility_id 정수 변환 실패: {facility_id}")
+                )
+                continue
+
+            facility_obj = Facility.objects.filter(facility_id=facility_id_int).first()
+
+            if not station_obj or not line_obj or not facility_obj:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ facility_loc row 건너뜀 (FK 매칭 실패): {row}"
+                    )
+                )
+                continue
+
+            obj, created = FacilityLoc.objects.update_or_create(
+                station=station_obj,
+                line=line_obj,
+                facility=facility_obj,
+                defaults={
+                    "detail_loc": detail_loc,
+                },
+            )
+
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ facility_loc.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
             )
         )
