@@ -112,10 +112,10 @@ class Facility(models.Model):
 # --- FacilityLoc 테이블 (편의시설 위치 정보) ---
 class FacilityLoc(models.Model):
     id = models.AutoField(primary_key=True)  # PK
-    station_id = models.ForeignKey(Station, on_delete=models.CASCADE)  # station_id FK
-    line_id = models.ForeignKey(Line, on_delete=models.CASCADE)  # line_id FK
     detail_loc = models.TextField()  # 상세 위치 정보
-    facility_id = models.ForeignKey(Facility, on_delete=models.CASCADE)  # 🔥 FK도 정수형을 참조하게 자동 적용됨
+    station = models.ForeignKey(Station, on_delete=models.CASCADE)  # station_id FK
+    line = models.ForeignKey(Line, on_delete=models.CASCADE)  # line_id FK
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE)  # 🔥 FK도 정수형을 참조하게 자동 적용됨
 
     class Meta:
         db_table = 'facility_loc'
