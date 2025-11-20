@@ -6,18 +6,17 @@ import uuid
 
 from apps.journeys.services.guide import (
     load_graph_from_db,
-    load_lines_from_db,
     get_subway_route,
     build_full_guidance,
 )
-from apps.journeys.management.commands.build_graph import get_graph
 
-from apps.journeys.services import services 
+from apps.journeys.services.services import validate_stations
 
-# Session namespace for journey progress
 SESSION_KEY = "journey"
 
+# ------------------ 함수 정의 PART ------------------
 
+# session 초기화 함수 
 def _init_session(request, steps, start_station, start_exit, end_station, end_exit):
     """Initialize journey session state right after route is created."""
     request.session[SESSION_KEY] = {
@@ -32,21 +31,22 @@ def _init_session(request, steps, start_station, start_exit, end_station, end_ex
     }
     request.session.modified = True
 
-
+# session에 존재하는 현재 여정 상태 추적 
 def _get_state(request):
     """Return current journey session dict or None."""
     return request.session.get(SESSION_KEY)
 
-
+# index를 늘려서 업데이트 
 def _set_idx(request, idx):
     """Update current step index in session."""
-    s = _get_state(request)
-    if not s:
+    data_ok = _get_state(request)
+    if not data_ok:
         return
-    s["idx"] = idx
-    request.session[SESSION_KEY] = s
+    data_ok["idx"] = idx
+    request.session[SESSION_KEY] = data_ok
     request.session.modified = True
 
+# ------------------ 함수 정의 PART END ------------------
 
 @require_http_methods(["GET", "POST"])
 def route(request):
@@ -100,17 +100,18 @@ def route(request):
         end_station = request.POST.get("end_station", "").strip()
         end_exit = request.POST.get("end_exit", "").strip()
 
+        # 1) 출발역 or 도착역을 입력하지 않았을 때 
         if not start_station or not end_station:
             messages.error(request, "출발역/도착역은 필수입니다.")
             return redirect("journeys:route")
         
-        # 추가된 부분: 출발역과 도착역이 동일한지 확인
+        # 2) 출발역과 도착역에 같은 역을 입력했을 때 
         if start_station == end_station:
             messages.error(request, "같은 역을 입력하셨습니다. 서로 다른 역을 입력해주세요.")
             return redirect("journeys:route")
         
         # services.py에서 역 / 출구 유효성 검사 + 보정
-        ok, station_pair_or_msg, norm_start_exit, norm_end_exit = services.validate_stations(
+        ok, station_pair_or_msg, norm_start_exit, norm_end_exit = validate_stations(
             start_station, end_station, start_exit, end_exit
         )
         if not ok:
