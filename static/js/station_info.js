@@ -1,26 +1,26 @@
 // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
 // 각 역 객체에는 고유 ID, 역명, 호선 목록, 시설 정보, 실시간 도착 정보 등이 포함되어야 합니다.
 // Mock data for stations with detailed information
-// const stations = [
-//     {
-//         name: '강남역',
-//         lines: ['2호선', '분당선'],
-//         lineInfo: [
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-//             { line: '분당선', detail: '왕십리 ↔ 수원' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-//             { line: '2호선', direction: '까치산행', time: '5분 후 도착' },
-//             { line: '분당선', direction: '왕십리행', time: '3분 후 도착' },
-//             { line: '분당선', direction: '수원행', time: '7분 후 도착' }
-//         ]
-//     },
+const stations = [
+    {
+        name: '강남역',
+        lines: ['2호선', '분당선'],
+        lineInfo: [
+            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+            { line: '분당선', detail: '왕십리 ↔ 수원' }
+        ],
+        facilities: [
+            { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
+            { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
+            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+        ],
+        realtime: [
+            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
+            { line: '2호선', direction: '까치산행', time: '5분 후 도착' },
+            { line: '분당선', direction: '왕십리행', time: '3분 후 도착' },
+            { line: '분당선', direction: '수원행', time: '7분 후 도착' }
+        ]
+    },
 //     {
 //         name: '선릉역',
 //         lines: ['2호선', '분당선'],
@@ -158,24 +158,24 @@
 //             { line: '경의중앙선', direction: '문산행', time: '5분 후 도착' }
 //         ]
 //     },
-//     {
-//         name: '합정역',
-//         lines: ['2호선', '6호선'],
-//         lineInfo: [
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-//             { line: '6호선', detail: '응암순환 ↔ 신내' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-//             { line: '6호선', direction: '응암순환행', time: '4분 후 도착' }
-//         ]
-//     }
-// ];
+    {
+        name: '합정역',
+        lines: ['2호선', '6호선'],
+        lineInfo: [
+            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
+            { line: '6호선', detail: '응암순환 ↔ 신내' }
+        ],
+        facilities: [
+            { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
+            { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
+            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
+        ],
+        realtime: [
+            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
+            { line: '6호선', direction: '응암순환행', time: '4분 후 도착' }
+        ]
+    }
+];
 
 // Current state
 let currentStation = null;
