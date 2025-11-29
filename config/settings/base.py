@@ -55,7 +55,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")  # 프록시가 �
 # Application definition
 
 INSTALLED_APPS = [
-    "rest_framework"
+    "rest_framework",
     "apps.accounts.apps.AccountsConfig",
     "apps.stations",
     "apps.journeys",
