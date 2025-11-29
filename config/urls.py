@@ -25,5 +25,5 @@ urlpatterns = [
     path("stations/", include(("apps.stations.urls", "stations"), namespace="stations")),
     path("journeys/", include(("apps.journeys.urls", "journeys"), namespace="journeys")),
     # /api/stations/로 시작하는 모든 URL은 stations.urls로 위임
-    path("api/stations/", include("apps.stations.urls")),
+    path("api/stations/", include(("apps.stations.api_urls", "stations_api"), namespace="stations_api")),
 ]
