@@ -4,6 +4,24 @@ from django.contrib import messages
 from django.utils import timezone
 import uuid
 
+from rest_framework import generics
+from .models import FacilityLoc
+from .serializers import FacilityLocSerializer
+
+class StationFacilityListView(generics.ListAPIView):
+    serializer_class = FacilityLocSerializer
+
+    def get_queryset(self):
+        station_id = self.kwargs['station_id']
+        line_id = self.request.query_params.get('line_id')
+
+        qs = FacilityLoc.objects.select_related('station', 'line', 'facility').filter(station_id=station_id)
+
+        if line_id:
+            qs = qs.filter(line_id=line_id)
+        
+        return qs
+
 from apps.journeys.services.guide import (
     load_graph_from_db,
     get_subway_route,
