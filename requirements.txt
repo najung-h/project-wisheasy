@@ -10,3 +10,4 @@ PyJWT==2.8.0
 cryptography==46.0.2
 pandas
 networkx>=3.3
+djangorestframework==3.16.1
