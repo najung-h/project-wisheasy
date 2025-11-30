@@ -41,16 +41,30 @@ function setupStationInputs() {
 
 function setupAutocomplete(input, suggestionsId) {
     const suggestionsContainer = document.getElementById(suggestionsId);
+    let isStationSelected = false; // 역 선택 상태를 추적하는 플래그
 
     // Use event delegation for suggestion clicks
     suggestionsContainer.addEventListener('mousedown', function(e) {
         if (e.target && e.target.matches('div.suggestion-item')) {
             selectStation(e.target.dataset.stationName, input.id);
+
+            // 역 선택 시 리스트를 즉시 숨기고 선택 상태로 변경
+            suggestionsContainer.style.display = 'none';
+            suggestionsContainer.innerHTML = ''; 
+            isStationSelected = true;
         }
+    });
+    
+    // 사용자가 다시 타이핑을 시작하면 선택 상태 해제
+    input.addEventListener('input', function() {
+        isStationSelected = false;
     });
 
     // debounce와 fetchStations 사용
     input.addEventListener('input', debounce(async function() { // <--- 1. debounce 적용
+        // 역이 선택된 상태라면 자동완성 검색을 수행하지 않음 (지연된 호출 방지)
+        if (isStationSelected) return;
+
         const value = this.value;
         suggestionsContainer.innerHTML = ''; // 이전 제안 삭제
 
@@ -61,6 +75,12 @@ function setupAutocomplete(input, suggestionsId) {
 
         // 2. API 호출로 stations 데이터를 가져옴 (search-util.js의 함수 사용)
         const stations = await fetchStations(value);
+
+        // 비동기 요청 완료 후에도 사용자가 그 사이 역을 선택했다면 리스트를 열지 않음
+        if (isStationSelected) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
 
         if (stations.length > 0) {
             stations.forEach(station => {
