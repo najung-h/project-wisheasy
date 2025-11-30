@@ -34,6 +34,32 @@ const FACILITY_CONFIG = {
     }
 };
 
+/**
+ * 호선 명칭을 CSS 클래스 접미사로 변환
+ * 예: "2호선" -> "2", "신분당선" -> "shinbundang"
+ */
+function getLineClass(lineName) {
+    if (!lineName) return 'default';
+
+    // 1. "N호선" 패턴에서 숫자만 추출 ("7호선" -> "7")
+    const match = lineName.match(/(\d+)호선/);
+    if (match) {
+        return match[1]; // CSS 클래스 .line-7 매핑
+    }
+
+    // 2. 숫자가 없는 노선 매핑 (필요한 노선 추가)
+    const lineMap = {
+        '수인분당': 'bundang',
+        '신분당선': 'shinbundang',
+        '경의중앙': 'gyeongui',
+        '공항철도': 'airport',
+        '경춘': 'gyeongchun',
+        '우이신설': 'ui'
+    };
+
+    return lineMap[lineName] || 'default';
+}
+
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     initializeStationPage();
