@@ -215,6 +215,53 @@ function updateFacilities(facilities) {
     `).join('');
 }
 
+// ========================================
+// 편의시설 필터링
+// ========================================
+
+/**
+ * 편의시설 필터링 (역 정보 페이지용)
+ * - 에스컬레이터: 출구 정보만 포함
+ * - 나머지: 전부 표시
+ */
+function filterFacilitiesForStationInfo(facilities) {
+    return facilities.map(facility => {
+        const config = FACILITY_CONFIG[facility.facility_name] || {
+            icon: 'fas fa-info-circle',
+            showInRoute: false
+        };
+
+        // 에스컬레이터인 경우 "출구"가 포함된 것만 표시
+        if (facility.facility_name === '에스컬레이터') {
+            if (!facility.detail_loc || !facility.detail_loc.includes('출구')) {
+                return null;  // 필터링 제외
+            }
+        }
+
+        return {
+            ...facility,
+            icon: config.icon,
+            displayName: config.displayName || facility.facility_name
+        };
+    }).filter(f => f !== null);  // null 제거
+}
+
+/**
+ * 편의시설 필터링 (경로 안내 페이지용)
+ * - 화장실, 엘베만 포함
+ * - 에스컬레이터 제외
+ */
+function filterFacilitiesForRoute(facilities) {
+    return facilities.filter(facility => {
+        const config = FACILITY_CONFIG[facility.facility_name];
+        return config && config.showInRoute === true;
+    }).map(facility => ({
+        ...facility,
+        icon: FACILITY_CONFIG[facility.facility_name].icon,
+        displayName: FACILITY_CONFIG[facility.facility_name].displayName || facility.facility_name
+    }));
+}
+
 function showNoResults() {
     document.getElementById('stationInfo').style.display = 'none';
     document.getElementById('noResults').style.display = 'block';
