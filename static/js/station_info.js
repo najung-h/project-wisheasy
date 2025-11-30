@@ -1,184 +1,38 @@
-// TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
-// 각 역 객체에는 고유 ID, 역명, 호선 목록, 시설 정보, 실시간 도착 정보 등이 포함되어야 합니다.
-// Mock data for stations with detailed information
-const stations = [
-    {
-        name: '강남역',
-        lines: ['2호선', '분당선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '분당선', detail: '왕십리 ↔ 수원' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-            { line: '2호선', direction: '까치산행', time: '5분 후 도착' },
-            { line: '분당선', direction: '왕십리행', time: '3분 후 도착' },
-            { line: '분당선', direction: '수원행', time: '7분 후 도착' }
-        ]
-    },
-//     {
-//         name: '선릉역',
-//         lines: ['2호선', '분당선'],
-//         lineInfo: [
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-//             { line: '분당선', detail: '왕십리 ↔ 수원' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '1,3번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '2호선', direction: '신정네거리행', time: '1분 후 도착' },
-//             { line: '2호선', direction: '까치산행', time: '4분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '삼성역',
-//         lines: ['2호선'],
-//         lineInfo: [
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '1번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '2호선', direction: '신정네거리행', time: '3분 후 도착' },
-//             { line: '2호선', direction: '까치산행', time: '6분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '신도림역',
-//         lines: ['2호선', '1호선'],
-//         lineInfo: [
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-//             { line: '1호선', detail: '소요산 ↔ 인천' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-//             { line: '1호선', direction: '소요산행', time: '4분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '여의도역',
-//         lines: ['5호선', '9호선'],
-//         lineInfo: [
-//             { line: '5호선', detail: '방화 ↔ 마천' },
-//             { line: '9호선', detail: '개화 ↔ 중앙보훈병원' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '5호선', direction: '방화행', time: '3분 후 도착' },
-//             { line: '9호선', direction: '개화행', time: '5분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '여의나루역',
-//         lines: ['5호선', '9호선'],
-//         lineInfo: [
-//             { line: '5호선', detail: '방화 ↔ 마천' },
-//             { line: '9호선', detail: '개화 ↔ 중앙보훈병원' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '1번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '2번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '5호선', direction: '방화행', time: '1분 후 도착' },
-//             { line: '9호선', direction: '개화행', time: '4분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '시청역',
-//         lines: ['1호선', '2호선'],
-//         lineInfo: [
-//             { line: '1호선', detail: '소요산 ↔ 인천' },
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '1호선', direction: '소요산행', time: '2분 후 도착' },
-//             { line: '2호선', direction: '신정네거리행', time: '3분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '종각역',
-//         lines: ['1호선', '3호선'],
-//         lineInfo: [
-//             { line: '1호선', detail: '소요산 ↔ 인천' },
-//             { line: '3호선', detail: '대화 ↔ 수서' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '1호선', direction: '소요산행', time: '4분 후 도착' },
-//             { line: '3호선', direction: '대화행', time: '2분 후 도착' }
-//         ]
-//     },
-//     {
-//         name: '홍대입구역',
-//         lines: ['2호선', '6호선', '경의중앙선'],
-//         lineInfo: [
-//             { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-//             { line: '6호선', detail: '응암순환 ↔ 신내' },
-//             { line: '경의중앙선', detail: '문산 ↔ 용문' }
-//         ],
-//         facilities: [
-//             { name: '에스컬레이터', location: '1,2,3,4번 출구', icon: 'fas fa-walking' },
-//             { name: '엘리베이터', location: '2,4번 출구', icon: 'fas fa-wheelchair' },
-//             { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-//         ],
-//         realtime: [
-//             { line: '2호선', direction: '신정네거리행', time: '1분 후 도착' },
-//             { line: '6호선', direction: '응암순환행', time: '3분 후 도착' },
-//             { line: '경의중앙선', direction: '문산행', time: '5분 후 도착' }
-//         ]
-//     },
-    {
-        name: '합정역',
-        lines: ['2호선', '6호선'],
-        lineInfo: [
-            { line: '2호선', detail: '신정네거리 ↔ 까치산' },
-            { line: '6호선', detail: '응암순환 ↔ 신내' }
-        ],
-        facilities: [
-            { name: '에스컬레이터', location: '1,2,3번 출구', icon: 'fas fa-walking' },
-            { name: '엘리베이터', location: '2번 출구', icon: 'fas fa-wheelchair' },
-            { name: '화장실', location: '1,3번 출구 근처', icon: 'fas fa-restroom' }
-        ],
-        realtime: [
-            { line: '2호선', direction: '신정네거리행', time: '2분 후 도착' },
-            { line: '6호선', direction: '응암순환행', time: '4분 후 도착' }
-        ]
-    }
-];
+// ========================================
+// 편의시설 설정
+// ========================================
 
-// Current state
-let currentStation = null;
+/**
+ * 편의시설 타입별 아이콘 및 설정
+ */
+const FACILITY_CONFIG = {
+    'ATM': {
+        icon: 'fas fa-won-sign',
+        showInRoute: false  // 경로 안내에서 제외
+    },
+    '물품보관함': {
+        icon: 'fas fa-box',
+        showInRoute: false
+    },
+    '유실물': {
+        icon: 'fas fa-archive',
+        showInRoute: false
+    },
+    '화장실': {
+        icon: 'fas fa-restroom',
+        showInRoute: true  // 경로 안내에 포함
+    },
+    '엘리베이터': {
+        icon: 'fas fa-wheelchair',
+        showInRoute: true,
+        displayName: '엘베'
+    },
+    '에스컬레이터': {
+        icon: 'fas fa-walking',
+        showInRoute: false,  // 경로 안내에서 제외
+        filterType: 'exit'   // 출구 정보만 표시
+    }
+};
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
@@ -248,18 +102,64 @@ function selectStation(stationName) {
     suggestions.style.display = 'none';
 }
 
-function triggerStationSearch() {
-    const stationName = document.getElementById('stationSearch').value;
+async function triggerStationSearch() {
+    const stationName = document.getElementById('stationSearch').value.trim();
     if (!stationName) {
         alert('역 이름을 입력해주세요.');
         return;
     }
 
-    currentStation = stations.find(s => s.name === stationName);
-    if (currentStation) {
-        showStationInfo(currentStation);
-    } else {
-        showNoResults();
+    try {
+        // 1. 역 검색 API로 station_id와 lines 정보 가져오기
+        const searchResults = await fetchStations(stationName);
+        const station = searchResults.find(s => s.name === stationName);
+
+        if (!station) {
+            showNoResults();
+            return;
+        }
+
+        // 2. 편의시설 API로 편의시설 정보 가져오기
+        const facilities = await fetchStationFacilities(station.id);
+
+        // 3. 데이터 결합하여 표시
+        showStationInfo({
+            id: station.id,
+            name: station.name,
+            lines: station.lines,  // 검색 API에서 받은 호선 정보
+            facilities: facilities  // 편의시설 API에서 받은 시설 정보
+        });
+
+    } catch (error) {
+        console.error('역 정보 조회 실패:', error);
+        alert('역 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+/**
+ * 역 편의시설 정보 조회
+ * @param {string} stationId - 역 ID
+ * @param {string} lineId - 호선 ID (선택사항)
+ * @returns {Promise<Array>} - 편의시설 목록
+ */
+async function fetchStationFacilities(stationId, lineId = null) {
+    try {
+        let url = `/api/stations/${encodeURIComponent(stationId)}/facilities/`;
+        if (lineId) {
+            url += `?line_id=${encodeURIComponent(lineId)}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error('Facilities API failed:', response.status);
+            return [];
+        }
+
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Error fetching facilities:', error);
+        return [];
     }
 }
 
@@ -273,19 +173,13 @@ function showStationInfo(station) {
     
     // Update line badges
     const lineContainer = document.getElementById('stationLines');
-    lineContainer.innerHTML = station.lines.map(line => 
-        `<span class="line-badge line-${getLineClass(line)}">${line}</span>`
+    lineContainer.innerHTML = station.lines.map(line =>
+        `<span class="line-badge line-${getLineClass(line.name)}">${line.name}</span>`
     ).join('');
-    
-    // Update line info
-    updateLineInfo(station.lineInfo);
-    
+
     // Update facilities
     updateFacilities(station.facilities);
-    
-    // Update realtime info
-    updateRealtimeInfo(station.realtime);
-    
+
     // Show station info
     document.getElementById('stationInfo').style.display = 'block';
     
@@ -295,40 +189,73 @@ function showStationInfo(station) {
     });
 }
 
-function updateLineInfo(lineInfo) {
-    const container = document.getElementById('lineInfo');
-    container.innerHTML = lineInfo.map(line => `
-        <div class="line-item">
-            <span class="line-badge line-${getLineClass(line.line)}">${line.line}</span>
-            <span class="line-detail">${line.detail}</span>
-        </div>
-    `).join('');
-}
-
 function updateFacilities(facilities) {
     const container = document.getElementById('facilityList');
-    container.innerHTML = facilities.map(facility => `
+
+    // 역 정보 페이지용 필터링 적용
+    const filteredFacilities = filterFacilitiesForStationInfo(facilities);
+
+    if (filteredFacilities.length === 0) {
+        container.innerHTML = '<p class="no-data">편의시설 정보가 없습니다.</p>';
+        return;
+    }
+
+    container.innerHTML = filteredFacilities.map(facility => `
         <div class="facility-item">
             <i class="${facility.icon}"></i>
             <div class="facility-detail">
-                <span class="facility-name">${facility.name}</span>
-                <span class="facility-location">${facility.location}</span>
+                <span class="facility-name">${facility.displayName}</span>
+                <span class="facility-location">${facility.detail_loc || '위치 정보 없음'}</span>
             </div>
         </div>
     `).join('');
 }
 
-function updateRealtimeInfo(realtime) {
-    const container = document.getElementById('realtimeInfo');
-    container.innerHTML = realtime.map(train => `
-        <div class="train-info">
-            <span class="line-badge line-${getLineClass(train.line)}">${train.line}</span>
-            <div class="train-detail">
-                <span class="train-direction">${train.direction}</span>
-                <span class="train-time">${train.time}</span>
-            </div>
-        </div>
-    `).join('');
+// ========================================
+// 편의시설 필터링
+// ========================================
+
+/**
+ * 편의시설 필터링 (역 정보 페이지용)
+ * - 에스컬레이터: 출구 정보만 포함
+ * - 나머지: 전부 표시
+ */
+function filterFacilitiesForStationInfo(facilities) {
+    return facilities.map(facility => {
+        const config = FACILITY_CONFIG[facility.facility_name] || {
+            icon: 'fas fa-info-circle',
+            showInRoute: false
+        };
+
+        // 에스컬레이터인 경우 "출구"가 포함된 것만 표시
+        if (facility.facility_name === '에스컬레이터') {
+            if (!facility.detail_loc || !facility.detail_loc.includes('출구')) {
+                return null;  // 필터링 제외
+            }
+        }
+
+        return {
+            ...facility,
+            icon: config.icon,
+            displayName: config.displayName || facility.facility_name
+        };
+    }).filter(f => f !== null);  // null 제거
+}
+
+/**
+ * 편의시설 필터링 (경로 안내 페이지용)
+ * - 화장실, 엘베만 포함
+ * - 에스컬레이터 제외
+ */
+function filterFacilitiesForRoute(facilities) {
+    return facilities.filter(facility => {
+        const config = FACILITY_CONFIG[facility.facility_name];
+        return config && config.showInRoute === true;
+    }).map(facility => ({
+        ...facility,
+        icon: FACILITY_CONFIG[facility.facility_name].icon,
+        displayName: FACILITY_CONFIG[facility.facility_name].displayName || facility.facility_name
+    }));
 }
 
 function showNoResults() {
@@ -339,21 +266,6 @@ function showNoResults() {
 function hideAllResults() {
     document.getElementById('stationInfo').style.display = 'none';
     document.getElementById('noResults').style.display = 'none';
-}
-
-// Tab functionality
-function showTab(tabName) {
-    // Update tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    document.getElementById(tabName + 'Tab').classList.add('active');
 }
 
 // Navigation
@@ -399,21 +311,3 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
-
-// Auto-refresh realtime data (mock)
-function refreshRealtimeData() {
-    if (currentStation) {
-        // TODO: 실제 API 호출로 교체 필요
-        // 여기서는 단순히 시간을 업데이트하는 것으로 시뮬레이션
-        // Simulate realtime data update
-        const updatedRealtime = currentStation.realtime.map(train => ({
-            ...train,
-            time: `${Math.floor(Math.random() * 5) + 1}분 후 도착`
-        }));
-        
-        updateRealtimeInfo(updatedRealtime);
-    }
-}
-
-// Refresh realtime data every 30 seconds
-setInterval(refreshRealtimeData, 30000);
