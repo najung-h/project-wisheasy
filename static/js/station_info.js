@@ -144,15 +144,36 @@ async function triggerStationSearch() {
             return;
         }
 
-        // 2. 편의시설 API로 편의시설 정보 가져오기
-        const facilities = await fetchStationFacilities(station.id);
+        // 2. 호선별로 편의시설 API 호출
+        const lines = station.lines || [];
+
+        if (lines.length === 0) {
+            showStationInfo({
+                id: station.id,
+                name: station.name,
+                lines: [],
+                lineFacilities: []
+            });
+            return;
+        }
+
+        // 각 호선별로 편의시설 조회
+        const lineFacilitiesData = await Promise.all(
+            lines.map(async (line) => {
+                const facilities = await fetchStationFacilities(station.id, line.id);
+                return {
+                    lineName: line.name,
+                    facilities: facilities
+                };
+            })
+        );
 
         // 3. 데이터 결합하여 표시
         showStationInfo({
             id: station.id,
             name: station.name,
-            lines: station.lines,  // 검색 API에서 받은 호선 정보
-            facilities: facilities  // 편의시설 API에서 받은 시설 정보
+            lines: station.lines,
+            lineFacilities: lineFacilitiesData
         });
 
     } catch (error) {
@@ -192,48 +213,68 @@ function showStationInfo(station) {
     // Hide search section and no results
     document.querySelector('.search-section').style.display = 'none';
     document.getElementById('noResults').style.display = 'none';
-    
+
     // Update station header
     document.getElementById('stationName').textContent = station.name;
-    
+
     // Update line badges
     const lineContainer = document.getElementById('stationLines');
     lineContainer.innerHTML = station.lines.map(line =>
         `<span class="line-badge line-${getLineClass(line.name)}">${line.name}</span>`
     ).join('');
 
-    // Update facilities
-    updateFacilities(station.facilities);
+    // Update facilities (호선별 데이터 전달)
+    updateFacilities(station.lineFacilities);
 
     // Show station info
     document.getElementById('stationInfo').style.display = 'block';
-    
+
     // Scroll to station info
-    document.getElementById('stationInfo').scrollIntoView({ 
-        behavior: 'smooth' 
+    document.getElementById('stationInfo').scrollIntoView({
+        behavior: 'smooth'
     });
 }
 
-function updateFacilities(facilities) {
+function updateFacilities(lineFacilitiesData) {
     const container = document.getElementById('facilityList');
 
-    // 역 정보 페이지용 필터링 적용
-    const filteredFacilities = filterFacilitiesForStationInfo(facilities);
-
-    if (filteredFacilities.length === 0) {
+    if (!lineFacilitiesData || lineFacilitiesData.length === 0) {
         container.innerHTML = '<p class="no-data">편의시설 정보가 없습니다.</p>';
         return;
     }
 
-    container.innerHTML = filteredFacilities.map(facility => `
-        <div class="facility-item">
-            <i class="${facility.icon}"></i>
-            <div class="facility-detail">
-                <span class="facility-name">${facility.displayName}</span>
-                <span class="facility-location">${facility.detail_loc || '위치 정보 없음'}</span>
+    // 각 호선별로 편의시설 필터링 및 표시 여부 확인
+    const lineFacilitiesHTML = lineFacilitiesData.map(data => {
+        const filteredFacilities = filterFacilitiesForStationInfo(data.facilities);
+
+        if (filteredFacilities.length === 0) {
+            return ''; // 편의시설이 없는 호선은 표시하지 않음
+        }
+
+        return `
+            <div class="line-facilities-section">
+                <h5 class="line-subtitle">${data.lineName}</h5>
+                <div class="facility-list-inner">
+                    ${filteredFacilities.map(facility => `
+                        <div class="facility-item">
+                            <i class="${facility.icon}"></i>
+                            <div class="facility-detail">
+                                <span class="facility-name">${facility.displayName}</span>
+                                <span class="facility-location">${facility.detail_loc || '위치 정보 없음'}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).filter(html => html).join('');
+
+    if (!lineFacilitiesHTML) {
+        container.innerHTML = '<p class="no-data">편의시설 정보가 없습니다.</p>';
+        return;
+    }
+
+    container.innerHTML = lineFacilitiesHTML;
 }
 
 // ========================================
