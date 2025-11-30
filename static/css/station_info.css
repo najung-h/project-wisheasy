@@ -201,53 +201,37 @@ body {
     flex-wrap: wrap;
 }
 
+/* =========================================
+   호선별 뱃지 컬러 스타일
+   ========================================= */
+
+/* 기본 뱃지 스타일 보강 */
 .line-badge {
     padding: 6px 12px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 14px;
+    color: #fff;             /* 글자색 흰색 */
+    background-color: #ccc;  /* 매칭 안될 경우 기본 회색 */
+    border: none;            /* 테두리 제거 */
     font-weight: 600;
-    color: white;
 }
 
-.line-2 {
-    background: #00a651;
-}
+/* 1~9호선 */
+.line-1 { background-color: #0052A4; }
+.line-2 { background-color: #00A84D; }
+.line-3 { background-color: #EF7C1C; }
+.line-4 { background-color: #00A4E4; }
+.line-5 { background-color: #996CAC; }
+.line-6 { background-color: #CD7C2F; }
+.line-7 { background-color: #747F00; }
+.line-8 { background-color: #E6186C; }
+.line-9 { background-color: #BB8336; }
 
-.line-bundang {
-    background: #f5a200;
-}
-
-.line-1 {
-    background: #003499;
-}
-
-.line-3 {
-    background: #ff6600;
-}
-
-.line-4 {
-    background: #00a2d1;
-}
-
-.line-5 {
-    background: #996cac;
-}
-
-.line-6 {
-    background: #cd7c2f;
-}
-
-.line-7 {
-    background: #747f00;
-}
-
-.line-8 {
-    background: #e6186c;
-}
-
-.line-9 {
-    background: #b7c452;
-}
+/* 기타 노선 (분당선, 신분당선, 경의중앙선 등) */
+.line-bundang { background-color: #F5A200; }      /* 수인분당선 (노란색) */
+.line-shinbundang { background-color: #D4003B; }  /* 신분당선 (빨간색) */
+.line-gyeongui { background-color: #77C4A3; }    /* 경의중앙선 (옥색) */
+.line-airport { background-color: #0090D2; }      /* 공항철도 (하늘색) */
 
 /* Info Tabs */
 .info-tabs {
