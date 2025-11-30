@@ -182,7 +182,11 @@
   </div>
 
   <!-- Facilities Modal -->
-  <div class="modal" id="facilitiesModal">
+  <div class="modal" id="facilitiesModal" 
+      {% if mode == "guide" %}
+      data-start-station="{{ start_station }}"
+      data-end-station="{{ end_station }}"
+      {% endif %}>
     <div class="modal-content">
       <div class="modal-header">
         <h3>편의시설 정보</h3>
@@ -191,17 +195,16 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="facility-stations">
-          <button class="station-btn active" onclick="selectFacilityStation('gangnam')">강남역</button>
-          <button class="station-btn" onclick="selectFacilityStation('seolleung')">선릉역</button>
-          <button class="station-btn" onclick="selectFacilityStation('samsung')">삼성역</button>
+        <!-- 역 버튼은 JavaScript로 동적 생성 -->
+        <div class="facility-stations" id="facilityStations">
+          <!-- 버튼이 여기에 동적으로 추가됩니다 -->
         </div>
+        
+        <!-- 편의시설 상세 정보 -->
         <div class="facility-details" id="facilityDetails">
-          <h4>강남역 편의시설</h4>
-          <div class="facility-list">
-            <div class="facility-item"><i class="fas fa-walking"></i><span>에스컬레이터: 1,2,3,4번 출구</span></div>
-            <div class="facility-item"><i class="fas fa-wheelchair"></i><span>엘리베이터: 2,4번 출구</span></div>
-            <div class="facility-item"><i class="fas fa-restroom"></i><span>화장실: 1,3번 출구 근처</span></div>
+          <div class="loading-message">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>편의시설 정보를 불러오는 중...</p>
           </div>
         </div>
       </div>
