@@ -701,3 +701,21 @@ body {
 .line-9 {
     background: #b7c452 !important;
 }
+
+/* 호선별 편의시설 섹션 */
+.line-facilities-section {
+    margin-bottom: 24px;
+}
+
+.line-facilities-section:last-child {
+    margin-bottom: 0;
+}
+
+.line-subtitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e0e0e0;
+}

@@ -565,10 +565,10 @@ async function selectFacilityStation(stationName, stationLabel) {
     `;
 
     try {
-        // 1. 역 검색 API로 station_id 찾기
+        // 1. 역 검색 API로 station_id와 lines 정보 가져오기
         const searchResults = await fetchStations(stationName);
         const station = searchResults.find(s => s.name === stationName);
-        
+
         if (!station) {
             detailsContainer.innerHTML = `
                 <div class="no-data">
@@ -578,36 +578,69 @@ async function selectFacilityStation(stationName, stationLabel) {
             `;
             return;
         }
-        
-        // 2. 편의시설 API 호출
-        const facilities = await fetchStationFacilities(station.id);
-        
-        // 3. 화장실, 엘베만 필터링 (station_info.js에 정의된 함수 재사용)
-        const filteredFacilities = filterFacilitiesForRoute(facilities);
-        
-        // 4. 결과 표시
-        if (filteredFacilities.length === 0) {
+
+        // 2. 호선별로 편의시설 API 호출
+        const lines = station.lines || [];
+
+        if (lines.length === 0) {
             detailsContainer.innerHTML = `
-                <h4>${stationName}역</h4>
+                <div class="no-data">
+                    <i class="fas fa-info-circle"></i>
+                    <p>호선 정보가 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+
+        // 각 호선별로 편의시설 조회
+        const lineFacilitiesData = await Promise.all(
+            lines.map(async (line) => {
+                const facilities = await fetchStationFacilities(station.id, line.id);
+                const filteredFacilities = filterFacilitiesForRoute(facilities);
+                return {
+                    lineName: line.name,
+                    facilities: filteredFacilities
+                };
+            })
+        );
+
+        // 3. 결과 표시
+        const hasAnyFacilities = lineFacilitiesData.some(data => data.facilities.length > 0);
+
+        if (!hasAnyFacilities) {
+            detailsContainer.innerHTML = `
                 <div class="no-data">
                     <i class="fas fa-info-circle"></i>
                     <p>편의시설 정보가 없습니다.</p>
                 </div>
             `;
         } else {
-            detailsContainer.innerHTML = `
-                <h4>${stationName}역</h4>
-                <div class="facility-list">
-                    ${filteredFacilities.map(facility => `
-                        <div class="facility-item">
-                            <i class="${facility.icon}"></i>
-                            <span>${facility.displayName}: ${facility.detail_loc || '위치 정보 없음'}</span>
+            // 호선별로 편의시설 표시
+            const facilitiesHTML = lineFacilitiesData.map(data => {
+                if (data.facilities.length === 0) {
+                    return ''; // 편의시설이 없는 호선은 표시하지 않음
+                }
+
+                return `
+                    <div class="line-facilities-section">
+                        <h5 class="line-subtitle">${data.lineName}</h5>
+                        <div class="facility-list">
+                            ${data.facilities.map(facility => `
+                                <div class="facility-item">
+                                    <i class="${facility.icon}"></i>
+                                    <span>${facility.displayName}: ${facility.detail_loc || '위치 정보 없음'}</span>
+                                </div>
+                            `).join('')}
                         </div>
-                    `).join('')}
-                </div>
+                    </div>
+                `;
+            }).filter(html => html).join('');
+
+            detailsContainer.innerHTML = `
+                ${facilitiesHTML}
             `;
         }
-        
+
     } catch (error) {
         console.error('편의시설 정보 조회 실패:', error);
         detailsContainer.innerHTML = `
