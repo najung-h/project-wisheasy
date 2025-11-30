@@ -34,10 +34,6 @@ const FACILITY_CONFIG = {
     }
 };
 
-
-// Current state
-let currentStation = null;
-
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     initializeStationPage();
