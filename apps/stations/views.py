@@ -11,6 +11,21 @@ def search_stations(request):
     """
     역 이름 검색 자동완성 API
     /api/search/stations/?q=검색어
+
+    응답 예시:
+    {
+        "results": [
+            {
+                "id": "222",
+                "name": "강남",
+                "line": "2호선, 신분당선",
+                "lines": [
+                    {"id": "2", "name": "2호선"},
+                    {"id": "SB", "name": "신분당선"}
+                ]
+            }
+        ]
+    }
     """
     query = request.GET.get('q', None)
     results = []
@@ -28,17 +43,20 @@ def search_stations(request):
 
         # 3. 각 Station 객체를 순회합니다.
         for s in stations:
+            # 호선 정보를 개별 객체로 변환
+            lines_list = [{"id": l.id, "name": l.name} for l in s.lines.all()]
             # 4. 해당 역(s)에 연결된 모든 호선(l)의 이름을 리스트로 만듭니다.
             #    (예: ["2호선", "신분당선"])
             line_names = [l.name for l in s.lines.all()]
-            
             # 5. 리스트를 ", "로 연결된 하나의 문자열로 만듭니다.
             #    (예: "2호선, 신분당선")
             lines_str = ", ".join(line_names)
             
             results.append({
-                'name': s.name,    # 역 이름 (예: "강남")
-                'line': lines_str  # 호선 이름 (예: "2호선, 신분당선")
+                'id': s.id,           # ⭐ station_id 추가
+                'name': s.name,        # 역 이름 (예: "강남")
+                'line': lines_str,     # 호선 이름 (예: "2호선, 신분당선")
+                'lines': lines_list    # ⭐ 호선 상세 정보 추가
             })
         
         # 최종 결과 리스트에서 10개만 반환
