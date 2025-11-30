@@ -49,7 +49,7 @@ SESSION_KEY = "journey"
 #     }
 #     request.session.modified = True
 
-def _init_session(request, steps, start_station, start_exit, end_station, end_exit, transfer_stations=None):
+def _init_session(request, steps, start_station, start_exit, end_station, end_exit, transfer_stations=None, start_line="", end_line="", transfer_lines=None):
     """Initialize journey session state right after route is created."""
     request.session[SESSION_KEY] = {
         "id": str(uuid.uuid4()),
@@ -60,7 +60,10 @@ def _init_session(request, steps, start_station, start_exit, end_station, end_ex
         "start_exit": start_exit,
         "end_station": end_station,
         "end_exit": end_exit,
-        "transfer_stations": transfer_stations or [],  # 추가
+        "transfer_stations": transfer_stations or [],
+        "start_line": start_line,
+        "end_line": end_line,
+        "transfer_lines": transfer_lines or {},
     }
     request.session.modified = True
 
@@ -175,14 +178,33 @@ def route(request):
             if not isinstance(steps, list):
                 steps = list(steps)
 
-            # 환승역 추출 (short_path_list의 중간 요소들)
+            # 각 역의 호선 정보 추출 (프로그레스 바 색상용)
+            start_line = short_path_list[0][3][0] if short_path_list else ""
+            end_line = short_path_list[-1][3][0] if short_path_list else ""
+
+            # 환승역 추출 및 호선 정보 동시에 수집
             transfer_stations = []
+            transfer_lines = {}
             if len(short_path_list) > 2:
-                # 첫 번째와 마지막을 제외한 중간 요소들의 역 이름
-                for item in short_path_list[1:-1]:
-                    station_name = item[0]  # (station, start, goal, (line, target)) 형식
+                # 첫 출발역과 끝 도착역을 제외하고 순회
+                for i in range(1, len(short_path_list) - 1):
+                    current_node = short_path_list[i]
+                    prev_node = short_path_list[i-1]
+                    next_node = short_path_list[i+1]
+                    
+                    station_name = current_node[0]
+                    current_line = current_node[3][0] # 현재 역의 호선
+                    
+                    # 환승역 판단 로직 (단순 이름 저장이 아니라, 실제 환승이 일어나는지 확인 필요)
+                    # 여기서는 간단히 중간에 있는 역들을 환승역으로 간주하고,
+                    # 해당 역에서 '이용하는 호선' 정보를 저장합니다.
+                    
+                    # 이미 저장된 역이면 건너뜀 (한 역에 여러 노드가 있을 수 있음)
                     if station_name not in transfer_stations:
                         transfer_stations.append(station_name)
+                        # 환승역의 마커 색상은 '갈아탈 노선' 혹은 '도착한 노선' 중 선택
+                        # 여기서는 현재 노드에 할당된 호선을 사용합니다.
+                        transfer_lines[station_name] = current_line
 
             _init_session(
                 request,
@@ -190,8 +212,11 @@ def route(request):
                 start_station=start_station,
                 start_exit=start_exit,
                 end_station=end_station,
-                end_exit=end_exit, # 여기 수정 
-                transfer_stations=transfer_stations,  # 추가
+                end_exit=end_exit,
+                transfer_stations=transfer_stations,
+                start_line=start_line,  # 추가
+                end_line=end_line,  # 추가
+                transfer_lines=transfer_lines,  # 추가
             )
             return redirect("journeys:route")
 
@@ -217,7 +242,10 @@ def route(request):
                 "start_exit": state.get("start_exit"),
                 "end_station": state.get("end_station"),
                 "end_exit": state.get("end_exit"),
-                "transfer_stations": state.get("transfer_stations", []),  # 추가
+                "transfer_stations": state.get("transfer_stations", []),
+                "start_line": state.get("start_line", ""),
+                "end_line": state.get("end_line", ""),
+                "transfer_lines": state.get("transfer_lines", {}),
                 "idx": idx,
                 "count": count,
                 "step_text": steps[idx] if steps else "(안내 없음)",

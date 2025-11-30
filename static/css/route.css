@@ -186,86 +186,107 @@ body {
     cursor: not-allowed;
 }
 
-/* Route Guidance */
-.route-guidance {
-    animation: fadeInUp 0.5s ease-out;
-    /* height: 100vh; */ /* Removed to fit content */
-    display: block; /* Changed from flex */
-    background: white;
-}
+/* =========================================
+   경로 안내 프로그레스 바 (디자인 개선)
+   ========================================= */
 
-/* Route Progress Bar */
+/* 컨테이너: 마커와 이름이 잘리지 않도록 여백 확보 */
 .route-progress {
-    padding: 40px 20px 20px;
-    background: white;
+    position: relative;
+    padding: 70px 20px 30px; /* 상단 여백 확보 (역 이름 표시용) */
+    background: #fff;
+    /* 하단 경계선 (선택사항) */
+    border-bottom: 1px solid #f0f0f0;
 }
 
+/* 트랙 (기찻길) */
 .progress-line {
     position: relative;
-    height: 6px; /* Changed */
-    background: #0052A4; /* Changed */
-    border-radius: 4px; /* Changed */
-    margin-bottom: 20px;
+    height: 8px;              /* 적당한 두께감 */
+    background-color: #e9ecef; /* 부드러운 회색 트랙 */
+    border-radius: 4px;       /* 둥근 끝처리 */
+    margin: 0 20px;           /* 양옆 여백 */
 }
 
+/* -----------------------------------------
+   역 마커 (Start, End, Transfer)
+   ----------------------------------------- */
+/* 기본 마커 스타일 (심플한 원형 점) */
 .station-marker, .transfer-marker {
     position: absolute;
-    top: -21px; /* Changed */
-    width: 50px; /* Changed */
-    height: 50px; /* Changed */
-    background: #0052A4; /* Changed */
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    top: 50%;
+    transform: translate(-50%, -50%);
+    
+    width: 16px;              /* 크기 축소하여 세련되게 */
+    height: 16px;
+    
+    background-color: #fff;   /* 내부 흰색 */
+    border: 4px solid #ccc;   /* 기본 테두리 (회색) */
+    border-radius: 50%;       /* 원형 */
+    
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: border-color 0.3s ease;
 }
 
-.station-marker.start {
-    left: 0;
+/* 출발/도착 마커는 조금 더 크게 강조 */
+.station-marker.start,
+.station-marker.end {
+    width: 22px;
+    height: 22px;
+    border-width: 5px; 
 }
 
-.transfer-marker {
+/* 역 이름 텍스트 (마커 위로 배치) */
+.station-name {
+    position: absolute;
+    top: -47px;               /* 마커 위쪽으로 띄움 */
     left: 50%;
     transform: translateX(-50%);
-    background: #2E9AFE; /* Changed */
+    
+    font-size: 13px;
+    font-weight: 700;         /* 굵게 */
+    color: #424242;           /* 진한 회색 */
+    white-space: nowrap;      /* 줄바꿈 방지 */
+    text-shadow: 0 1px 2px rgba(255,255,255,1); /* 글자 배경 확보 */
 }
 
-.station-marker.end {
-    right: 0;
+/* 출발/도착역 텍스트 높이 미세 보정 */
+.station-marker.start .station-name,
+.station-marker.end .station-name {
+    top: -44px;
 }
 
-.station-name {
-    color: white;
-    font-size: 12px; /* Changed */
-    font-weight: 600;
-    text-align: center;
-    line-height: 1;
-}
-
+/* -----------------------------------------
+   열차 아이콘 (현재 위치)
+   ----------------------------------------- */
 .train-icon {
     position: absolute;
-    top: -16px;
-    width: 40px;
+    top: 50%;
+    transform: translate(-50%, -50%); /* 정확한 중앙 정렬 */
+    
+    width: 40px;              /* 시인성 좋은 크기 */
     height: 40px;
-    background: #DE314C; /* Changed */
-    border-radius: 50%;
+    
+    background-color: #0052A4;   /* 깨끗한 흰색 배경 */
+    border: 3px solid #fff; /* 브랜드 컬러 (파란색) 테두리 */
+    border-radius: 50%;       
+    
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: left 0.5s ease;
-    transform: translateX(-50%);
+    
+    color: #fff;           /* 아이콘 색상 */
+    font-size: 17px;
+    
+    /* 입체감과 부드러운 그림자 */
+    box-shadow: 0 4px 12px rgba(0, 82, 164, 0.3);
+    
+    z-index: 20;              /* 마커보다 항상 위에 표시 */
+    transition: left 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* 부드러운 이동 애니메이션 */
 }
 
-.train-icon i {
-    color: white;
-    font-size: 18px;
-}
-
-.time-segments {
+/* .time-segments {
     display: flex;
     justify-content: space-between;
     padding: 0 10px;
@@ -278,9 +299,9 @@ body {
 
 .time-label {
     font-size: 12px;
-    color: #6E6E6E; /* Changed */
+    color: #6E6E6E;
     font-weight: 500;
-}
+} */
 
 /* Main Instruction */
 .instruction-section {
@@ -700,6 +721,30 @@ body {
 
 .line-9 {
     background: #b7c452 !important;
+}
+
+.line-shinbundang {
+    background: #d4003b !important;
+}
+
+.line-gyeongui {
+    background: #77c4a3 !important;
+}
+
+.line-airport {
+    background: #0090d2 !important;
+}
+
+.line-gyeongchun {
+    background: #0c8043 !important;
+}
+
+.line-ui {
+    background: #b0ce18 !important;
+}
+
+.line-default {
+    background: #6E6E6E !important;
 }
 
 /* 호선별 편의시설 섹션 */

@@ -64,7 +64,7 @@
           </div>
 
           <div class="input-group">
-            <label class="input-label">출발 출구(선택)</label>
+            <label class="input-label">출발 출구</label>
             <div class="input-container">
               <input type="text" id="startExit" name="start_exit" class="station-input"
                      placeholder="예: 2번출구" autocomplete="off">
@@ -81,7 +81,7 @@
           </div>
 
           <div class="input-group">
-            <label class="input-label">도착 출구(선택)</label>
+            <label class="input-label">도착 출구</label>
             <div class="input-container">
               <input type="text" id="endExit" name="end_exit" class="station-input"
                      placeholder="예: 4번출구" autocomplete="off">
@@ -98,18 +98,14 @@
         <div class="route-guidance" id="routeGuidance" style="display: block;">
           <!-- Progress -->
           <div class="route-progress">
-            <div class="progress-line">
-              <div class="station-marker start">
-                <span class="station-name" id="startStationName">{{ start_station }}</span>
-              </div>
-
-              <div class="transfer-marker" id="transferMarker" style="display: none;">
-                <span class="station-name" id="transferStationName">환승</span>
-              </div>
-
-              <div class="station-marker end">
-                <span class="station-name" id="endStationName">{{ end_station }}</span>
-              </div>
+            <div class="progress-line" id="progressLine"
+                 data-start-station="{{ start_station }}"
+                 data-start-line="{{ start_line }}"
+                 data-end-station="{{ end_station }}"
+                 data-end-line="{{ end_line }}"
+                 data-transfer-stations="{{ transfer_stations|join:',' }}"
+                 data-transfer-lines="{{ transfer_lines|safe }}">
+              <!-- 마커들이 JavaScript로 동적 생성됩니다 -->
 
               <div class="train-icon"
                    id="trainIcon"
@@ -117,11 +113,6 @@
                    data-count="{{ count|default:1 }}">
                 <i class="fas fa-subway"></i>
               </div>
-            </div>
-
-            <div class="time-segments" id="timeSegments">
-              <div class="time-segment"><span class="time-label" id="startTime"></span></div>
-              <div class="time-segment"><span class="time-label" id="endTime"></span></div>
             </div>
           </div>
 
@@ -255,14 +246,136 @@
 <script src="{% static "js/route.js" %}"></script>
 
 <script>
-  // 열차 아이콘 이동
+  // 프로그레스 바 마커 생성 및 열차 아이콘 이동
   (function () {
+    var progressLine = document.getElementById('progressLine');
+    if (!progressLine) return;
+
+    // 역 정보 가져오기
+    var startStation = progressLine.dataset.startStation;
+    var startLine = progressLine.dataset.startLine;
+    var endStation = progressLine.dataset.endStation;
+    var endLine = progressLine.dataset.endLine;
+    var transferStationsStr = progressLine.dataset.transferStations || '';
+    var transferLinesStr = progressLine.dataset.transferLines || '{}';
+
+    // 환승역 파싱
+    var transferStations = transferStationsStr ? transferStationsStr.split(',').filter(s => s.trim()) : [];
+    var transferLines = {};
+    try {
+      transferLines = JSON.parse(transferLinesStr.replace(/'/g, '"'));
+    } catch (e) {
+      console.error('Failed to parse transfer lines:', e);
+    }
+
+    // 전체 역 목록 구성
+    var stations = [];
+
+    // 출발역
+    stations.push({
+      name: startStation,
+      line: startLine,
+      type: 'start'
+    });
+
+    // 환승역들
+    transferStations.forEach(function(station) {
+      station = station.trim();
+      stations.push({
+        name: station,
+        line: transferLines[station] || '',
+        type: 'transfer'
+      });
+    });
+
+    // 도착역
+    stations.push({
+      name: endStation,
+      line: endLine,
+      type: 'end'
+    });
+
+    // 호선명을 CSS 클래스로 변환
+    function getLineClass(lineName) {
+      if (!lineName) return 'default';
+      var match = lineName.match(/(\d+)호선/);
+      if (match) return 'line-' + match[1];
+
+      var lineMap = {
+        '수인분당': 'line-bundang',
+        '신분당선': 'line-shinbundang',
+        '경의중앙': 'line-gyeongui',
+        '공항철도': 'line-airport',
+        '경춘': 'line-gyeongchun',
+        '우이신설': 'line-ui'
+      };
+      return lineMap[lineName] || 'line-default';
+    }
+
+    // 마커 생성
+    var totalStations = stations.length;
+    stations.forEach(function(station, index) {
+      var marker = document.createElement('div');
+      marker.className = 'station-marker ' + station.type + ' ' + getLineClass(station.line);
+
+      var stationName = document.createElement('span');
+      stationName.className = 'station-name';
+      stationName.textContent = station.name;
+      marker.appendChild(stationName);
+
+      // [수정된 부분] 위치 설정 로직 단순화
+      // 출발(0%), 도착(100%), 환승(중간%) 모두 동일한 공식 적용
+      // JS에서 transform을 건드리지 않아야 CSS의 수직 정렬이 유지됩니다.
+      var position = 0;
+      if (totalStations > 1) {
+          position = (index / (totalStations - 1)) * 100;
+      }
+      
+      marker.style.left = position + '%';
+
+      progressLine.appendChild(marker);
+    });
+
+    // 열차 아이콘 이동
     var icon = document.getElementById('trainIcon');
-    if (!icon) return;
-    var idx = parseInt(icon.dataset.idx || '0', 10);
-    var count = parseInt(icon.dataset.count || '1', 10);
-    var ratio = (count > 1) ? (idx / (count - 1)) : 0;
-    icon.style.left = 'calc(25px + (100% - 50px) * ' + ratio + ')';
+    if (icon) {
+      var idx = parseInt(icon.dataset.idx || '0', 10);
+      var count = parseInt(icon.dataset.count || '1', 10);
+      var ratio = (count > 1) ? (idx / (count - 1)) : 0;
+      icon.style.left = (ratio * 100) + '%';
+    }
+  })();
+</script>
+
+<script>
+  // 안내 내용에 따른 아이콘 동적 설정
+  (function () {
+    var instructionText = document.getElementById('instructionText');
+    var instructionIcon = document.getElementById('instructionIcon');
+
+    if (!instructionText || !instructionIcon) return;
+
+    var text = instructionText.textContent;
+    var iconElement = instructionIcon.querySelector('i');
+    if (!iconElement) return;
+
+    // 기존 아이콘 클래스 제거
+    iconElement.className = '';
+
+    // 텍스트 내용에 따라 아이콘 설정
+    if (text.includes('에스컬레이터')) {
+      iconElement.className = 'fas fa-sort-amount-up'; // 에스컬레이터
+    } else if (text.includes('승차')) {
+      iconElement.className = 'fas fa-subway'; // 승차
+    } else if (text.includes('엘리베이터')) {
+      iconElement.className = 'fas fa-wheelchair'; // 엘리베이터
+    } else if (text.includes('계단') || text.includes('도보')) {
+      iconElement.className = 'fas fa-walking'; // 계단/도보
+    } else if (text.includes('감사합니다')) {
+      iconElement.className = 'fas fa-check-circle'; // 완료
+    } else {
+      iconElement.className = 'fas fa-info-circle'; // 기본 정보 아이콘
+    }
   })();
 </script>
 
