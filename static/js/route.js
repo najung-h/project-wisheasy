@@ -404,49 +404,200 @@ function updateRouteVisual(stations) {
 //     }, 2000);
 // }
 
-// '편의 시설' 버튼 -> 출발역/환승역/도착역의 시설 정보(모달)
-function showFacilities() {
-    document.getElementById('facilitiesModal').classList.add('show');
+// ========================================
+// station_info.js에서 재사용할 함수들
+// (station_info.js와 동일한 로직)
+// ========================================
+
+/**
+ * 역 편의시설 정보 조회
+ * @param {string} stationId - 역 ID
+ * @param {string} lineId - 호선 ID (선택사항)
+ * @returns {Promise<Array>} - 편의시설 목록
+ */
+async function fetchStationFacilities(stationId, lineId = null) {
+    try {
+        let url = `/api/stations/${encodeURIComponent(stationId)}/facilities/`;
+        if (lineId) {
+            url += `?line_id=${encodeURIComponent(lineId)}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error('Facilities API failed:', response.status);
+            return [];
+        }
+
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Error fetching facilities:', error);
+        return [];
+    }
+}
+
+/**
+ * 편의시설 설정 (station_info.js와 동일)
+ */
+const FACILITY_CONFIG = {
+    'ATM': {
+        icon: 'fas fa-won-sign',
+        showInRoute: false
+    },
+    '물품보관함': {
+        icon: 'fas fa-box',
+        showInRoute: false
+    },
+    '유실물': {
+        icon: 'fas fa-archive',
+        showInRoute: false
+    },
+    '화장실': {
+        icon: 'fas fa-restroom',
+        showInRoute: true
+    },
+    '엘리베이터': {
+        icon: 'fas fa-wheelchair',
+        showInRoute: true,
+    },
+    '에스컬레이터': {
+        icon: 'fas fa-walking',
+        showInRoute: false,
+        filterType: 'exit'
+    }
+};
+
+/**
+ * 편의시설 필터링 (경로 안내 페이지용)
+ * - 화장실, 엘베만 포함
+ */
+function filterFacilitiesForRoute(facilities) {
+    return facilities.filter(facility => {
+        const config = FACILITY_CONFIG[facility.facility_name];
+        return config && config.showInRoute === true;
+    }).map(facility => ({
+        ...facility,
+        icon: FACILITY_CONFIG[facility.facility_name].icon,
+        displayName: FACILITY_CONFIG[facility.facility_name].displayName || facility.facility_name
+    }));
+}
+
+// ========================================
+// 편의시설 모달 관련
+// ========================================
+
+/**
+ * 편의시설 모달 표시
+ * - 출발역, 도착역, 환승역(있을 경우)의 편의시설 정보를 API로 가져와서 표시
+ */
+async function showFacilities() {
+    const modal = document.getElementById('facilitiesModal');
+    
+    // 1. 모달에서 역 정보 가져오기 (Django 템플릿에서 data 속성으로 전달된 값)
+    const startStation = modal.dataset.startStation;
+    const endStation = modal.dataset.endStation;
+    
+    if (!startStation || !endStation) {
+        alert('경로 정보를 찾을 수 없습니다.');
+        return;
+    }
+    
+    // 2. 모달 표시
+    modal.classList.add('show');
+    
+    // 3. 경로에 포함된 역 목록 생성 (출발역, 도착역)
+    // TODO: 환승역 정보도 포함하려면 Django에서 전달받아야 함
+    const stations = [
+        { name: startStation, label: '출발역' },
+        { name: endStation, label: '도착역' }
+    ];
+    
+    // 4. 역 버튼 생성
+    const stationsContainer = document.getElementById('facilityStations');
+    stationsContainer.innerHTML = stations.map((station, index) => `
+        <button class="station-btn ${index === 0 ? 'active' : ''}" 
+                onclick="selectFacilityStation('${station.name}', '${station.label}')">
+            ${station.label}: ${station.name}
+        </button>
+    `).join('');
+    
+    // 5. 첫 번째 역(출발역)의 편의시설 자동 로드
+    await selectFacilityStation(startStation, '출발역');
+}
+
+/**
+ * 특정 역의 편의시설 정보 로드 및 표시
+ * @param {string} stationName - 역 이름
+ * @param {string} stationLabel - 역 라벨 (출발역, 도착역 등)
+ */
+async function selectFacilityStation(stationName, stationLabel) {
+    const detailsContainer = document.getElementById('facilityDetails');
+    
+    // 로딩 표시
+    detailsContainer.innerHTML = `
+        <div class="loading-message">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>편의시설 정보를 불러오는 중...</p>
+        </div>
+    `;
+    
+    try {
+        // 1. 역 검색 API로 station_id 찾기
+        const searchResults = await fetchStations(stationName);
+        const station = searchResults.find(s => s.name === stationName);
+        
+        if (!station) {
+            detailsContainer.innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-info-circle"></i>
+                    <p>${stationName} 정보를 찾을 수 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 2. 편의시설 API 호출
+        const facilities = await fetchStationFacilities(station.id);
+        
+        // 3. 화장실, 엘베만 필터링 (station_info.js에 정의된 함수 재사용)
+        const filteredFacilities = filterFacilitiesForRoute(facilities);
+        
+        // 4. 결과 표시
+        if (filteredFacilities.length === 0) {
+            detailsContainer.innerHTML = `
+                <h4>${stationLabel}: ${stationName}</h4>
+                <div class="no-data">
+                    <i class="fas fa-info-circle"></i>
+                    <p>편의시설 정보가 없습니다.</p>
+                </div>
+            `;
+        } else {
+            detailsContainer.innerHTML = `
+                <h4>${stationLabel}: ${stationName}</h4>
+                <div class="facility-list">
+                    ${filteredFacilities.map(facility => `
+                        <div class="facility-item">
+                            <i class="${facility.icon}"></i>
+                            <span>${facility.displayName}: ${facility.detail_loc || '위치 정보 없음'}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('편의시설 정보 조회 실패:', error);
+        detailsContainer.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>편의시설 정보를 불러오는 중 오류가 발생했습니다.</p>
+            </div>
+        `;
+    }
 }
 
 function closeFacilitiesModal() {
     document.getElementById('facilitiesModal').classList.remove('show');
-}
-
-function selectFacilityStation(stationName) {
-    // Update active button
-    document.querySelectorAll('.station-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-
-    // TODO: API 또는 전체 데이터베이스에서 가져온 실제 역 목록으로 교체해야 합니다.
-    // 각 역 객체에는 고유 ID, 역명, 편의 시설 등의 정보가 포함되어야 합니다.
-    // Update facility details
-    const details = document.getElementById('facilityDetails');
-    const stationNames = {
-        'gangnam': '강남역',
-        'seolleung': '선릉역',
-        'samsung': '삼성역'
-    };
-
-    details.innerHTML = `
-        <h4>${stationNames[stationName]} 편의시설</h4>
-        <div class="facility-list">
-            <div class="facility-item">
-                <i class="fas fa-walking"></i>
-                <span>에스컬레이터: 1,2,3,4번 출구</span>
-            </div>
-            <div class="facility-item">
-                <i class="fas fa-wheelchair"></i>
-                <span>엘리베이터: 2,4번 출구</span>
-            </div>
-            <div class="facility-item">
-                <i class="fas fa-restroom"></i>
-                <span>화장실: 1,3번 출구 근처</span>
-            </div>
-        </div>
-    `;
 }
 
 // '이용 불가' 버튼 -> 모달 창 띄우기

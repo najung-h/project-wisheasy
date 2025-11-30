@@ -635,6 +635,27 @@ body {
     animation: spin 1s linear infinite;
 }
 
+/* 편의시설 모달 - 로딩 및 빈 데이터 상태 */
+.loading-message,
+.no-data {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.loading-message i,
+.no-data i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.loading-message p,
+.no-data p {
+    margin: 0;
+    font-size: 14px;
+}
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
