@@ -323,24 +323,15 @@
       stationName.textContent = station.name;
       marker.appendChild(stationName);
 
-      // 위치 설정
-      if (index === 0) {
-        // 출발역: 왼쪽 끝
-        marker.style.left = '0';
-        marker.style.transform = 'none';
-      } else if (index === totalStations - 1) {
-        // 도착역: 오른쪽 끝
-        marker.style.left = 'auto';
-        marker.style.right = '0';
-        marker.style.transform = 'none';
-      } else {
-        // 환승역: 중간 위치 (균등 배치)
-        var transferCount = totalStations - 2; // 출발역, 도착역 제외
-        var transferIndex = index; // 현재 환승역의 순서
-        var position = (transferIndex / (totalStations - 1)) * 100;
-        marker.style.left = position + '%';
-        marker.style.transform = 'translateX(-50%)';
+      // [수정된 부분] 위치 설정 로직 단순화
+      // 출발(0%), 도착(100%), 환승(중간%) 모두 동일한 공식 적용
+      // JS에서 transform을 건드리지 않아야 CSS의 수직 정렬이 유지됩니다.
+      var position = 0;
+      if (totalStations > 1) {
+          position = (index / (totalStations - 1)) * 100;
       }
+      
+      marker.style.left = position + '%';
 
       progressLine.appendChild(marker);
     });
@@ -351,7 +342,7 @@
       var idx = parseInt(icon.dataset.idx || '0', 10);
       var count = parseInt(icon.dataset.count || '1', 10);
       var ratio = (count > 1) ? (idx / (count - 1)) : 0;
-      icon.style.left = 'calc(25px + (100% - 50px) * ' + ratio + ')';
+      icon.style.left = (ratio * 100) + '%';
     }
   })();
 </script>
