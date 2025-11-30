@@ -267,6 +267,38 @@
 </script>
 
 <script>
+  // 안내 내용에 따른 아이콘 동적 설정
+  (function () {
+    var instructionText = document.getElementById('instructionText');
+    var instructionIcon = document.getElementById('instructionIcon');
+
+    if (!instructionText || !instructionIcon) return;
+
+    var text = instructionText.textContent;
+    var iconElement = instructionIcon.querySelector('i');
+    if (!iconElement) return;
+
+    // 기존 아이콘 클래스 제거
+    iconElement.className = '';
+
+    // 텍스트 내용에 따라 아이콘 설정
+    if (text.includes('에스컬레이터')) {
+      iconElement.className = 'fas fa-sort-amount-up'; // 에스컬레이터
+    } else if (text.includes('승차')) {
+      iconElement.className = 'fas fa-subway'; // 승차
+    } else if (text.includes('엘리베이터')) {
+      iconElement.className = 'fas fa-wheelchair'; // 엘리베이터
+    } else if (text.includes('계단') || text.includes('도보')) {
+      iconElement.className = 'fas fa-walking'; // 계단/도보
+    } else if (text.includes('감사합니다')) {
+      iconElement.className = 'fas fa-check-circle'; // 완료
+    } else {
+      iconElement.className = 'fas fa-info-circle'; // 기본 정보 아이콘
+    }
+  })();
+</script>
+
+<script>
   // 마지막 스텝: '다음' 클릭 시 모달 → 홈 이동
   (function () {
     var nextBtn = document.getElementById('nextBtn');
