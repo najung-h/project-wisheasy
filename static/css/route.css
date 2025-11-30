@@ -194,18 +194,21 @@ body {
     background: white;
 }
 
-/* Route Progress Bar */
+/* 진행 바 컨테이너 */
 .route-progress {
-    padding: 40px 20px 20px;
-    background: white;
+    position: relative;
+    padding: 50px 20px 30px; /* 상단 여백을 늘려 아이콘 공간 확보 */
+    background-color: #fff;
+    border-bottom: 1px solid #f0f0f0;
 }
 
+/* 회색 트랙 (기찻길) */
 .progress-line {
     position: relative;
-    height: 6px; /* Changed */
-    background: #BDBDBD; /* Changed */
-    border-radius: 4px; /* Changed */
-    margin-bottom: 20px;
+    height: 8px;              /* 두께감 있게 변경 */
+    background-color: #e9ecef; /* 부드러운 회색 */
+    border-radius: 4px;       /* 둥근 끝처리 */
+    margin: 0 10px;           /* 양옆 여백 */
 }
 
 .station-marker, .transfer-marker {
@@ -265,7 +268,7 @@ body {
     font-size: 18px;
 }
 
-.time-segments {
+/* .time-segments {
     display: flex;
     justify-content: space-between;
     padding: 0 10px;
@@ -278,9 +281,9 @@ body {
 
 .time-label {
     font-size: 12px;
-    color: #6E6E6E; /* Changed */
+    color: #6E6E6E;
     font-weight: 500;
-}
+} */
 
 /* Main Instruction */
 .instruction-section {

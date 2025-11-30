@@ -340,30 +340,30 @@ function updateTrainPosition() {
 //     }
 // }
 
-function updateRouteVisual(stations) {
-    const stationLine = document.getElementById('stationLine');
-    stationLine.innerHTML = '';
+// function updateRouteVisual(stations) {
+//     const stationLine = document.getElementById('stationLine');
+//     stationLine.innerHTML = '';
 
-    stations.forEach((station, index) => {
-        // Add station
-        const stationEl = document.createElement('div');
-        stationEl.className = 'station';
-        if (index === 0) stationEl.classList.add('current');
-        stationEl.textContent = station;
-        stationLine.appendChild(stationEl);
+//     stations.forEach((station, index) => {
+//         // Add station
+//         const stationEl = document.createElement('div');
+//         stationEl.className = 'station';
+//         if (index === 0) stationEl.classList.add('current');
+//         stationEl.textContent = station;
+//         stationLine.appendChild(stationEl);
 
-        // Add line segment (except for last station)
-        if (index < stations.length - 1) {
-            const segment = document.createElement('div');
-            segment.className = 'line-segment';
-            segment.innerHTML = `
-                <div class="line"></div>
-                <span class="time">${Math.floor(Math.random() * 5) + 2}분</span>
-            `;
-            stationLine.appendChild(segment);
-        }
-    });
-}
+//         // Add line segment (except for last station)
+//         if (index < stations.length - 1) {
+//             const segment = document.createElement('div');
+//             segment.className = 'line-segment';
+//             segment.innerHTML = `
+//                 <div class="line"></div>
+//                 <span class="time">${Math.floor(Math.random() * 5) + 2}분</span>
+//             `;
+//             stationLine.appendChild(segment);
+//         }
+//     });
+// }
 
 // function endGuidance() {
 //     alert('경로 안내가 종료되었습니다.');
