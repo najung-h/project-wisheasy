@@ -106,18 +106,64 @@ function selectStation(stationName) {
     suggestions.style.display = 'none';
 }
 
-function triggerStationSearch() {
-    const stationName = document.getElementById('stationSearch').value;
+async function triggerStationSearch() {
+    const stationName = document.getElementById('stationSearch').value.trim();
     if (!stationName) {
         alert('역 이름을 입력해주세요.');
         return;
     }
 
-    currentStation = stations.find(s => s.name === stationName);
-    if (currentStation) {
-        showStationInfo(currentStation);
-    } else {
-        showNoResults();
+    try {
+        // 1. 역 검색 API로 station_id와 lines 정보 가져오기
+        const searchResults = await fetchStations(stationName);
+        const station = searchResults.find(s => s.name === stationName);
+
+        if (!station) {
+            showNoResults();
+            return;
+        }
+
+        // 2. 편의시설 API로 편의시설 정보 가져오기
+        const facilities = await fetchStationFacilities(station.id);
+
+        // 3. 데이터 결합하여 표시
+        showStationInfo({
+            id: station.id,
+            name: station.name,
+            lines: station.lines,  // 검색 API에서 받은 호선 정보
+            facilities: facilities  // 편의시설 API에서 받은 시설 정보
+        });
+
+    } catch (error) {
+        console.error('역 정보 조회 실패:', error);
+        alert('역 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+/**
+ * 역 편의시설 정보 조회
+ * @param {string} stationId - 역 ID
+ * @param {string} lineId - 호선 ID (선택사항)
+ * @returns {Promise<Array>} - 편의시설 목록
+ */
+async function fetchStationFacilities(stationId, lineId = null) {
+    try {
+        let url = `/api/stations/${encodeURIComponent(stationId)}/facilities/`;
+        if (lineId) {
+            url += `?line_id=${encodeURIComponent(lineId)}`;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            console.error('Facilities API failed:', response.status);
+            return [];
+        }
+
+        const data = await response.json();
+        return Array.isArray(data) ? data : [];
+    } catch (error) {
+        console.error('Error fetching facilities:', error);
+        return [];
     }
 }
 
