@@ -73,16 +73,30 @@ function initializeStationPage() {
 function setupStationSearch() {
     const searchInput = document.getElementById('stationSearch');
     const suggestionsContainer = document.getElementById('searchSuggestions');
+    let isStationSelected = false; // 역 선택 여부 확인용 플래그
 
     // Use event delegation for suggestion clicks
     suggestionsContainer.addEventListener('mousedown', function(e) {
         if (e.target && e.target.matches('div.suggestion-item')) {
             selectStation(e.target.dataset.stationName);
+
+            // 역 선택 시 리스트를 즉시 닫고 플래그 설정
+            suggestionsContainer.style.display = 'none';
+            suggestionsContainer.innerHTML = '';
+            isStationSelected = true;
         }
     });
     
+    // 사용자가 다시 입력을 시작하면 플래그 해제
+    searchInput.addEventListener('input', function() {
+        isStationSelected = false;
+    });
+
     // debounce와 fetchStations 사용
     searchInput.addEventListener('input', debounce(async function() { // <--- 1. debounce 적용
+        // 역이 선택된 상태라면 검색 로직 중단
+        if (isStationSelected) return;
+
         const value = this.value;
         suggestionsContainer.innerHTML = ''; // 이전 제안 삭제
 
@@ -93,6 +107,12 @@ function setupStationSearch() {
 
         // 2. API 호출로 stations 데이터를 가져옴 (search-util.js의 함수 사용)
         const stations = await fetchStations(value);
+
+        // 비동기 응답 후에도 선택 상태라면 리스트 표시 안 함
+        if (isStationSelected) {
+            suggestionsContainer.style.display = 'none';
+            return;
+        }
 
         if (stations.length > 0) {
             stations.forEach(station => {
