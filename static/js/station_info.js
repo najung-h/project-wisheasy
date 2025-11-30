@@ -25,7 +25,6 @@ const FACILITY_CONFIG = {
     '엘리베이터': {
         icon: 'fas fa-wheelchair',
         showInRoute: true,
-        displayName: '엘베'
     },
     '에스컬레이터': {
         icon: 'fas fa-walking',
