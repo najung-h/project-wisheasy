@@ -35,7 +35,21 @@ SESSION_KEY = "journey"
 # ------------------ 함수 정의 PART ------------------
 
 # session 초기화 함수 
-def _init_session(request, steps, start_station, start_exit, end_station, end_exit):
+# def _init_session(request, steps, start_station, start_exit, end_station, end_exit):
+#     """Initialize journey session state right after route is created."""
+#     request.session[SESSION_KEY] = {
+#         "id": str(uuid.uuid4()),
+#         "created_at": timezone.now().isoformat(),
+#         "steps": list(steps) if not isinstance(steps, list) else steps,
+#         "idx": 0,
+#         "start_station": start_station,
+#         "start_exit": start_exit,
+#         "end_station": end_station,
+#         "end_exit": end_exit,
+#     }
+#     request.session.modified = True
+
+def _init_session(request, steps, start_station, start_exit, end_station, end_exit, transfer_stations=None):
     """Initialize journey session state right after route is created."""
     request.session[SESSION_KEY] = {
         "id": str(uuid.uuid4()),
@@ -46,6 +60,7 @@ def _init_session(request, steps, start_station, start_exit, end_station, end_ex
         "start_exit": start_exit,
         "end_station": end_station,
         "end_exit": end_exit,
+        "transfer_stations": transfer_stations or [],  # 추가
     }
     request.session.modified = True
 
@@ -160,6 +175,15 @@ def route(request):
             if not isinstance(steps, list):
                 steps = list(steps)
 
+            # 환승역 추출 (short_path_list의 중간 요소들)
+            transfer_stations = []
+            if len(short_path_list) > 2:
+                # 첫 번째와 마지막을 제외한 중간 요소들의 역 이름
+                for item in short_path_list[1:-1]:
+                    station_name = item[0]  # (station, start, goal, (line, target)) 형식
+                    if station_name not in transfer_stations:
+                        transfer_stations.append(station_name)
+
             _init_session(
                 request,
                 steps=steps,
@@ -167,6 +191,7 @@ def route(request):
                 start_exit=start_exit,
                 end_station=end_station,
                 end_exit=end_exit, # 여기 수정 
+                transfer_stations=transfer_stations,  # 추가
             )
             return redirect("journeys:route")
 
@@ -192,6 +217,7 @@ def route(request):
                 "start_exit": state.get("start_exit"),
                 "end_station": state.get("end_station"),
                 "end_exit": state.get("end_exit"),
+                "transfer_stations": state.get("transfer_stations", []),  # 추가
                 "idx": idx,
                 "count": count,
                 "step_text": steps[idx] if steps else "(안내 없음)",
