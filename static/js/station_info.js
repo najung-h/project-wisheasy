@@ -1,3 +1,40 @@
+// ========================================
+// 편의시설 설정
+// ========================================
+
+/**
+ * 편의시설 타입별 아이콘 및 설정
+ */
+const FACILITY_CONFIG = {
+    'ATM': {
+        icon: 'fas fa-won-sign',
+        showInRoute: false  // 경로 안내에서 제외
+    },
+    '물품보관함': {
+        icon: 'fas fa-box',
+        showInRoute: false
+    },
+    '유실물': {
+        icon: 'fas fa-archive',
+        showInRoute: false
+    },
+    '화장실': {
+        icon: 'fas fa-restroom',
+        showInRoute: true  // 경로 안내에 포함
+    },
+    '엘리베이터': {
+        icon: 'fas fa-wheelchair',
+        showInRoute: true,
+        displayName: '엘베'
+    },
+    '에스컬레이터': {
+        icon: 'fas fa-walking',
+        showInRoute: false,  // 경로 안내에서 제외
+        filterType: 'exit'   // 출구 정보만 표시
+    }
+};
+
+
 // Current state
 let currentStation = null;
 
