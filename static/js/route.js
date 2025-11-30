@@ -496,7 +496,8 @@ async function showFacilities() {
     // 1. 모달에서 역 정보 가져오기 (Django 템플릿에서 data 속성으로 전달된 값)
     const startStation = modal.dataset.startStation;
     const endStation = modal.dataset.endStation;
-    
+    const transferStationsStr = modal.dataset.transferStations || '';
+
     if (!startStation || !endStation) {
         alert('경로 정보를 찾을 수 없습니다.');
         return;
@@ -506,21 +507,33 @@ async function showFacilities() {
     modal.classList.add('show');
     
     // 3. 경로에 포함된 역 목록 생성 (출발역, 도착역)
-    // TODO: 환승역 정보도 포함하려면 Django에서 전달받아야 함
     const stations = [
-        { name: startStation, label: '출발역' },
-        { name: endStation, label: '도착역' }
+        { name: startStation, label: '출발역' }
     ];
+    
+    // 환승역 추가
+    if (transferStationsStr.trim()) {
+        const transferStations = transferStationsStr.split(',').filter(s => s.trim());
+        transferStations.forEach((station, index) => {
+            stations.push({
+                name: station.trim(),
+                label: transferStations.length > 1 ? `환승역 ${index + 1}` : '환승역'
+            });
+        });
+    }
+    
+    stations.push({ name: endStation, label: '도착역' });
     
     // 4. 역 버튼 생성
     const stationsContainer = document.getElementById('facilityStations');
     stationsContainer.innerHTML = stations.map((station, index) => `
-        <button class="station-btn ${index === 0 ? 'active' : ''}" 
+        <button class="station-btn ${index === 0 ? 'active' : ''}"
+                data-station-name="${station.name}"
                 onclick="selectFacilityStation('${station.name}', '${station.label}')">
-            ${station.label}: ${station.name}
+            ${station.name}역
         </button>
     `).join('');
-    
+
     // 5. 첫 번째 역(출발역)의 편의시설 자동 로드
     await selectFacilityStation(startStation, '출발역');
 }
@@ -532,7 +545,17 @@ async function showFacilities() {
  */
 async function selectFacilityStation(stationName, stationLabel) {
     const detailsContainer = document.getElementById('facilityDetails');
-    
+
+    // 활성화된 버튼 업데이트
+    const allButtons = document.querySelectorAll('.station-btn');
+    allButtons.forEach(btn => {
+        if (btn.dataset.stationName === stationName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
     // 로딩 표시
     detailsContainer.innerHTML = `
         <div class="loading-message">
@@ -540,7 +563,7 @@ async function selectFacilityStation(stationName, stationLabel) {
             <p>편의시설 정보를 불러오는 중...</p>
         </div>
     `;
-    
+
     try {
         // 1. 역 검색 API로 station_id 찾기
         const searchResults = await fetchStations(stationName);
@@ -565,7 +588,7 @@ async function selectFacilityStation(stationName, stationLabel) {
         // 4. 결과 표시
         if (filteredFacilities.length === 0) {
             detailsContainer.innerHTML = `
-                <h4>${stationLabel}: ${stationName}</h4>
+                <h4>${stationName}역</h4>
                 <div class="no-data">
                     <i class="fas fa-info-circle"></i>
                     <p>편의시설 정보가 없습니다.</p>
@@ -573,7 +596,7 @@ async function selectFacilityStation(stationName, stationLabel) {
             `;
         } else {
             detailsContainer.innerHTML = `
-                <h4>${stationLabel}: ${stationName}</h4>
+                <h4>${stationName}역</h4>
                 <div class="facility-list">
                     ${filteredFacilities.map(facility => `
                         <div class="facility-item">
