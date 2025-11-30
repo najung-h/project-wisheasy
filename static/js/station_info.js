@@ -177,19 +177,13 @@ function showStationInfo(station) {
     
     // Update line badges
     const lineContainer = document.getElementById('stationLines');
-    lineContainer.innerHTML = station.lines.map(line => 
-        `<span class="line-badge line-${getLineClass(line)}">${line}</span>`
+    lineContainer.innerHTML = station.lines.map(line =>
+        `<span class="line-badge line-${getLineClass(line.name)}">${line.name}</span>`
     ).join('');
-    
-    // Update line info
-    // updateLineInfo(station.lineInfo);
-    
+
     // Update facilities
     updateFacilities(station.facilities);
-    
-    // Update realtime info
-    // updateRealtimeInfo(station.realtime);
-    
+
     // Show station info
     document.getElementById('stationInfo').style.display = 'block';
     
@@ -201,12 +195,21 @@ function showStationInfo(station) {
 
 function updateFacilities(facilities) {
     const container = document.getElementById('facilityList');
-    container.innerHTML = facilities.map(facility => `
+
+    // 역 정보 페이지용 필터링 적용
+    const filteredFacilities = filterFacilitiesForStationInfo(facilities);
+
+    if (filteredFacilities.length === 0) {
+        container.innerHTML = '<p class="no-data">편의시설 정보가 없습니다.</p>';
+        return;
+    }
+
+    container.innerHTML = filteredFacilities.map(facility => `
         <div class="facility-item">
             <i class="${facility.icon}"></i>
             <div class="facility-detail">
-                <span class="facility-name">${facility.name}</span>
-                <span class="facility-location">${facility.location}</span>
+                <span class="facility-name">${facility.displayName}</span>
+                <span class="facility-location">${facility.detail_loc || '위치 정보 없음'}</span>
             </div>
         </div>
     `).join('');
