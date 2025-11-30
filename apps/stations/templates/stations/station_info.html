@@ -41,92 +41,38 @@
                 <div class="station-header">
                     <h2 id="stationName">강남역</h2>
                     <div class="station-lines" id="stationLines">
-                        <span class="line-badge line-2">2호선</span>
-                        <span class="line-badge line-bundang">분당선</span>
+                        <!-- 호선 정보가 여기에 표시됩니다 (예: 2호선, 신분당선) -->
                     </div>
                 </div>
 
-                <!-- Info Tabs -->
-                <div class="info-tabs">
-                    <button class="tab-btn active" onclick="showTab('lines')">
-                        <i class="fas fa-subway"></i>
-                        호선 정보
-                    </button>
-                    <button class="tab-btn" onclick="showTab('facilities')">
-                        <i class="fas fa-building"></i>
-                        시설 정보
-                    </button>
-                    <button class="tab-btn" onclick="showTab('realtime')">
-                        <i class="fas fa-clock"></i>
-                        실시간 정보
-                    </button>
-                </div>
-
-                <!-- Tab Content -->
-                <div class="tab-content active" id="linesTab">
-                    <div class="info-card">
-                        <h3>운영 호선</h3>
-                        <div class="line-info" id="lineInfo">
-                            <div class="line-item">
-                                <span class="line-badge line-2">2호선</span>
-                                <span class="line-detail">신정네거리 ↔ 까치산</span>
-                            </div>
-                            <div class="line-item">
-                                <span class="line-badge line-bundang">분당선</span>
-                                <span class="line-detail">왕십리 ↔ 수원</span>
+                <!-- Facilities Section -->
+                <div class="info-card">
+                    <h3>편의시설</h3>
+                    <div class="facility-list" id="facilityList">
+                        <!-- 편의시설 목록이 여기에 표시됩니다 -->
+                        {% comment %} 
+                        <div class="facility-item">
+                            <i class="fas fa-walking"></i>
+                            <div class="facility-detail">
+                                <span class="facility-name">에스컬레이터</span>
+                                <span class="facility-location">1,2,3,4번 출구</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="tab-content" id="facilitiesTab">
-                    <div class="info-card">
-                        <h3>편의시설</h3>
-                        <div class="facility-list" id="facilityList">
-                            <div class="facility-item">
-                                <i class="fas fa-walking"></i>
-                                <div class="facility-detail">
-                                    <span class="facility-name">에스컬레이터</span>
-                                    <span class="facility-location">1,2,3,4번 출구</span>
-                                </div>
-                            </div>
-                            <div class="facility-item">
-                                <i class="fas fa-wheelchair"></i>
-                                <div class="facility-detail">
-                                    <span class="facility-name">엘리베이터</span>
-                                    <span class="facility-location">2,4번 출구</span>
-                                </div>
-                            </div>
-                            <div class="facility-item">
-                                <i class="fas fa-restroom"></i>
-                                <div class="facility-detail">
-                                    <span class="facility-name">화장실</span>
-                                    <span class="facility-location">1,3번 출구 근처</span>
-                                </div>
+                        <div class="facility-item">
+                            <i class="fas fa-wheelchair"></i>
+                            <div class="facility-detail">
+                                <span class="facility-name">엘리베이터</span>
+                                <span class="facility-location">2,4번 출구</span>
                             </div>
                         </div>
-                    </div>
-                </div>
+                        <div class="facility-item">
+                            <i class="fas fa-restroom"></i>
+                            <div class="facility-detail">
+                                <span class="facility-name">화장실</span>
+                                <span class="facility-location">1,3번 출구 근처</span>
+                            </div>
+                        </div> {% endcomment %}
 
-                <div class="tab-content" id="realtimeTab">
-                    <div class="info-card">
-                        <h3>실시간 도착 정보</h3>
-                        <div class="realtime-info" id="realtimeInfo">
-                            <div class="train-info">
-                                <span class="line-badge line-2">2호선</span>
-                                <div class="train-detail">
-                                    <span class="train-direction">신정네거리행</span>
-                                    <span class="train-time">2분 후 도착</span>
-                                </div>
-                            </div>
-                            <div class="train-info">
-                                <span class="line-badge line-2">2호선</span>
-                                <div class="train-detail">
-                                    <span class="train-direction">까치산행</span>
-                                    <span class="train-time">5분 후 도착</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
