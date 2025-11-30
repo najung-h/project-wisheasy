@@ -9,7 +9,7 @@ urlpatterns = [
     path("search/", views.search_stations, name="search_stations"),
     # 역 편의시설 API
     path(
-        "<int:station_id>/facilities/",
+        "<str:station_id>/facilities/",
         StationFacilityListView.as_view(),
         name="station-facilities",
     ),
