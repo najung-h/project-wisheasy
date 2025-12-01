@@ -6,6 +6,13 @@ import networkx as nx
 from apps.journeys.models import Station, Line, Node, Edge, FastGate, Lines
 from apps.journeys.management.commands.build_graph import get_graph
 
+class RouteBuildError(Exception):
+    """그래프에서 최단 경로를 만들지 못했을 때"""
+    pass
+
+class GuidanceBuildError(Exception):
+    """노드 간 안내 문장을 만들지 못했을 때"""
+    pass
 
 # Lines → dict 로드
 def load_lines_from_db() -> dict[str, list[str]]:
@@ -191,6 +198,7 @@ def get_subway_route(
         ("아현", "2호선 이대 방면 승강장", "1번출구", ("2호선", "도착역")),
       ]
     """
+    
     # 1) DB에서 노선별 역 순서 로드 + 그래프 로드
     line_data = load_lines_from_db()
     G = get_graph()
@@ -201,10 +209,11 @@ def get_subway_route(
 
     if not start_nodes or not end_nodes:
         # 역명이 잘못되었거나 DB에 없음
-        return [
-            (start_station, start_exit, "[오류] 역명 확인 필요", ("", "")),
-            (end_station, "[오류] 역명 확인 필요", end_exit, ("", "")),
-        ]
+        # return [
+        #     (start_station, start_exit, "[오류] 역명 확인 필요", ("", "")),
+        #     (end_station, "[오류] 역명 확인 필요", end_exit, ("", "")),
+        # ]
+        raise RouteBuildError("station nodes not found in graph")
 
     # 3) 최단 경로(환승 가중치=1 최소화)
     best_path: Optional[List[str]] = None
@@ -220,7 +229,9 @@ def get_subway_route(
                 continue
 
     if best_path is None:
-        return [(start_station, start_exit, "[오류] 연결 경로 없음", ("", ""))]
+        # return [(start_station, start_exit, "[오류] 연결 경로 없음", ("", ""))]
+        raise RouteBuildError("no path between stations")
+
 
     path = best_path
 
@@ -447,12 +458,16 @@ def build_guidance_for_segment(
     start_id = get_node_id(df_nodes, station, start_name)
     goal_id  = get_node_id(df_nodes, station, goal_name)
     if start_id is None or goal_id is None:
-        return [f"[{station}] 안내 실패: 노드 식별 불가 (start='{start_name}', goal='{goal_name}')"]
-
+        # return [f"[{station}] 안내 실패: 노드 식별 불가 (start='{start_name}', goal='{goal_name}')"]
+        raise GuidanceBuildError(
+            f"node not found for station={station}, start={start_name}, goal={goal_name}"
+        )
     node_path = bfs_path_node_ids(df_edges_sub, start_id, goal_id)
     if node_path is None:
-        return [f"[{station}] 안내 실패: 경로 없음 (start='{start_name}', goal='{goal_name}')"]
-
+        # return [f"[{station}] 안내 실패: 경로 없음 (start='{start_name}', goal='{goal_name}')"]
+        raise GuidanceBuildError(
+            f"no bfs path for station={station}, start={start_name}, goal={goal_name}"
+        )
     edges_path = to_edge_rows(df_edges_sub, node_path)
 
     steps: List[str] = []
