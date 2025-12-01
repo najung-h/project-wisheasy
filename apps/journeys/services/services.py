@@ -2,25 +2,21 @@
 
 from apps.journeys.models import Station, Node
 
-def _pretty_exit_label(exit_name: str) -> str:
+def format_exit_for_message(exit_name: str) -> str:
     """
-    DB에는 '8번출구'로 저장되어 있지만,
-    메시지에는 '8번 출구'처럼 띄워서 보여주고 싶을 때 쓰는 함수.
+    '8번출구', '8번 출구' 등 → '8번 출구'로 통일해서
+    사용자에게 보여줄 때 쓰는 함수.
     """
-    if exit_name.endswith("번출구"):
-        num = exit_name[:-3]  # '8번출구' -> '8번'
-        return f"{num}번 출구"  # '8번출구' -> '8번 출구'
-    return exit_name
+    if not exit_name:
+        return exit_name
 
-def split_exit_with_space(exit_input: str) -> str:
-    """
-    출구 번호에서 '번출구' 형식을 분리하여, '번 출구' 형식으로 반환하는 함수.
-    예: '8번출구' -> '8번 출구'
-    """
-    if "번출구" in exit_input:
-        # '번출구'를 분리하고, '번 출구' 형식으로 반환
-        return exit_input.replace("번출구", "번 출구")
-    return exit_input
+    no_space = exit_name.replace(" ", "")
+    if "번출구" in no_space:
+        # '8번출구' -> '8번 출구'
+        return no_space.replace("번출구", "번 출구")
+
+    return exit_name.strip()
+
 
 # ---- 캐시: 서버 프로세스당 한 번만 DB에서 읽어오도록 ----
 _STATIONS_CACHE = None      # ['강남', '역삼', ...]
@@ -88,54 +84,81 @@ def validate_and_correct_station_name(raw_station: str):
     # 3) 그 외는 전부 유효하지 않은 역
     return False, f"'{station_input}'은(는) 유효한 역이 아닙니다. 다시 입력해주세요."
 
+def _normalize_exit_string(raw: str) -> str:
+    """
+    '1', '1번', '1 번', '1번 출구', '1번출구' -> '1번출구' 로 통일
+    그 외는 공백만 제거
+    """
+    if not raw:
+        return ""
+
+    s = raw.strip()
+    no_space = s.replace(" ", "")
+
+    # 1 -> 1번출구
+    if no_space.isdigit():
+        return f"{no_space}번출구"
+
+    # 1번 -> 1번출구
+    if no_space.endswith("번") and no_space[:-1].isdigit():
+        return f"{no_space}출구"
+
+    # 이미 1번출구 꼴이면 그대로
+    if no_space.endswith("번출구") and no_space[:-3].isdigit():
+        return no_space
+
+    # 그 외는 그냥 공백만 제거한 값
+    return no_space
 
 def validate_and_correct_exit(raw_exit: str, station_name: str):
     """
     출구 유효성 검사 + 보정.
 
-    - 출구는 '선택'이므로 빈 값이면 그냥 통과 ('' 그대로 반환)
-    - 숫자만 들어오면 '번출구'를 붙여준다.
-      · '1'  -> '1번출구'
+    - 출구는 '선택'이지만, 비어 있으면 기본값 1번출구로 시도
+    - 1 / 1번 / 1번 출구 / 1번출구 등은 모두 '1번출구'로 정규화
+    - DB에 없는 출구면 오류 메시지 + 최대 출구 번호 안내
     """
     _, exits_by_station = _get_station_and_exit_cache()
+
+    # 0) 출구가 비어 있으면 기본값 "1번출구" 로 시도
     exit_input = (raw_exit or "").strip()
-
-    # 출구는 선택 사항이므로, 비어 있으면 그대로 OK
     if not exit_input:
-        return True, ""
+        exit_input = "1번출구"
 
-    # 숫자만 입력된 경우 → '번출구' 붙이기
-    if exit_input.isdigit():
-        exit_input = f"{exit_input}번출구"  # 예: '1' -> '1번출구'
-
-    # 비교할 때는 띄어쓰기 제거
-    exit_input_without_space = exit_input.replace(" ", "")  # 띄어쓰기 제거
+    # 1) 문자열 정규화 (공백/형식 정리)
+    exit_norm = _normalize_exit_string(exit_input)   # 예: '1', '1 번 출구' -> '1번출구'
 
     station_exits = exits_by_station.get(station_name)
 
-    # 이 역에 대한 출구 데이터가 전혀 없다면, 형식만 맞춘 값은 그대로 통과
+    # 2) 이 역에 출구 데이터가 전혀 없다면: 형식만 맞춘 값은 그대로 통과
     if station_exits is None:
-        return True, exit_input
+        return True, exit_norm
 
-    # 출구 번호가 등록된 목록에 있는지 확인 (띄어쓰기 제거 후 비교)
-    if exit_input_without_space not in [exit.replace(" ", "") for exit in station_exits]:
-        # 출구 목록이 있다면, 가장 큰 번호(마지막 값)를 기준으로 안내
+    # 3) 역에 등록된 출구 목록도 공백 제거해서 비교용으로 맞춰줌
+    normalized_station_exits = [ex.replace(" ", "") for ex in station_exits]
+
+    # 등록되지 않은 출구라면 에러
+    if exit_norm not in normalized_station_exits:
         if station_exits:
+            # 출구 번호 기준으로 정렬해서 최대 출구 찾기
             sorted_exits = sorted(
                 station_exits,
-                key=lambda x: int(''.join(filter(str.isdigit, x))))  # 출구 번호 기준으로 정렬
-            max_exit = sorted_exits[-1]  # 예: '8번출구'
-            pretty_max = _pretty_exit_label(max_exit)  # '8번 출구'
-            exit_input = split_exit_with_space(exit_input)
+                key=lambda x: int("".join(filter(str.isdigit, x)) or 0),
+            )
+            max_exit = sorted_exits[-1]               # 예: '8번출구'
+            pretty_max = format_exit_for_message(max_exit) # '8번 출구'
+            pretty_input = format_exit_for_message(exit_norm)
+
             return False, (
-                f"'{exit_input}'은(는) {station_name}역에 존재하지 않는 출구입니다. "
+                f"'{pretty_input}'은(는) {station_name}역에 존재하지 않는 출구입니다. "
                 f"{pretty_max}까지 있습니다."
             )
 
-        return False, f"'{exit_input}'은(는) {station_name}에 존재하지 않는 출구입니다."
+        pretty_input = format_exit_for_message(exit_norm)
+        return False, f"'{pretty_input}'은(는) {station_name}에 존재하지 않는 출구입니다."
 
-    return True, exit_input
-
+    # 4) 정상인 경우: 정규화된 exit_norm 그대로 반환
+    return True, exit_norm
 
 def validate_stations(
     start_station: str,

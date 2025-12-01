@@ -159,6 +159,15 @@ body {
     border-bottom: none;
 }
 
+.form-error {
+  min-height: 18px;        /* 에러 없어도 자리 유지해서 레이아웃 안 튐 */
+  margin-top: 4px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #e74c3c;          /* 기존 모달 에러 색이랑 비슷하게 맞추기 */
+}
+
+
 .search-btn {
     width: 100%;
     background: #0052A4; /* Changed */
