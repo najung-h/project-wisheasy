@@ -58,16 +58,18 @@
             <label class="input-label">출발역</label>
             <div class="input-container">
               <input type="text" id="startStation" name="start_station" class="station-input"
-                     placeholder="역 이름을 입력하세요" autocomplete="off" required>
+                     placeholder="역 이름을 입력하세요" autocomplete="off">
               <div class="suggestions" id="startSuggestions"></div>
             </div>
           </div>
 
           <div class="input-group">
-            <label class="input-label">출발 출구</label>
+            <label class="input-label">
+              출발 출구 
+            </label>
             <div class="input-container">
               <input type="text" id="startExit" name="start_exit" class="station-input"
-                     placeholder="예: 2번출구" autocomplete="off">
+                     placeholder="필요시 출구 번호를 입력하세요" autocomplete="off">
             </div>
           </div>
 
@@ -75,18 +77,22 @@
             <label class="input-label">도착역</label>
             <div class="input-container">
               <input type="text" id="endStation" name="end_station" class="station-input"
-                     placeholder="역 이름을 입력하세요" autocomplete="off" required>
+                     placeholder="역 이름을 입력하세요" autocomplete="off">
               <div class="suggestions" id="endSuggestions"></div>
             </div>
           </div>
 
           <div class="input-group">
-            <label class="input-label">도착 출구</label>
+            <label class="input-label">
+              도착 출구
+            </label>
             <div class="input-container">
               <input type="text" id="endExit" name="end_exit" class="station-input"
-                     placeholder="예: 4번출구" autocomplete="off">
+                     placeholder="필요시 출구 번호를 입력하세요" autocomplete="off">
             </div>
           </div>
+
+          <div id="formError" class="form-error" aria-live="polite"></div>
 
           <button class="search-btn" type="submit">
             <i class="fas fa-search"></i>

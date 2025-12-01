@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeRoutePage() {
     setupStationInputs();
     updateTrainPosition();
+    setupFormValidation();
     console.log('길찾기 페이지가 로드되었습니다.');
 }
 
@@ -94,6 +95,102 @@ function selectStation(stationName, inputId) {
 
     input.value = stationName;
     suggestions.style.display = 'none';
+}
+
+function normalizeAndValidateExit(value) {
+  const raw = (value || '').trim();
+  if (!raw) {
+    // 빈 값은 JS에서는 그대로 허용 (service에서 1번출구로 처리할 것)
+    return { ok: true, normalized: '' };
+  }
+
+  // 공백 제거 버전 (예: "1 번 출구" → "1번출구")
+  const noSpace = raw.replace(/\s+/g, '');
+
+  // 1 → 1번출구
+  if (/^\d+$/.test(noSpace)) {
+    return { ok: true, normalized: `${noSpace}번출구` };
+  }
+
+  // 1번 → 1번출구
+  if (/^\d+번$/.test(noSpace)) {
+    return { ok: true, normalized: `${noSpace}출구` };
+  }
+
+  // 1번출구 → 그대로
+  if (/^\d+번출구$/.test(noSpace)) {
+    return { ok: true, normalized: noSpace };
+  }
+
+  // 그 외는 전부 막음
+  return { ok: false, normalized: raw };
+}
+
+function setupFormValidation() {
+  const form = document.getElementById('inputSection');
+  if (!form) return;
+
+  const startInput = document.getElementById('startStation');
+  const endInput   = document.getElementById('endStation');
+  const startExit  = document.getElementById('startExit');
+  const endExit    = document.getElementById('endExit');
+  const errorBox   = document.getElementById('formError');
+  const searchBtn  = form.querySelector('.search-btn');
+
+  function showError(msg) {
+    if (errorBox) errorBox.textContent = msg;
+    else alert(msg);
+  }
+
+  function clearError() {
+    if (errorBox) errorBox.textContent = '';
+  }
+
+  form.addEventListener('submit', function (event) {
+    clearError();
+
+    const start = (startInput?.value || '').trim();
+    const end   = (endInput?.value || '').trim();
+
+    // 1) 역 이름 필수
+    if (!start || !end) {
+      event.preventDefault();
+      showError('출발역/도착역은 필수입니다.');
+      return;
+    }
+
+    // 2) 같은 역 금지
+    if (start === end) {
+      event.preventDefault();
+      showError('같은 역을 입력하셨습니다. 서로 다른 역을 입력해주세요.');
+      return;
+    }
+
+    // 3) 출구 형식 체크 + 정규화
+    const se = normalizeAndValidateExit(startExit?.value);
+    const ee = normalizeAndValidateExit(endExit?.value);
+
+    if (!se.ok) {
+      event.preventDefault();
+      showError('출발 출구는 1 / 1번 / 1번출구 형식만 사용할 수 있습니다.');
+      return;
+    }
+    if (!ee.ok) {
+      event.preventDefault();
+      showError('도착 출구는 1 / 1번 / 1번출구 형식만 사용할 수 있습니다.');
+      return;
+    }
+
+    if (startExit) startExit.value = se.normalized;
+    if (endExit)   endExit.value   = ee.normalized;
+
+    // 로딩 UI는 선택
+    if (searchBtn) {
+      searchBtn.disabled = true;
+      searchBtn.dataset.originalText = searchBtn.innerHTML;
+      searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 경로 탐색 중...';
+    }
+  });
 }
 
 /* 현재 스텝(idx)에 맞춰 진행 바의 기차 아이콘 위치를 설정하는 함수 */
