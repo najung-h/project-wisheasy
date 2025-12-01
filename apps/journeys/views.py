@@ -26,6 +26,8 @@ from apps.journeys.services.guide import (
     load_graph_from_db,
     get_subway_route,
     build_full_guidance,
+    RouteBuildError, 
+    GuidanceBuildError,
 )
 
 from apps.journeys.services.services import validate_stations
@@ -169,10 +171,6 @@ def route(request):
                 end_exit=end_exit,
             )
 
-            if not short_path_list:
-                messages.error(request, "경로를 찾지 못했습니다. 역 이름을 확인해 주세요.")
-                return redirect("journeys:route")
-
             df_nodes, df_edges = load_graph_from_db()
             steps = build_full_guidance(df_nodes, df_edges, short_path_list)
             if not isinstance(steps, list):
@@ -220,8 +218,21 @@ def route(request):
             )
             return redirect("journeys:route")
 
-        except Exception as e:
-            messages.error(request, f"경로 생성 중 오류: {e}")
+        # 👉 그래프/경로 관련 실패: 사용자에게는 깔끔한 한 줄만
+        except (RouteBuildError, GuidanceBuildError):
+            messages.error(
+                request,
+                "지하철 경로를 만들지 못했어요. "
+                "잠시 후 다시 시도하거나, 출발역·도착역/출구를 바꿔서 다시 시도해 주세요."
+            )
+            return redirect("journeys:route")
+        
+        # 👉 진짜 예기치 못한 오류: 내부 내용(e)은 노출 안 함
+        except Exception:
+            messages.error(
+                request,
+                "일시적인 오류가 발생했어요. 잠시 후 다시 시도해 주세요."
+            )
             return redirect("journeys:route")
 
     # GET: optional fresh start, then render form/guide depending on session
