@@ -295,23 +295,6 @@ body {
     transition: left 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* 부드러운 이동 애니메이션 */
 }
 
-/* .time-segments {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px;
-}
-
-.time-segment {
-    flex: 1;
-    text-align: center;
-}
-
-.time-label {
-    font-size: 12px;
-    color: #6E6E6E;
-    font-weight: 500;
-} */
-
 /* Main Instruction */
 .instruction-section {
     position: relative;

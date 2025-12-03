@@ -301,8 +301,6 @@ function updateFacilities(lineFacilitiesData) {
 
 /**
  * 편의시설 필터링 (역 정보 페이지용)
- * - 에스컬레이터: 출구 정보만 포함
- * - 나머지: 전부 표시
  */
 function filterFacilitiesForStationInfo(facilities) {
     return facilities.map(facility => {
