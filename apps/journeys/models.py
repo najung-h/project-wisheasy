@@ -44,16 +44,16 @@ class Node(models.Model):
 
 # --- Fast_Gate 테이블 (빠른하차탑승구) --- 
 class FastGate(models.Model):
-    boarding_gate = models.CharField(max_length=50)  # boarding gate info
-    escalator = models.BooleanField(default=False)  # whether there is an escalator (True/False)
-    station = models.ForeignKey(Station, on_delete=models.CASCADE)  # station_id (FK)
-    line = models.ForeignKey(Line, on_delete=models.CASCADE)  # line_id (FK)
+    platform = models.CharField(max_length=50, default="")  # ex. 2호선 구의역 방면 승강장
+    boarding_gate = models.CharField(max_length=50, default="") # ex. 4-2, 5-2
+    transfer = models.BooleanField(default=False) 
+    escalator = models.BooleanField(default=False)  
 
     class Meta:
         db_table = 'fast_gate'
 
     def __str__(self):
-        return f"Fast Gate {self.boarding_gate} at {self.station.name} ({self.line.name})"
+        return f"Fast Gate  {self.platform} {self.boarding_gate}"
 
 
 # --- Edge 테이블 (노드 간의 연결) --- 
