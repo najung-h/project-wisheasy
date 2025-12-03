@@ -373,3 +373,53 @@ body {
 .google-login-btn i {
     font-size: 20px;
 }
+
+/* Welcome Modal (Refactored) */
+.welcome-overlay {
+    display: none; /* JS에서 제어하기 위해 기본값은 none */
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* JS에서 display: flex를 주기 위한 유틸리티 클래스 */
+.welcome-overlay.show {
+    display: flex;
+}
+
+.welcome-box {
+    background: #fff;
+    padding: 24px 28px;
+    border-radius: 14px;
+    min-width: 280px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.welcome-title {
+    margin: 0 0 8px;
+    font-weight: bold;
+    font-size: 1.17em;
+}
+
+.welcome-desc {
+    margin: 0 0 16px;
+    color: #666;
+}
+
+.welcome-close-btn {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #1f6feb;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.welcome-close-btn:hover {
+    background: #1652b5;
+}

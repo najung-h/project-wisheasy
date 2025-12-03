@@ -14,7 +14,7 @@ const FACILITY_CONFIG = {
         icon: 'fas fa-box',
         showInRoute: false
     },
-    '유실물': {
+    '유실물보관소': {
         icon: 'fas fa-archive',
         showInRoute: false
     },
@@ -27,9 +27,9 @@ const FACILITY_CONFIG = {
         showInRoute: true,
     },
     '에스컬레이터': {
-        icon: 'fas fa-walking',
+        icon: 'icon-escalator-custom',
         showInRoute: false,  // 경로 안내에서 제외
-        filterType: 'exit'   // 출구 정보만 표시
+        // filterType: '출구'   // 출구 정보만 표시
     }
 };
 
@@ -249,10 +249,8 @@ function showStationInfo(station) {
     // Show station info
     document.getElementById('stationInfo').style.display = 'block';
 
-    // Scroll to station info
-    document.getElementById('stationInfo').scrollIntoView({
-        behavior: 'smooth'
-    });
+    // 화면 최상단으로 부드럽게 스크롤 이동
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateFacilities(lineFacilitiesData) {
@@ -303,8 +301,6 @@ function updateFacilities(lineFacilitiesData) {
 
 /**
  * 편의시설 필터링 (역 정보 페이지용)
- * - 에스컬레이터: 출구 정보만 포함
- * - 나머지: 전부 표시
  */
 function filterFacilitiesForStationInfo(facilities) {
     return facilities.map(facility => {
@@ -313,35 +309,12 @@ function filterFacilitiesForStationInfo(facilities) {
             showInRoute: false
         };
 
-        // 에스컬레이터인 경우 "출구"가 포함된 것만 표시
-        if (facility.facility_name === '에스컬레이터') {
-            if (!facility.detail_loc || !facility.detail_loc.includes('출구')) {
-                return null;  // 필터링 제외
-            }
-        }
-
         return {
             ...facility,
             icon: config.icon,
             displayName: config.displayName || facility.facility_name
         };
-    }).filter(f => f !== null);  // null 제거
-}
-
-/**
- * 편의시설 필터링 (경로 안내 페이지용)
- * - 화장실, 엘베만 포함
- * - 에스컬레이터 제외
- */
-function filterFacilitiesForRoute(facilities) {
-    return facilities.filter(facility => {
-        const config = FACILITY_CONFIG[facility.facility_name];
-        return config && config.showInRoute === true;
-    }).map(facility => ({
-        ...facility,
-        icon: FACILITY_CONFIG[facility.facility_name].icon,
-        displayName: FACILITY_CONFIG[facility.facility_name].displayName || facility.facility_name
-    }));
+    });
 }
 
 function showNoResults() {

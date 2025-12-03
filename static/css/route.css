@@ -295,23 +295,6 @@ body {
     transition: left 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* 부드러운 이동 애니메이션 */
 }
 
-/* .time-segments {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 10px;
-}
-
-.time-segment {
-    flex: 1;
-    text-align: center;
-}
-
-.time-label {
-    font-size: 12px;
-    color: #6E6E6E;
-    font-weight: 500;
-} */
-
 /* Main Instruction */
 .instruction-section {
     position: relative;
@@ -322,9 +305,13 @@ body {
     padding: 20px 0;
     text-align: center;
     background-color: #fff;
-    border-radius: 12px; 
+    border-radius: 12px;
     /* box-shadow: 0 2px 8px rgba(0,0,0,0.05); */
     margin-bottom: 20px;
+}
+
+.instruction-section form {
+    display: contents;
 }
 
 /* 스텝 표시 (아이콘 상단, 작은 글씨) */
@@ -383,8 +370,22 @@ body {
 /* 아이콘 스타일 */
 .instruction-icon {
     font-size: 40px;
+    width: 40px;
+    height: 40px;
     color: #333;
     margin-bottom: 16px;
+}
+
+/* 에스컬레이터 PNG 아이콘 전용 클래스 */
+.icon-escalator-custom {
+    display: inline-block;
+    width: 100%;  /* 아이콘 크기 조절 */
+    height: 100%;
+    background-image: url('https://img.icons8.com/?size=100&id=10639&format=png&color=000000');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    vertical-align: middle; /* 텍스트와 높이 맞춤 */
 }
 
 /* 안내 텍스트 (작은 글씨, 가독성) */
@@ -584,15 +585,110 @@ body {
 
 /* '이용 불가' 모달 전용 스타일 */
 #reportClosureModal .report-modal-body {
-    padding: 24px 16px 16px 16px; 
-    text-align: center; 
+    padding: 24px 16px 16px 16px;
+    text-align: center;
 }
 
 #reportClosureModal .report-modal-body p {
-    margin: 0 0 24px 0; 
+    margin: 0 0 24px 0;
     font-size: 16px;
     line-height: 1.6;
-    color: var(--text-color-secondary); 
+    color: var(--text-color-secondary);
+}
+
+/* Error Modal Styles */
+.error-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.error-modal.show {
+    display: flex;
+}
+
+.error-modal-content {
+    background: #fff;
+    padding: 24px 28px;
+    border-radius: 14px;
+    min-width: 280px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+}
+
+.error-modal-content h3 {
+    margin: 0 0 8px;
+    color: #e74c3c;
+}
+
+.error-modal-content p {
+    margin: 0 0 8px;
+    color: #666;
+}
+
+.error-modal-btn {
+    margin-top: 12px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #e74c3c;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* Thank You Modal Styles */
+.thankyou-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.thankyou-modal.show {
+    display: flex;
+}
+
+.thankyou-modal-content {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px 26px;
+    min-width: 280px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
+
+.thankyou-modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.thankyou-modal-text {
+    color: #666;
+    margin-bottom: 16px;
+}
+
+.thankyou-modal-link {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #1f6feb;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Hidden Form */
+.hidden-form {
+    display: none;
 }
 
 /* Animations */
