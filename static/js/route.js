@@ -268,7 +268,7 @@ const FACILITY_CONFIG = {
         showInRoute: true,
     },
     '에스컬레이터': {
-        icon: 'fas fa-walking',
+        icon: 'icon-escalator-custom',
         showInRoute: false,
         filterType: 'exit'
     }

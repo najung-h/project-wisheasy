@@ -27,9 +27,9 @@ const FACILITY_CONFIG = {
         showInRoute: true,
     },
     '에스컬레이터': {
-        icon: 'fas fa-walking',
+        icon: 'icon-escalator-custom',
         showInRoute: false,  // 경로 안내에서 제외
-        filterType: 'exit'   // 출구 정보만 표시
+        filterType: '출구'   // 출구 정보만 표시
     }
 };
 
