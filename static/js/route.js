@@ -1,6 +1,10 @@
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     initializeRoutePage();
+    initializeProgressBar();
+    initializeInstructionIcon();
+    initializeNextButton();
+    initializeErrorModal();
 });
 
 function initializeRoutePage() {
@@ -479,3 +483,166 @@ document.addEventListener('click', function(e) {
         e.target.classList.remove('show');
     }
 });
+
+// ========================================
+// 프로그레스 바 마커 생성 및 열차 아이콘 이동
+// ========================================
+function initializeProgressBar() {
+    var progressLine = document.getElementById('progressLine');
+    if (!progressLine) return;
+
+    // 역 정보 가져오기
+    var startStation = progressLine.dataset.startStation;
+    var startLine = progressLine.dataset.startLine;
+    var endStation = progressLine.dataset.endStation;
+    var endLine = progressLine.dataset.endLine;
+    var transferStationsStr = progressLine.dataset.transferStations || '';
+    var transferLinesStr = progressLine.dataset.transferLines || '{}';
+
+    // 환승역 파싱
+    var transferStations = transferStationsStr ? transferStationsStr.split(',').filter(s => s.trim()) : [];
+    var transferLines = {};
+    try {
+        transferLines = JSON.parse(transferLinesStr.replace(/'/g, '"'));
+    } catch (e) {
+        console.error('Failed to parse transfer lines:', e);
+    }
+
+    // 전체 역 목록 구성
+    var stations = [];
+
+    // 출발역
+    stations.push({
+        name: startStation,
+        line: startLine,
+        type: 'start'
+    });
+
+    // 환승역들
+    transferStations.forEach(function(station) {
+        station = station.trim();
+        stations.push({
+            name: station,
+            line: transferLines[station] || '',
+            type: 'transfer'
+        });
+    });
+
+    // 도착역
+    stations.push({
+        name: endStation,
+        line: endLine,
+        type: 'end'
+    });
+
+    // 호선명을 CSS 클래스로 변환
+    function getLineClass(lineName) {
+        if (!lineName) return 'default';
+        var match = lineName.match(/(\d+)호선/);
+        if (match) return 'line-' + match[1];
+
+        var lineMap = {
+            '수인분당': 'line-bundang',
+            '신분당선': 'line-shinbundang',
+            '경의중앙': 'line-gyeongui',
+            '공항철도': 'line-airport',
+            '경춘': 'line-gyeongchun',
+            '우이신설': 'line-ui'
+        };
+        return lineMap[lineName] || 'line-default';
+    }
+
+    // 마커 생성
+    var totalStations = stations.length;
+    stations.forEach(function(station, index) {
+        var marker = document.createElement('div');
+        marker.className = 'station-marker ' + station.type + ' ' + getLineClass(station.line);
+
+        var stationName = document.createElement('span');
+        stationName.className = 'station-name';
+        stationName.textContent = station.name;
+        marker.appendChild(stationName);
+
+        // 위치 설정 로직
+        var position = 0;
+        if (totalStations > 1) {
+            position = (index / (totalStations - 1)) * 100;
+        }
+
+        marker.style.left = position + '%';
+
+        progressLine.appendChild(marker);
+    });
+
+    // 열차 아이콘 이동
+    var icon = document.getElementById('trainIcon');
+    if (icon) {
+        var idx = parseInt(icon.dataset.idx || '0', 10);
+        var count = parseInt(icon.dataset.count || '1', 10);
+        var ratio = (count > 1) ? (idx / (count - 1)) : 0;
+        icon.style.left = (ratio * 100) + '%';
+    }
+}
+
+// ========================================
+// 안내 내용에 따른 아이콘 동적 설정
+// ========================================
+function initializeInstructionIcon() {
+    var instructionText = document.getElementById('instructionText');
+    var instructionIcon = document.getElementById('instructionIcon');
+
+    if (!instructionText || !instructionIcon) return;
+
+    var text = instructionText.textContent;
+    var iconElement = instructionIcon.querySelector('i');
+    if (!iconElement) return;
+
+    // 기존 아이콘 클래스 제거
+    iconElement.className = '';
+
+    // 텍스트 내용에 따라 아이콘 설정
+    if (text.includes('에스컬레이터')) {
+        iconElement.className = 'icon-escalator-custom';
+    } else if (text.includes('승차')) {
+        iconElement.className = 'fas fa-subway';
+    } else if (text.includes('엘리베이터')) {
+        iconElement.className = 'fas fa-wheelchair';
+    } else if (text.includes('계단') || text.includes('도보')) {
+        iconElement.className = 'fas fa-walking';
+    } else if (text.includes('감사합니다')) {
+        iconElement.className = 'fas fa-check-circle';
+    } else {
+        iconElement.className = 'fas fa-info-circle';
+    }
+}
+
+// ========================================
+// 마지막 스텝: '다음' 클릭 시 모달 → 홈 이동
+// ========================================
+function initializeNextButton() {
+    var nextBtn = document.getElementById('nextBtn');
+    if (!nextBtn) return;
+
+    nextBtn.addEventListener('click', function (ev) {
+        var hasNext = this.dataset.hasNext === '1';
+        if (hasNext) return;
+
+        ev.preventDefault();
+        var modal = document.getElementById('thankyouModal');
+        if (modal) modal.classList.add('show');
+
+        setTimeout(function () {
+            window.location.href = nextBtn.dataset.homeUrl || '/';
+        }, 1400);
+    });
+}
+
+// ========================================
+// 에러 모달 초기화
+// ========================================
+function initializeErrorModal() {
+    var modal = document.getElementById('error-modal');
+    if (modal) {
+        modal.classList.add('show');
+    }
+}

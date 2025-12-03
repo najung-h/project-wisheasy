@@ -28,20 +28,18 @@
 
     <!-- Error Modal -->
     {% if messages %}
-      <div id="error-modal"
-          style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;z-index:9999;">
-        <div style="background:#fff;padding:24px 28px;border-radius:14px;min-width:280px;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.16);">
-          <h3 style="margin:0 0 8px;color:#e74c3c;">오류가 발생했습니다</h3>
+      <div id="error-modal" class="error-modal">
+        <div class="error-modal-content">
+          <h3>오류가 발생했습니다</h3>
 
           {# error 메시지만 모아서 표시 #}
           {% for message in messages %}
             {% if message.tags == 'error' %}
-              <p style="margin:0 0 8px;color:#666;">{{ message }}</p>
+              <p>{{ message }}</p>
             {% endif %}
           {% endfor %}
 
-          <button onclick="document.getElementById('error-modal').style.display='none'"
-                  style="margin-top:12px;padding:8px 14px;border:0;border-radius:10px;background:#e74c3c;color:#fff;cursor:pointer;">
+          <button onclick="document.getElementById('error-modal').classList.remove('show')" class="error-modal-btn">
             닫기
           </button>
         </div>
@@ -124,7 +122,7 @@
 
           <!-- Instructions -->
           <div class="instruction-section">
-            <form method="post" style="display: contents;">
+            <form method="post">
               {% csrf_token %}
               
               <button class="nav-btn prev-btn" id="prevBtn" name="action" value="prev" {% if not has_prev %}disabled{% endif %}>
@@ -149,7 +147,8 @@
                       id="nextBtn"
                       name="action"
                       value="next"
-                      data-has-next="{{ has_next|yesno:'1,0' }}">
+                      data-has-next="{{ has_next|yesno:'1,0' }}"
+                      data-home-url="{% url 'journeys:leave' %}">
                 <i class="fas fa-chevron-right"></i>
               </button>
             </form>
@@ -210,19 +209,18 @@
   </div>
 
   {# prev POST용 숨은 폼 #}
-  <form id="hiddenPrevForm" method="post" action="{% url 'journeys:route' %}" style="display:none;">
+  <form id="hiddenPrevForm" method="post" action="{% url 'journeys:route' %}" class="hidden-form">
     {% csrf_token %}
     <input type="hidden" name="action" value="prev">
   </form>
 
   {# 마지막 스텝 완료 모달 #}
-  <div id="thankyouModal"
-       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:#fff;border-radius:14px;padding:22px 26px;min-width:280px;max-width:90%;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.18);">
-      <div style="font-size:22px;font-weight:700;margin-bottom:8px;">이용해주셔서 감사합니다!</div>
-      <div style="color:#666;margin-bottom:16px;">잠시 후 홈으로 이동합니다…</div>
+  <div id="thankyouModal" class="thankyou-modal">
+    <div class="thankyou-modal-content">
+      <div class="thankyou-modal-title">이용해주셔서 감사합니다!</div>
+      <div class="thankyou-modal-text">잠시 후 홈으로 이동합니다…</div>
       <div>
-        <a href="{% url 'journeys:leave' %}" style="display:inline-block;padding:8px 14px;border-radius:10px;background:#1f6feb;color:#fff;text-decoration:none;">지금 홈으로</a>
+        <a href="{% url 'journeys:leave' %}" class="thankyou-modal-link">지금 홈으로</a>
       </div>
     </div>
   </div>
@@ -250,165 +248,4 @@
 {% block js %}
 <script src="{% static "js/search-util.js" %}"></script>
 <script src="{% static "js/route.js" %}"></script>
-
-<script>
-  // 프로그레스 바 마커 생성 및 열차 아이콘 이동
-  (function () {
-    var progressLine = document.getElementById('progressLine');
-    if (!progressLine) return;
-
-    // 역 정보 가져오기
-    var startStation = progressLine.dataset.startStation;
-    var startLine = progressLine.dataset.startLine;
-    var endStation = progressLine.dataset.endStation;
-    var endLine = progressLine.dataset.endLine;
-    var transferStationsStr = progressLine.dataset.transferStations || '';
-    var transferLinesStr = progressLine.dataset.transferLines || '{}';
-
-    // 환승역 파싱
-    var transferStations = transferStationsStr ? transferStationsStr.split(',').filter(s => s.trim()) : [];
-    var transferLines = {};
-    try {
-      transferLines = JSON.parse(transferLinesStr.replace(/'/g, '"'));
-    } catch (e) {
-      console.error('Failed to parse transfer lines:', e);
-    }
-
-    // 전체 역 목록 구성
-    var stations = [];
-
-    // 출발역
-    stations.push({
-      name: startStation,
-      line: startLine,
-      type: 'start'
-    });
-
-    // 환승역들
-    transferStations.forEach(function(station) {
-      station = station.trim();
-      stations.push({
-        name: station,
-        line: transferLines[station] || '',
-        type: 'transfer'
-      });
-    });
-
-    // 도착역
-    stations.push({
-      name: endStation,
-      line: endLine,
-      type: 'end'
-    });
-
-    // 호선명을 CSS 클래스로 변환
-    function getLineClass(lineName) {
-      if (!lineName) return 'default';
-      var match = lineName.match(/(\d+)호선/);
-      if (match) return 'line-' + match[1];
-
-      var lineMap = {
-        '수인분당': 'line-bundang',
-        '신분당선': 'line-shinbundang',
-        '경의중앙': 'line-gyeongui',
-        '공항철도': 'line-airport',
-        '경춘': 'line-gyeongchun',
-        '우이신설': 'line-ui'
-      };
-      return lineMap[lineName] || 'line-default';
-    }
-
-    // 마커 생성
-    var totalStations = stations.length;
-    stations.forEach(function(station, index) {
-      var marker = document.createElement('div');
-      marker.className = 'station-marker ' + station.type + ' ' + getLineClass(station.line);
-
-      var stationName = document.createElement('span');
-      stationName.className = 'station-name';
-      stationName.textContent = station.name;
-      marker.appendChild(stationName);
-
-      // [수정된 부분] 위치 설정 로직 단순화
-      // 출발(0%), 도착(100%), 환승(중간%) 모두 동일한 공식 적용
-      // JS에서 transform을 건드리지 않아야 CSS의 수직 정렬이 유지됩니다.
-      var position = 0;
-      if (totalStations > 1) {
-          position = (index / (totalStations - 1)) * 100;
-      }
-      
-      marker.style.left = position + '%';
-
-      progressLine.appendChild(marker);
-    });
-
-    // 열차 아이콘 이동
-    var icon = document.getElementById('trainIcon');
-    if (icon) {
-      var idx = parseInt(icon.dataset.idx || '0', 10);
-      var count = parseInt(icon.dataset.count || '1', 10);
-      var ratio = (count > 1) ? (idx / (count - 1)) : 0;
-      icon.style.left = (ratio * 100) + '%';
-    }
-  })();
-</script>
-
-<script>
-  // 안내 내용에 따른 아이콘 동적 설정
-  (function () {
-    var instructionText = document.getElementById('instructionText');
-    var instructionIcon = document.getElementById('instructionIcon');
-
-    if (!instructionText || !instructionIcon) return;
-
-    var text = instructionText.textContent;
-    var iconElement = instructionIcon.querySelector('i');
-    if (!iconElement) return;
-
-    // 기존 아이콘 클래스 제거
-    iconElement.className = '';
-
-    // 텍스트 내용에 따라 아이콘 설정
-    if (text.includes('에스컬레이터')) {
-      iconElement.className = 'icon-escalator-custom'; // 에스컬레이터
-    } else if (text.includes('승차')) {
-      iconElement.className = 'fas fa-subway'; // 승차
-    } else if (text.includes('엘리베이터')) {
-      iconElement.className = 'fas fa-wheelchair'; // 엘리베이터
-    } else if (text.includes('계단') || text.includes('도보')) {
-      iconElement.className = 'fas fa-walking'; // 계단/도보
-    } else if (text.includes('감사합니다')) {
-      iconElement.className = 'fas fa-check-circle'; // 완료
-    } else {
-      iconElement.className = 'fas fa-info-circle'; // 기본 정보 아이콘
-    }
-  })();
-</script>
-
-<script>
-  // 마지막 스텝: '다음' 클릭 시 모달 → 홈 이동
-  (function () {
-    var nextBtn = document.getElementById('nextBtn');
-    if (!nextBtn) return;
-    nextBtn.addEventListener('click', function (ev) {
-      var hasNext = this.dataset.hasNext === '1';
-      if (hasNext) return; // 다음이 있으면 정상 submit
-      ev.preventDefault();
-      var m = document.getElementById('thankyouModal');
-      if (m) m.style.display = 'flex';
-      setTimeout(function () {
-        window.location.href = "{% url 'journeys:leave' %}";
-      }, 1400);
-    });
-  })();
-</script>
-<script>
-  (function () {
-    var m = document.getElementById('error-modal');
-    if (m) {
-      m.style.display = 'flex';
-    }
-  })();
-</script>
-
 {% endblock js %}
