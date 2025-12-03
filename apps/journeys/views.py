@@ -36,23 +36,19 @@ SESSION_KEY = "journey"
 
 # ------------------ 함수 정의 PART ------------------
 
-# session 초기화 함수 
-# def _init_session(request, steps, start_station, start_exit, end_station, end_exit):
-#     """Initialize journey session state right after route is created."""
-#     request.session[SESSION_KEY] = {
-#         "id": str(uuid.uuid4()),
-#         "created_at": timezone.now().isoformat(),
-#         "steps": list(steps) if not isinstance(steps, list) else steps,
-#         "idx": 0,
-#         "start_station": start_station,
-#         "start_exit": start_exit,
-#         "end_station": end_station,
-#         "end_exit": end_exit,
-#     }
-#     request.session.modified = True
-
-def _init_session(request, steps, start_station, start_exit, end_station, end_exit, transfer_stations=None, start_line="", end_line="", transfer_lines=None):
-    """Initialize journey session state right after route is created."""
+def _init_session(
+    request,
+    steps,
+    start_station,
+    start_exit,
+    end_station,
+    end_exit,
+    transfer_stations=None,
+    start_line="",
+    end_line="",
+    transfer_lines=None,
+):
+    """경로 생성 직후 여정 상태를 세션에 저장."""
     request.session[SESSION_KEY] = {
         "id": str(uuid.uuid4()),
         "created_at": timezone.now().isoformat(),
@@ -69,14 +65,14 @@ def _init_session(request, steps, start_station, start_exit, end_station, end_ex
     }
     request.session.modified = True
 
-# session에 존재하는 현재 여정 상태 추적 
+
 def _get_state(request):
-    """Return current journey session dict or None."""
+    """현재 여정 세션 상태 반환 (없으면 None)."""
     return request.session.get(SESSION_KEY)
 
-# index를 늘려서 업데이트 
+
 def _set_idx(request, idx):
-    """Update current step index in session."""
+    """현재 step index 업데이트."""
     data_ok = _get_state(request)
     if not data_ok:
         return
@@ -89,12 +85,10 @@ def _set_idx(request, idx):
 @require_http_methods(["GET", "POST"])
 def route(request):
     """
-    Single URL handling both:
-      - GET: form or guidance view (depends on session)
-      - POST: navigation (next/prev/restart) or initial route submission
-    Follows PRG: every POST ends with redirect to this view.
+    GET  : 폼 또는 안내 화면 (세션 여부에 따라)
+    POST : 경로 생성 또는 next/prev/restart 내비게이션
     """
-    # default context (form mode)
+    # 기본 컨텍스트 (폼 모드)
     context = {
         "mode": "form",
         "step_text": None,
@@ -108,11 +102,11 @@ def route(request):
         "end_exit": None,
     }
 
-    # POST: navigation or initial submission (always redirect back here)
+    # POST: 내비게이션 또는 최초 경로 생성
     if request.method == "POST":
         action = request.POST.get("action")
 
-        # navigation actions
+        # next / prev / restart
         if action in ("next", "prev", "restart"):
             state = _get_state(request)
             if not state:
@@ -132,38 +126,37 @@ def route(request):
             _set_idx(request, idx)
             return redirect("journeys:route")
 
-        # initial submission
+        # 최초 경로 생성
         start_station = request.POST.get("start_station", "").strip()
         start_exit = request.POST.get("start_exit", "").strip()
         end_station = request.POST.get("end_station", "").strip()
         end_exit = request.POST.get("end_exit", "").strip()
 
-        # 1) 출발역 or 도착역을 입력하지 않았을 때 
+        # 1) 출발/도착역 필수 체크
         if not start_station or not end_station:
             messages.error(request, "출발역/도착역은 필수입니다.")
             return redirect("journeys:route")
         
-        # 2) 출발역과 도착역에 같은 역을 입력했을 때 
+        # 2) 같은 역 입력 방지
         if start_station == end_station:
             messages.error(request, "같은 역을 입력하셨습니다. 서로 다른 역을 입력해주세요.")
             return redirect("journeys:route")
         
-        # services.py에서 역 / 출구 유효성 검사 + 보정
+        # 3) 역/출구 유효성 검사 + 보정
         ok, station_pair_or_msg, norm_start_exit, norm_end_exit = validate_stations(
             start_station, end_station, start_exit, end_exit
         )
         if not ok:
-            # station_pair_or_msg 에는 에러 메시지가 들어 있음
             messages.error(request, station_pair_or_msg)
             return redirect("journeys:route")
 
-        # 정상인 경우: 정규화된 역 이름/출구 사용
+        # 정규화된 값 사용
         start_station, end_station = station_pair_or_msg
         start_exit = norm_start_exit
         end_exit = norm_end_exit
-        # ---------- 여기까지 ----------
 
         try:
+            # 4) 역 단위 경로 (3-튜플) 생성
             short_path_list = get_subway_route(
                 start_station=start_station,
                 start_exit=start_exit,
@@ -171,38 +164,18 @@ def route(request):
                 end_exit=end_exit,
             )
 
+            # 5) 그래프 로딩 + 전체 안내 문장 생성
             df_nodes, df_edges = load_graph_from_db()
             steps = build_full_guidance(df_nodes, df_edges, short_path_list)
             if not isinstance(steps, list):
                 steps = list(steps)
 
-            # 각 역의 호선 정보 추출 (프로그레스 바 색상용)
-            start_line = short_path_list[0][3][0] if short_path_list else ""
-            end_line = short_path_list[-1][3][0] if short_path_list else ""
-
-            # 환승역 추출 및 호선 정보 동시에 수집
+            # 🔹 라인/환승 정보는 지금 구조상 3-튜플만 있어서
+            #    별도 메타 없이 기본값으로 둔다 (UI에서 선택적으로 사용)
+            start_line = ""
+            end_line = ""
             transfer_stations = []
             transfer_lines = {}
-            if len(short_path_list) > 2:
-                # 첫 출발역과 끝 도착역을 제외하고 순회
-                for i in range(1, len(short_path_list) - 1):
-                    current_node = short_path_list[i]
-                    prev_node = short_path_list[i-1]
-                    next_node = short_path_list[i+1]
-                    
-                    station_name = current_node[0]
-                    current_line = current_node[3][0] # 현재 역의 호선
-                    
-                    # 환승역 판단 로직 (단순 이름 저장이 아니라, 실제 환승이 일어나는지 확인 필요)
-                    # 여기서는 간단히 중간에 있는 역들을 환승역으로 간주하고,
-                    # 해당 역에서 '이용하는 호선' 정보를 저장합니다.
-                    
-                    # 이미 저장된 역이면 건너뜀 (한 역에 여러 노드가 있을 수 있음)
-                    if station_name not in transfer_stations:
-                        transfer_stations.append(station_name)
-                        # 환승역의 마커 색상은 '갈아탈 노선' 혹은 '도착한 노선' 중 선택
-                        # 여기서는 현재 노드에 할당된 호선을 사용합니다.
-                        transfer_lines[station_name] = current_line
 
             _init_session(
                 request,
@@ -212,13 +185,12 @@ def route(request):
                 end_station=end_station,
                 end_exit=end_exit,
                 transfer_stations=transfer_stations,
-                start_line=start_line,  # 추가
-                end_line=end_line,  # 추가
-                transfer_lines=transfer_lines,  # 추가
+                start_line=start_line,
+                end_line=end_line,
+                transfer_lines=transfer_lines,
             )
             return redirect("journeys:route")
 
-        # 👉 그래프/경로 관련 실패: 사용자에게는 깔끔한 한 줄만
         except (RouteBuildError, GuidanceBuildError):
             messages.error(
                 request,
@@ -227,7 +199,6 @@ def route(request):
             )
             return redirect("journeys:route")
         
-        # 👉 진짜 예기치 못한 오류: 내부 내용(e)은 노출 안 함
         except Exception:
             messages.error(
                 request,
@@ -235,11 +206,12 @@ def route(request):
             )
             return redirect("journeys:route")
 
-    # GET: optional fresh start, then render form/guide depending on session
+    # GET: new=1 이면 세션 초기화
     if request.GET.get("new") == "1":
         request.session.pop(SESSION_KEY, None)
         request.session.modified = True
 
+    # 세션이 있으면 안내 모드
     state = _get_state(request)
     if state:
         steps = state.get("steps", [])
@@ -269,7 +241,7 @@ def route(request):
 
 
 def leave(request):
-    """Clear journey session and return to home."""
+    """여정 세션 초기화 후 메인으로 이동."""
     request.session.pop(SESSION_KEY, None)
     request.session.modified = True
     return redirect("common:index")

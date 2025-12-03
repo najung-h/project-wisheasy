@@ -69,7 +69,6 @@ class Command(BaseCommand):
                 self.load_facility_loc(reader)
             elif "facility" in lower:
                 self.load_facility(reader)
-
             else:
                 raise CommandError(f"⚠️ '{csv_file}'은(는) 인식되지 않는 파일입니다.")
 
@@ -290,60 +289,44 @@ class Command(BaseCommand):
         )
 
     # -------------------
-    # FastGate
+    # FastGate (새 구조: platform / boarding_gate / transfer / escalator)
     # -------------------
     def load_fastgate(self, reader):
-        count_new = 0
-        count_update = 0
+        """
+        FastGate.csv
+        columns: platform, boarding_gate, transfer, escalator
+        """
+        self.stdout.write(self.style.WARNING("FastGate.csv 불러오는 중..."))
 
+        # 기존 데이터 모두 삭제 후 재적재
+        FastGate.objects.all().delete()
+
+        cnt = 0
         for row in reader:
-            station_id = (row.get("station_id") or "").strip()
-            line_id = (row.get("line_id") or "").strip()
-
-            if not station_id or not line_id:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"⚠️ FastGate row 건너뜀 (station_id/line_id 누락): {row}"
-                    )
-                )
-                continue
-
-            # station_obj = Station.objects.filter(name=station_id).first()
-            # line_obj = Line.objects.filter(name=line_id).first()
-
-            station_obj = Station.objects.filter(id=str(station_id)).first()
-            line_obj = Line.objects.filter(id=str(line_id)).first()
-
-            if not station_obj or not line_obj:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"⚠️ FastGate row 건너뜀 (Station/Line 미존재): {row}"
-                    )
-                )
-                continue
-
-            esc_raw = (row.get("escalator") or "").strip()
-            escalator = esc_raw in ("1", "True", "true", "Y", "y")
-
+            platform = (row.get("platform") or "").strip()
             boarding_gate = (row.get("boarding_gate") or "").strip()
+            transfer_raw = (row.get("transfer") or "").strip()
+            escalator_raw = (row.get("escalator") or "").strip()
 
-            obj, created = FastGate.objects.update_or_create(
-                station=station_obj,
-                line=line_obj,
+            if not platform or not boarding_gate:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ fast_gate row 건너뜀 (platform/boarding_gate 누락): {row}")
+                )
+                continue
+
+            transfer = transfer_raw in ("1", "True", "true", "Y", "y")
+            escalator = escalator_raw in ("1", "True", "true", "Y", "y")
+
+            FastGate.objects.create(
+                platform=platform,
                 boarding_gate=boarding_gate,
-                defaults={
-                    "escalator": escalator,
-                },
+                transfer=transfer,
+                escalator=escalator,
             )
-            if created:
-                count_new += 1
-            else:
-                count_update += 1
+            cnt += 1
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"✅ FastGate.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
-            )
+            self.style.SUCCESS(f"✅ FastGate.csv 업로드 완료: {cnt}개 저장됨")
         )
 
     # -------------------
@@ -402,7 +385,6 @@ class Command(BaseCommand):
             )
         )
 
-
     # -------------------
     # Facility (편의시설)
     # -------------------
@@ -422,7 +404,7 @@ class Command(BaseCommand):
 
             try:
                 facility_id = int(facility_id)
-            except:
+            except Exception:
                 self.stdout.write(self.style.WARNING(f"⚠️ facility_id 정수 변환 실패: {facility_id}"))
                 continue
 
@@ -468,7 +450,7 @@ class Command(BaseCommand):
 
             try:
                 facility_id_int = int(facility_id)
-            except:
+            except Exception:
                 self.stdout.write(
                     self.style.WARNING(f"⚠️ facility_id 정수 변환 실패: {facility_id}")
                 )
