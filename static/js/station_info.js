@@ -249,10 +249,8 @@ function showStationInfo(station) {
     // Show station info
     document.getElementById('stationInfo').style.display = 'block';
 
-    // Scroll to station info
-    document.getElementById('stationInfo').scrollIntoView({
-        behavior: 'smooth'
-    });
+    // 화면 최상단으로 부드럽게 스크롤 이동
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function updateFacilities(lineFacilitiesData) {
