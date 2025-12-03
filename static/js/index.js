@@ -1,68 +1,133 @@
-// Main page functionality
 document.addEventListener('DOMContentLoaded', function() {
-    initializeMainPage();
+    initializeMainPage();       // 기본 초기화 및 bfcache 처리
+    setupLoginModal();          // 로그인 모달 이벤트 연결 (NEW)
+    setupWelcomeModal();        // 환영 모달 이벤트 연결 (NEW)
+    setupGlobalInteractions();  // 터치 및 키보드 공통 동작
 });
 
+// ==========================================
+// 1. 초기화 및 페이지 복원(bfcache) 처리
+// ==========================================
 function initializeMainPage() {
-    // Add any initialization code here
     console.log('쉽길 메인페이지가 로드되었습니다.');
 
-    // 페이지가 표시될 때마다 실행되는 이벤트 리스너
+    // 뒤로가기로 돌아왔을 때, 로딩 상태가 남아있는 문제 해결
     window.addEventListener('pageshow', function(event) {
-        // event.persisted가 true이면, 페이지가 bfcache에서 복원된 것입니다.
         if (event.persisted) {
-            // 모든 메인 버튼을 찾습니다.
             const mainButtons = document.querySelectorAll('.main-btn');
             mainButtons.forEach(btn => {
-                // 'loading' 클래스를 제거합니다.
                 btn.classList.remove('loading');
-                // 버튼의 비활성화 속성을 제거합니다.
                 btn.disabled = false;
             });
         }
     });
 }
 
-function showLoginModal() {
+// ==========================================
+// 2. 로그인 모달 관련 로직 (onclick 제거 버전)
+// ==========================================
+function setupLoginModal() {
     const loginModal = document.getElementById('loginModal');
-    loginModal.classList.add('show');
-}
+    const openBtn = document.getElementById('openLoginBtn'); // HTML id="openLoginBtn" 필요
+    const closeBtn = document.getElementById('closeLoginBtn'); // HTML id="closeLoginBtn" 필요
+    const googleBtn = document.getElementById('googleLoginBtn'); // HTML id="googleLoginBtn" 필요
 
-function closeLoginModal() {
-    const loginModal = document.getElementById('loginModal');
-    loginModal.classList.remove('show');
-}
-
-function handleGoogleLogin() {
-    const node = document.getElementById('googleLoginUrl');
-    const url = node ? node.dataset.url : null;
-    if (!url) {
-        console.error('Google login URL not found');
-        return;
-    }
-    window.location.href = url;   // ← 실제 allauth 구글 로그인으로 이동
-}
-
-// Keyboard navigation
-document.addEventListener('keydown', function(e) {
-    // Enter key on buttons
-    if (e.key === 'Enter' && e.target.classList.contains('main-btn')) {
-        e.target.click();
+    // 1) 로그인 버튼 클릭 시 모달 열기
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            if (loginModal) {
+                loginModal.style.display = 'flex';
+            }
+        });
     }
 
-    // Escape key to go back
-    if (e.key === 'Escape') {
-        goBack();
+    // 2) 닫기 버튼 클릭 시 모달 닫기
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            if (loginModal) loginModal.style.display = 'none';
+        });
     }
-});
 
-// Touch feedback for mobile
-document.querySelectorAll('.main-btn').forEach(btn => {
-    btn.addEventListener('touchstart', function() {
-        this.style.transform = 'scale(0.98)';
+    // 3) 구글 로그인 버튼 처리
+    if (googleBtn) {
+        googleBtn.addEventListener('click', () => {
+            const urlSpan = document.getElementById('googleLoginUrl');
+            if (urlSpan && urlSpan.dataset.url) {
+                window.location.href = urlSpan.dataset.url;
+            } else {
+                console.error('Google login URL not found');
+            }
+        });
+    }
+
+    // 4) 모달 바깥 영역 클릭 시 닫기
+    window.addEventListener('click', (e) => {
+        if (e.target === loginModal) {
+            loginModal.style.display = 'none';
+        }
+    });
+}
+
+// ==========================================
+// 3. 환영 모달 관련 로직
+// ==========================================
+function setupWelcomeModal() {
+    const welcomeModal = document.getElementById('welcome-modal');
+    const closeBtn = document.getElementById('closeWelcomeBtn');
+
+    if (welcomeModal) {
+        // sessionStorage를 확인하여 최초 1회만 표시
+        const hasSeen = sessionStorage.getItem('hasSeenWelcome');
+
+        if (!hasSeen) {
+            // 처음 본 경우에만 표시
+            welcomeModal.classList.add('show');
+            
+            // "봤음" 표시 저장 (브라우저 닫을 때까지 유지)
+            sessionStorage.setItem('hasSeenWelcome', 'true');
+        }
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                welcomeModal.classList.remove('show');
+            });
+        }
+    }
+}
+
+// ==========================================
+// 4. 공통 인터랙션 (키보드, 터치)
+// ==========================================
+function setupGlobalInteractions() {
+    // [키보드] Enter로 버튼 클릭 / Escape로 모달 닫기
+    document.addEventListener('keydown', function(e) {
+        // Enter key on buttons
+        if (e.key === 'Enter' && e.target.classList.contains('main-btn')) {
+            e.target.click();
+        }
+
+        // Escape key: 모달 닫기
+        if (e.key === 'Escape') {
+            const loginModal = document.getElementById('loginModal');
+            const welcomeModal = document.getElementById('welcome-modal');
+            
+            if (loginModal && loginModal.style.display === 'block') {
+                loginModal.style.display = 'none';
+            }
+            if (welcomeModal && welcomeModal.classList.contains('show')) {
+                welcomeModal.classList.remove('show');
+            }
+        }
     });
 
-    btn.addEventListener('touchend', function() {
-        this.style.transform = '';
+    // [모바일] 터치 시 눌리는 효과 (Scale down)
+    document.querySelectorAll('.main-btn').forEach(btn => {
+        btn.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+
+        btn.addEventListener('touchend', function() {
+            this.style.transform = '';
+        });
     });
-});
+}
