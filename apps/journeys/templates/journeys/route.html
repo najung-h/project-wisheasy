@@ -34,7 +34,7 @@
 
           {# error 메시지만 모아서 표시 #}
           {% for message in messages %}
-            {% if message.tags == 'error' %}
+            {% if 'error' in message.tags %}
               <p>{{ message }}</p>
             {% endif %}
           {% endfor %}

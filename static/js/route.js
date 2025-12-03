@@ -642,7 +642,9 @@ function initializeNextButton() {
 // ========================================
 function initializeErrorModal() {
     var modal = document.getElementById('error-modal');
-    if (modal) {
+
+    // 모달이 존재하고, 내부에 에러 메시지(<p> 태그)가 실제로 있을 때만 표시
+    if (modal && modal.querySelector('p')) {
         modal.classList.add('show');
     }
 }
