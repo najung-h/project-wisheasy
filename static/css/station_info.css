@@ -363,6 +363,18 @@ body {
     color: #6E6E6E; /* Changed */
 }
 
+/* 에스컬레이터 PNG 아이콘 전용 클래스 */
+.icon-escalator-custom {
+    display: inline-block;
+    width: 16px;  
+    height: 16px;
+    background-image: url('https://img.icons8.com/?size=100&id=10639&format=png&color=2E9AFE');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    vertical-align: middle; /* 텍스트와 높이 맞춤 */
+}
+
 /* Realtime Info */
 .realtime-info {
     display: flex;
