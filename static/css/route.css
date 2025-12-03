@@ -383,6 +383,8 @@ body {
 /* 아이콘 스타일 */
 .instruction-icon {
     font-size: 40px;
+    width: 40px;
+    height: 40px;
     color: #333;
     margin-bottom: 16px;
 }
@@ -390,8 +392,8 @@ body {
 /* 에스컬레이터 PNG 아이콘 전용 클래스 */
 .icon-escalator-custom {
     display: inline-block;
-    width: 40px;  /* 아이콘 크기 조절 */
-    height: 40px;
+    width: 100%;  /* 아이콘 크기 조절 */
+    height: 100%;
     background-image: url('https://img.icons8.com/?size=100&id=10639&format=png&color=000000');
     background-size: contain;
     background-repeat: no-repeat;
