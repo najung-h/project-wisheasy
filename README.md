@@ -45,6 +45,69 @@
 
 <br><br>
 
+# 팀원소개
+<table>
+  <tr>
+    <td align="center" width="200px">
+      <a href="./docs/trouble_shooting/나정현.md"> <img src="./doc/images/worry_bubble.svg" alt="말풍선1" width="100%" />
+      </a>
+    </td>
+    <td align="center" width="200px">
+      <a href="./docs/trouble_shooting/박준아.md">
+        <img src="./doc/images/worry_bubble.svg" alt="말풍선2" width="100%" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="https://github.com/najung-h.png" width="100px" style="border-radius: 50%;" />
+      <br />
+      <b>나정현</b> <br> (PM, Infra CI/CD)
+    </td>
+    <td align="center">
+      <img src="https://github.com/ajjoona-git.png" width="100px" style="border-radius: 50%;" />
+      <br />
+      <b>박준아</b> <br> (UI/UX, Frontend)
+    </td>
+  </tr>
+</table>
+<table>
+  <tr>
+    <td align="center" width="200">
+      <a href="./docs/trouble_shooting/김소희.md">
+        <img src="./doc/images/worry_bubble.svg" alt="고민1" width="100%" />
+      </a>
+    </td>
+    <td align="center" width="200">
+      <a href="./docs/trouble_shooting/정환승.md">
+        <img src="./doc/images/worry_bubble.svg" alt="고민2" width="100%" />
+      </a>
+    </td>
+    <td align="center" width="200">
+      <a href="./docs/trouble_shooting/박지연.md">
+        <img src="./doc/images/worry_bubble.svg" alt="고민3" width="100%" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="200">
+      <img src="https://github.com/hann2a.png" width="80px" style="border-radius: 50%;" />
+      <br />
+      <b>팀원1</b> <br> (Backend)
+    </td>
+    <td align="center" width="200">
+      <img src="https://github.com/hwanseung251.png" width="80px" style="border-radius: 50%;" />
+      <br />
+      <b>팀원2</b> <br> (Frontend)
+    </td>
+    <td align="center" width="200">
+      <img src="https://github.com/yeonliyou.png" width="80px" style="border-radius: 50%;" />
+      <br />
+      <b>팀원3</b> <br> (Infra)
+    </td>
+  </tr>
+</table>
+
 ### 1) 아키텍처 개요 (Flowchart)
 
 <br>

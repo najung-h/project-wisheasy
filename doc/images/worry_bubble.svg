@@ -1,0 +1,9 @@
+<svg width="200" height="100" xmlns="http://www.w3.org/2000/svg">
+  <path d="M10,10 H190 A10,10 0 0 1 200,20 V70 A10,10 0 0 1 190,80 H110 L100,95 L90,80 H10 A10,10 0 0 1 0,70 V20 A10,10 0 0 1 10,10 Z" 
+        fill="#ffffff" stroke="#333333" stroke-width="2"/>
+  
+  <text x="50%" y="45" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333333" text-anchor="middle">
+    <tspan x="50%" dy="0">제 기술적 고민은요...</tspan>
+    <tspan x="50%" dy="18" font-size="12" fill="#666666">(클릭해서 보기)</tspan>
+  </text>
+</svg>
