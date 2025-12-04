@@ -601,10 +601,10 @@ function initializeInstructionIcon() {
     iconElement.className = '';
 
     // 텍스트 내용에 따라 아이콘 설정
-    if (text.includes('에스컬레이터')) {
-        iconElement.className = 'icon-escalator-custom';
-    } else if (text.includes('승차')) {
+    if (text.includes('승차')) {
         iconElement.className = 'fas fa-subway';
+    } else if (text.includes('에스컬레이터')) {
+        iconElement.className = 'icon-escalator-custom';
     } else if (text.includes('엘리베이터')) {
         iconElement.className = 'fas fa-wheelchair';
     } else if (text.includes('계단') || text.includes('도보')) {
