@@ -3,6 +3,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.utils import timezone
 import uuid
+import re
 
 from rest_framework import generics
 from .models import FacilityLoc
@@ -35,6 +36,34 @@ from apps.journeys.services.services import validate_stations
 SESSION_KEY = "journey"
 
 # ------------------ 함수 정의 PART ------------------
+
+def _extract_line_from_direction(direction_str):
+    """
+    방면 문자열에서 호선 정보 추출
+    예: '2호선 충정로 방면 승강장' -> '2호선'
+        '수인분당선 죽전 방면 승강장' -> '수인분당'
+    """
+    if not direction_str:
+        return ""
+
+    # 정규식으로 호선 추출 (숫자호선, 특수노선 등)
+    patterns = [
+        r'^(\d+호선)',           # 1호선, 2호선 등
+        r'^(수인분당)',
+        r'^(신분당선)',
+        r'^(경의중앙)',
+        r'^(공항철도)',
+        r'^(우이신설)',
+        r'^(경춘)',
+    ]
+
+    for pattern in patterns:
+        match = re.match(pattern, direction_str)
+        if match:
+            return match.group(1)
+
+    return ""
+
 
 def _init_session(
     request,
@@ -170,12 +199,39 @@ def route(request):
             if not isinstance(steps, list):
                 steps = list(steps)
 
-            # 🔹 라인/환승 정보는 지금 구조상 3-튜플만 있어서
-            #    별도 메타 없이 기본값으로 둔다 (UI에서 선택적으로 사용)
+            # 6) short_path_list에서 호선 및 환승역 정보 추출
+            # short_path_list 구조: [(역명, 방면1, 방면2), ...]
+            # - 첫 번째: (출발역, 출구, "호선 방면")
+            # - 중간: (환승역, "이전호선 방면", "다음호선 방면")
+            # - 마지막: (도착역, "호선 방면", 출구)
+
             start_line = ""
             end_line = ""
             transfer_stations = []
             transfer_lines = {}
+
+            if short_path_list:
+                # 출발역 호선 추출 (첫 번째 튜플의 3번째 요소에서)
+                if len(short_path_list) > 0 and len(short_path_list[0]) >= 3:
+                    start_line = _extract_line_from_direction(short_path_list[0][2])
+
+                # 도착역 호선 추출 (마지막 튜플의 2번째 요소에서)
+                if len(short_path_list) > 0 and len(short_path_list[-1]) >= 2:
+                    end_line = _extract_line_from_direction(short_path_list[-1][1])
+
+                # 환승역 추출 (첫 번째와 마지막을 제외한 중간 역들)
+                if len(short_path_list) > 2:
+                    for i in range(1, len(short_path_list) - 1):
+                        node = short_path_list[i]
+                        if len(node) >= 3:
+                            station_name = node[0]
+                            # 중간 역의 경우, 3번째 요소(다음 호선 방면)를 환승역의 호선으로 사용
+                            next_line = _extract_line_from_direction(node[2])
+
+                            # 중복 방지: 같은 역이 여러 번 나올 수 있음
+                            if station_name not in transfer_stations:
+                                transfer_stations.append(station_name)
+                                transfer_lines[station_name] = next_line
 
             _init_session(
                 request,
