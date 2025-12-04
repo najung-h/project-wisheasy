@@ -12,6 +12,7 @@ from apps.journeys.models import (
     Edge,
     FastGate,
     Lines,
+    Escalator
 )
 
 
@@ -65,6 +66,8 @@ class Command(BaseCommand):
                 self.load_nodes(reader)
             elif "edge" in lower:
                 self.load_edges(reader)
+            elif "escalator" in lower:
+                self.load_escalator(reader)
             elif "facilityloc" in lower:
                 self.load_facility_loc(reader)
             elif "facility" in lower:
@@ -287,6 +290,66 @@ class Command(BaseCommand):
                 f"✅ edge.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
             )
         )
+
+    # -------------------
+    # Escalator
+    # -------------------
+    def load_escalator(self, reader):
+        count_new = 0
+        count_update = 0
+
+        for row in reader:
+            esc_id = (row.get("id") or row.get("escalator_id") or "").strip()
+            if not esc_id:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ escalator row 건너뜀 (id/escalator_id 누락): {row}")
+                )
+                continue
+
+            # 운영 여부(Boolean) 파싱
+            op_raw = (row.get("operation") or row.get("is_operating") or "").strip()
+            operation = op_raw in ("1", "True", "true", "Y", "y")
+
+            # detail은 null 허용
+            detail = (row.get("detail") or "").strip() or None
+
+            # Edge FK
+            edge_id = (row.get("edge_id") or row.get("edge") or "").strip()
+            if not edge_id:
+                self.stdout.write(
+                    self.style.WARNING(f"⚠️ escalator row 건너뜀 (edge_id 누락): {row}")
+                )
+                continue
+
+            edge_obj = Edge.objects.filter(id=edge_id).first()
+            if not edge_obj:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f"⚠️ escalator row 건너뜀 (Edge 미존재, edge_id={edge_id}): {row}"
+                    )
+                )
+                continue
+
+            obj, created = Escalator.objects.update_or_create(
+                id=esc_id,
+                defaults={
+                    "operation": operation,
+                    "detail": detail,
+                    "edge": edge_obj,
+                },
+            )
+
+            if created:
+                count_new += 1
+            else:
+                count_update += 1
+
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"✅ escalator.csv 업로드 완료: {count_new}개 추가, {count_update}개 업데이트됨"
+            )
+        )
+
 
     # -------------------
     # FastGate (새 구조: platform / boarding_gate / transfer / escalator)

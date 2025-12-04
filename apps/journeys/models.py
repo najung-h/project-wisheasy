@@ -122,3 +122,23 @@ class FacilityLoc(models.Model):
 
     def __str__(self):
         return f"{self.facility.facility_name} at {self.station.name}"
+
+class Escalator(models.Model):
+    id = models.CharField(max_length=30, primary_key=True)
+    operation = models.BooleanField(default=True)
+    detail = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+    edge = models.ForeignKey(
+        Edge,
+        on_delete=models.CASCADE,
+        related_name="escalator_detail"
+    )
+
+    class Meta:
+        db_table = 'escalator'
+
+    def __str__(self):
+        return f"Escalator {self.id}"
