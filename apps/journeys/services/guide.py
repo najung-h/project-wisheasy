@@ -3,7 +3,7 @@ from typing import List, Tuple, Optional, Dict
 from collections import deque
 import networkx as nx
 
-from apps.journeys.models import Station, Line, Node, Edge, FastGate, Lines
+from apps.journeys.models import Station, Line, Node, Edge, FastGate, Lines, Escalator
 from apps.journeys.management.commands.build_graph import get_graph
 
 class RouteBuildError(Exception):
@@ -329,11 +329,33 @@ def build_relation_from_edge(row, df_nodes_sub: pd.DataFrame) -> str:
     tgt_id = row["target"]
     esc_val = bool(row.get("escalator", False))
 
-    src = df_nodes_sub[df_nodes_sub["node_id"]==src_id].iloc[0]
-    tgt = df_nodes_sub[df_nodes_sub["node_id"]==tgt_id].iloc[0]
+    src = df_nodes_sub[df_nodes_sub["node_id"] == src_id].iloc[0]
+    tgt = df_nodes_sub[df_nodes_sub["node_id"] == tgt_id].iloc[0]
 
-    move_str = "에스컬레이터를 이용하여" if esc_val else "계단/도보를 이용하여"
-    return f"{src['node_name']}({src['floor']})에서 {move_str} {tgt['node_name']}({tgt['floor']})로 이동하세요."
+    # 기본값
+    move_str = "계단/도보를 이용하여"
+
+    # 에스컬레이터 처리
+    if esc_val:
+        # Edge.id == Escalator.edge_id 매칭
+        edge_id = row["edge_id"] if "edge_id" in row else row["id"]
+        qs = Escalator.objects.filter(edge_id=edge_id)
+
+        if qs.exists():
+            esc = qs.first()
+            if esc.detail:
+                move_str = f"{esc.detail} 에스컬레이터를 이용하여"
+            else:
+                move_str = "에스컬레이터를 이용하여"
+        else:
+            # escalator=True인데 테이블에 정보가 없으면 fallback
+            move_str = "에스컬레이터를 이용하여"
+
+    return (
+        f"{src['node_name']}({src['floor']})에서 "
+        f"{move_str} "
+        f"{tgt['node_name']}({tgt['floor']})로 이동하세요."
+    )
 
 
 def build_fastgate_message_new(platform: str, is_transfer: bool) -> Optional[str]:
