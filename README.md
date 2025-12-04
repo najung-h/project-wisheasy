@@ -107,7 +107,7 @@
     <td align="center" width="200">
       <img src="https://github.com/hwanseung251.png" width="80px" style="border-radius: 50%;" />
       <br />
-      <b>정환승</b> <br> (Data analytics)
+      <b>정환승</b> <br> (Backend Developer, DB)
     </td>
     <td align="center" width="200">
       <img src="https://github.com/yeonliyou.png" width="80px" style="border-radius: 50%;" />
