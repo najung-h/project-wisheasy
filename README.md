@@ -93,17 +93,17 @@
     <td align="center" width="200">
       <img src="https://github.com/hann2a.png" width="80px" style="border-radius: 50%;" />
       <br />
-      <b>팀원1</b> <br> (Backend)
+      <b>김소희</b> <br> (Backend)
     </td>
     <td align="center" width="200">
       <img src="https://github.com/hwanseung251.png" width="80px" style="border-radius: 50%;" />
       <br />
-      <b>팀원2</b> <br> (Frontend)
+      <b>정환승</b> <br> (Data analytics)
     </td>
     <td align="center" width="200">
       <img src="https://github.com/yeonliyou.png" width="80px" style="border-radius: 50%;" />
       <br />
-      <b>팀원3</b> <br> (Infra)
+      <b>박지연</b> <br> (DB)
     </td>
   </tr>
 </table>
