@@ -45,12 +45,22 @@
 ---
 ## 3. 핵심 기능 (Key Features)
 
+---
+
 ### 3-1. 로그인 & 마이페이지
 
-| 기능 | 미리보기 |
-|------|---------|
-| **로그인 및 환영 메시지** | ![login](./doc/images/login.gif) |
-| **마이페이지** | ![mypage](./doc/images/mypage.gif) |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>로그인 및 환영 메시지</strong><br/>
+      <img src="./doc/images/login.gif" alt="login" width="360"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>마이페이지</strong><br/>
+      <img src="./doc/images/mypage.gif" alt="mypage" width="360"/>
+    </td>
+  </tr>
+</table>
 
 - OAuth 기반 로그인으로 이용자를 식별하고, 이후 즐겨찾기 등의 기능 확장을 계획 중
 
@@ -58,39 +68,63 @@
 
 ### 3-2. 에스컬레이터 기반 길찾기
 
-| 화면 | 미리보기 |
-|------|---------|
-| **경로 검색** | ![find_way_1](./doc/images/find_way_1.gif) |
-| **카드형** <br> **이동 안내** | ![find_way_2](./doc/images/find_way_2.gif) |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>경로 검색</strong><br/>
+      <img src="./doc/images/find_way_1.gif" alt="find_way_1" width="360"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>카드형 이동 안내</strong><br/>
+      <img src="./doc/images/find_way_2.gif" alt="find_way_2" width="360"/>
+    </td>
+  </tr>
+</table>
 
-- 출발역·도착역 입력 후, **역사 내 구조 + 에스컬레이터 정보를 반영한 동선 자동 생성**
-- 각 단계별 이동을 카드로 제공  
+- 출발역·도착역 입력 후, 역사 내 구조와 에스컬레이터 정보를 반영한 동선을 자동 생성
+- 각 단계별 이동을 카드 형태로 제공
 
 ---
 
 ### 3-3. 역사 및 편의시설 정보
 
-| 기능 | 미리보기 |
-|------|---------|
-| **역사 기본 정보 및** <br> **노선 정보 조회** | ![station_info](./doc/images/station_info.gif) |
-| **편의시설 상세 정보** <br> ATM, 물품보관함, 화장실, 엘리베이터, 유실물 보관소, 에스컬레이터 | ![station_detail](./doc/images/station_detail.gif) |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>역사 기본 정보 및 노선 정보 조회</strong><br/>
+      <img src="./doc/images/station_info.gif" alt="station_info" width="360"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>편의시설 상세 정보</strong><br/>
+      <img src="./doc/images/station_detail.gif" alt="station_detail" width="360"/>
+    </td>
+  </tr>
+</table>
 
-- 화장실, 편의점 등의 편의시설 정보를 **경로 안내 페이지에서 바로 확인 가능**
+- ATM, 물품보관함, 화장실, 엘리베이터, 유실물 보관소, 에스컬레이터 편의시설 정보를 <br/>
+  경로 안내 페이지에서 바로 확인 가능
 
 ---
 
 ### 3-4. 사용자 입력 검증 & 예외 처리
 
-| 케이스 | 미리보기 |
-|--------|---------|
-| **존재하지 않는 역 이름 입력 시 안내** | ![not_valid_name](./doc/images/not_valid_name.gif) |
-| **유효하지 않은 출구 선택 시 안내** | ![not_valid_exit](./doc/images/not_valid_exit.gif) |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>존재하지 않는 역 이름 입력 시 안내</strong><br/>
+      <img src="./doc/images/not_valid_name.gif" alt="not_valid_name" width="360"/>
+    </td>
+    <td align="center" width="50%">
+      <strong>유효하지 않은 출구 선택 시 안내</strong><br/>
+      <img src="./doc/images/not_valid_exit.gif" alt="not_valid_exit" width="360"/>
+    </td>
+  </tr>
+</table>
 
-- 잘못된 역명·출구 입력에 대한 **친절한 에러 메시지**
-- 역사 내 동선이 존재하지 않는 경우, **대체 안내 및 재입력 유도**
+- 잘못된 역명·출구 입력에 대한 친절한 에러 메시지 제공
+- 역사 내 동선이 존재하지 않는 경우, 대체 안내 및 재입력을 유도
 
 ---
-
 ## 4. 시스템 구성 (Architecture)
 
 ### 4-1. ERD
