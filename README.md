@@ -49,7 +49,7 @@
 
 | 기능 | 미리보기 |
 |------|---------|
-| **로그인 기반 이용자 식별 및 세션 기반 환영 메시지** | ![login](./doc/images/login.gif) |
+| **로그인 및 환영 메시지** | ![login](./doc/images/login.gif) |
 | **마이페이지** | ![mypage](./doc/images/mypage.gif) |
 
 - OAuth 기반 로그인으로 이용자를 식별하고, 이후 즐겨찾기 등의 기능 확장을 계획 중
@@ -61,11 +61,10 @@
 | 화면 | 미리보기 |
 |------|---------|
 | **경로 검색** | ![find_way_1](./doc/images/find_way_1.gif) |
-| **카드형 단계별 이동 안내** | ![find_way_2](./doc/images/find_way_2.gif) |
+| **카드형** <br> **이동 안내** | ![find_way_2](./doc/images/find_way_2.gif) |
 
 - 출발역·도착역 입력 후, **역사 내 구조 + 에스컬레이터 정보를 반영한 동선 자동 생성**
 - 각 단계별 이동을 카드로 제공  
-  (예: 개찰구 통과 → 오른쪽 에스컬레이터 이용 → ○○ 방면 승강장 도착)
 
 ---
 
@@ -73,7 +72,7 @@
 
 | 기능 | 미리보기 |
 |------|---------|
-| **역사 기본 정보 / 노선 정보 조회** | ![station_info](./doc/images/station_info.gif) |
+| **역사 기본 정보 및** <br> **노선 정보 조회** | ![station_info](./doc/images/station_info.gif) |
 | **편의시설 상세 정보** <br> ATM, 물품보관함, 화장실, 엘리베이터, 유실물 보관소, 에스컬레이터 | ![station_detail](./doc/images/station_detail.gif) |
 
 - 화장실, 편의점 등의 편의시설 정보를 **경로 안내 페이지에서 바로 확인 가능**
@@ -85,10 +84,10 @@
 | 케이스 | 미리보기 |
 |--------|---------|
 | **존재하지 않는 역 이름 입력 시 안내** | ![not_valid_name](./doc/images/not_valid_name.gif) |
-| **유효하지 않은 출구/동선 선택 시 안내** | ![not_valid_exit](./doc/images/not_valid_exit.gif) |
+| **유효하지 않은 출구 선택 시 안내** | ![not_valid_exit](./doc/images/not_valid_exit.gif) |
 
 - 잘못된 역명·출구 입력에 대한 **친절한 에러 메시지**
-- 역사 내 동선이 존재하지 않는 경우, **대체 안내 / 재입력 유도**
+- 역사 내 동선이 존재하지 않는 경우, **대체 안내 및 재입력 유도**
 
 ---
 
@@ -191,8 +190,8 @@
 ## 6. 협업 방식 (Git Workflow)
 
 - GitHub Flow 기반 브랜치 전략 사용  
-  (feature 브랜치 → Pull Request → 코드 리뷰 → dev → main)
-- 린트/테스트/배포를 GitHub Actions로 자동화
+- feature 브랜치 → Pull Request → 코드 리뷰 → dev → 배포
+- 배포를 GitHub Actions로 자동화
 
 <p align="center">
   <img src="./doc/images/git_graph.png" alt="git graph" width="80%"/>
@@ -264,7 +263,7 @@
     <td align="center" width="200">
       <img src="https://github.com/hwanseung251.png" width="80px" style="border-radius: 50%;" />
       <br />
-      <b>정환승</b> <br> (Backend Developer, DB)
+      <b>정환승</b> <br> (Backend, DB)
     </td>
     <td align="center" width="200">
       <img src="https://github.com/yeonliyou.png" width="80px" style="border-radius: 50%;" />
