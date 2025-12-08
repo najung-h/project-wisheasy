@@ -442,3 +442,7 @@ pyrightconfig.json
 
 # pem
 *.pem
+
+# mac 
+.DS_Store
+**/.DS_Store
