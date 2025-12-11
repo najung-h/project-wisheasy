@@ -308,6 +308,10 @@
 </table>
 
 
-| 전문가 제도| git 브랜치 전략 | commit 컨벤션 |
-| :--- | :---: | ---: |
+<div align="center">
+
+| 전문가 제도 | git 브랜치 전략 | commit 컨벤션 |
+| :-----------: | :-----------: | :-----------: |
 | [바로가기](./doc/전문가제도.md) | [바로가기](./doc/git_branch_strategy.md) | [바로가기](./doc/commit_message_convention.md) |
+
+</div>
